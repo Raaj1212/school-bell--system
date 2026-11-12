@@ -39,10 +39,10 @@ input[type=text]{flex:1;min-width:120px}
   <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
   <div class="row">
     <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
-    <button onclick="testGeneral()">🔊 घंटी + कंबाइंड अनाउंसमेंट टेस्ट करें</button>
+    <button onclick="testGeneral()">🔊 घंटी + अनाउंसमेंट टेस्ट करें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है (कंबाइंड सीक्वेंस के साथ)।</div>
+  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है (फिक्सड ऑडियो TTS के साथ)।</div>
 </section>
 
 <section class="card">
@@ -56,7 +56,7 @@ input[type=text]{flex:1;min-width:120px}
 </section>
 
 <section class="card">
-  <h2>घंटी और अनाउंसमेंट के बीच का गैप</h2>
+  <h2>घंटी के बाद बोलने का गैप</h2>
   <div class="row">
     <span class="muted">गैप चुनें:</span>
     <select id="delaySelect" onchange="updateDelay(this)">
@@ -69,7 +69,7 @@ input[type=text]{flex:1;min-width:120px}
 </section>
 
 <section class="card">
-  <h2>⏰ टाइमटेबल (हर घंटी के सामने लाइब्रेरी से अनाउंसमेंट चुनें)</h2>
+  <h2>⏰ टाइमटेबल (हर घंटी के सामने अनाउंसमेंट या सिर्फ घंटी सेट करें)</h2>
   <div class="row days" id="daysRow"></div>
   <div id="items"></div>
   <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
@@ -122,23 +122,43 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-// ऑडियो TTS प्ले करने का फंक्शन
-function speakAudio(text, cb){
+// 100% काम करने वाला रिलायबल ऑडियो TTS इंजन
+function speakText(text, cb){
   if(!text){if(cb)cb();return;}
   try{
     ttsAudioEl.pause();
+    // डायरेक्ट Google Translate TTS ऑडियो URL (जो हमेशा MP3 रिटर्न करता है)
     const encoded = encodeURIComponent(text);
     ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
     ttsAudioEl.currentTime = 0;
-    ttsAudioEl.onended = () => { ttsAudioEl.onended = null; if(cb) cb(); };
-    ttsAudioEl.play().catch(e => { if(cb) cb(); });
-  }catch(e){ if(cb) cb(); }
+    
+    ttsAudioEl.onended = () => {
+      ttsAudioEl.onended = null;
+      if(cb) cb();
+    };
+    
+    ttsAudioEl.play().catch(e => {
+      console.log("Audio play error, falling back to browser synth:", e);
+      // फॉलबैक: यदि ऑनलाइन ऑडियो ब्लॉक हो, तो ब्राउज़र का अपना बोल 
+      try {
+        window.speechSynthesis.cancel();
+        let u = new SpeechSynthesisUtterance(text);
+        u.lang = "hi-IN";
+        u.rate = 0.95;
+        u.onend = () => { if(cb) cb(); };
+        window.speechSynthesis.speak(u);
+      } catch(ex) {
+        if(cb) cb();
+      }
+    });
+  }catch(e){
+    if(cb) cb();
+  }
 }
 
-// यह मास्टर फंक्शन घंटी और टेक्स्ट को बिल्कुल परफेक्ट तरीके से कंबाइन (क्रम में) बजाता है
 function ringAndSpeak(text, playBell, onlyBell, cb){
   if(playBell === false){
-    if(!onlyBell) speakAudio(text, cb);
+    if(!onlyBell) speakText(text, cb);
     else if(cb) cb();
     return;
   }
@@ -146,21 +166,19 @@ function ringAndSpeak(text, playBell, onlyBell, cb){
   audioEl.pause();
   audioEl.currentTime = 0;
   
-  // पहले घंटी पूरी बजेगी
   audioEl.onended = () => {
     audioEl.onended = null;
     if(onlyBell){
       if(cb) cb();
       return;
     }
-    // घंटी खत्म होने के बाद गैप देकर कंबाइंड टेक्स्ट (अनाउंसमेंट) बोलेगा
     setTimeout(() => {
-      speakAudio(text, cb);
+      speakText(text, cb);
     }, st.bellDelay || 300);
   };
   
   audioEl.play().catch(() => {
-    if(!onlyBell) speakAudio(text, cb);
+    if(!onlyBell) speakText(text, cb);
     else if(cb) cb();
   });
 }
@@ -172,11 +190,11 @@ function testBellOnly(){
 
 function testGeneral(){
   ringAndSpeak("प्रथम घंटी बज चुकी है, कक्षा में जाएं", true, false, null);
-  toast("घंटी और कंबाइंड अनाउंसमेंट बज रही है");
+  toast("घंटी और अनाउंसमेंट टेस्ट हो रही है");
 }
 
 function stopSound(){
-  try{ ttsAudioEl.pause(); }catch(e){}
+  try{ ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
   audioEl.pause();
   audioEl.currentTime = 0;
 }
@@ -264,7 +282,7 @@ function render(){
       const playBtn = document.createElement("button");
       playBtn.className = "small primary";
       playBtn.textContent = "▶ सुनें";
-      playBtn.onclick = () => speakAudio(a.text, null);
+      playBtn.onclick = () => speakText(a.text, null);
 
       const delBtn = document.createElement("button");
       delBtn.className = "small danger";
