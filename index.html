@@ -25,8 +25,6 @@ input[type=text]{flex:1;min-width:100px}
 .item{border:1px solid var(--line);border-radius:10px;padding:9px;margin:8px 0}
 .r1{display:flex;gap:8px;align-items:center}
 .r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
-.r3 input[type=file]{font-size:12px;max-width:170px;padding:3px}
-.r3 label{font-size:13px;display:flex;gap:4px;align-items:center}
 .days label{margin-right:6px;font-size:13px}
 .hint{font-size:13px;color:#6b7280;margin:6px 0}
 .muted{color:#6b7280;font-size:12px}
@@ -38,7 +36,7 @@ input[type=text]{flex:1;min-width:100px}
 <main>
 
 <section class="card">
-  <h2>ऑटो घंटी सिस्टम (कंप्यूटर सर्वर मोड)</h2>
+  <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
   <div class="row">
     <button class="primary" id="startBtn" onclick="startSys()">सिस्टम चालू करें</button>
     <button id="stopBtn" onclick="stopSys()" style="display:none">सिस्टम बंद करें</button>
@@ -46,7 +44,7 @@ input[type=text]{flex:1;min-width:100px}
     <button onclick="testSay()">बोलकर सुनें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">सुनिश्चित करें कि मेन कंप्यूटर का ब्लूटूथ एम्पलीफायर से कनेक्टेड है।</div>
+  <div class="hint">कंप्यूटर का ब्लूटूथ एम्पलीफायर से कनेक्टेड होना चाहिए।</div>
 </section>
 
 <section class="card">
@@ -54,15 +52,6 @@ input[type=text]{flex:1;min-width:100px}
   <div class="row">
     <button id="micBtn" onclick="toggleMic()">लाइव माइक चालू करें</button>
     <span id="micState" class="muted">माइक बंद है</span>
-  </div>
-  <div class="hint">इसे चालू करने पर डिवाइस के माइक की आवाज़ सीधे ब्लूटूथ स्पीकर/एम्पलीफायर पर जाएगी।</div>
-</section>
-
-<section class="card">
-  <h2>घंटी की आवाज़ सेट करें</h2>
-  <div class="row">
-    <input type="file" id="bellFile" accept="audio/*" onchange="pickBell()">
-    <span id="bellState" class="muted"></span>
   </div>
 </section>
 
@@ -87,8 +76,12 @@ const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
 let st=JSON.parse(localStorage.getItem("bellphone")||"null")||{items:[{time:"08:00",label:"Assembly",bell:true,say:""}],days:"all",voice:"",rate:0.95,repeat:1};
 st.rate=st.rate||0.95;st.repeat=st.repeat||1;
-let running=false,audioEl=new Audio(),bellBlob=null,quietEl=null;
-let mediaStream=null,audioCtx=null,micSource=null;
+let running=false, audioEl=new Audio(), quietEl=null;
+let mediaStream=null, audioCtx=null, micSource=null;
+
+// यहाँ अपनी घंटी की फिक्स ऑनलाइन लिंक डालें (जो GitHub से कॉपी किया है)
+const DEFAULT_BELL_URL = "YOUR_AUDIO_LINK_HERE"; 
+audioEl.src = DEFAULT_BELL_URL;
 
 function makeQuietLoop(){
   try{
@@ -107,19 +100,6 @@ function toast(t){const e=document.getElementById("toast");e.textContent=t;e.sty
 function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
-
-function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("bellphone",1);r.onupgradeneeded=()=>r.result.createObjectStore("s");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
-async function idbSet(k,v){const db=await idb();return new Promise((res,rej)=>{const t=db.transaction("s","readwrite");t.objectStore("s").put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error);});}
-async function idbGet(k){const db=await idb();return new Promise((res)=>{const t=db.transaction("s","readonly");const q=t.objectStore("s").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null);});}
-
-async function pickBell(){
-  const f=document.getElementById("bellFile").files[0];
-  if(!f)return;
-  bellBlob=f;await idbSet("bell",f);
-  delete urlCache.__global;audioEl.src=URL.createObjectURL(f);
-  document.getElementById("bellState").textContent="सेव हो गई: "+f.name;
-  toast("घंटी की फ़ाइल सेव हो गई");
-}
 
 function pickVoice(lang){
   const vs=speechSynthesis.getVoices();
@@ -155,17 +135,9 @@ function speak(text){
   }catch(e){console.log("speak fail",e);}
 }
 
-const bellCache={},urlCache={};
-async function getBlob(key){if(bellCache[key])return bellCache[key];const b=await idbGet(key);if(b){bellCache[key]=b;return b;}return null;}
-async function ringFor(item,cb){
-  let blob=null;
-  if(item&&item.bellFile)blob=await getBlob(item.bellFile);
-  if(!blob)blob=bellBlob;
-  if(!blob){toast("पहले घंटी की फ़ाइल चुनें");if(cb)cb();return;}
-  const key=(item&&item.bellFile)||"__global";
-  if(!urlCache[key])urlCache[key]=URL.createObjectURL(blob);
+function ringFor(item,cb){
   audioEl.onended=()=>{if(cb)cb();};
-  audioEl.src=urlCache[key];audioEl.currentTime=0;
+  audioEl.currentTime=0;
   audioEl.play().catch(()=>{if(cb)cb();});
 }
 function testBell(){ringFor(null,null);}
@@ -267,10 +239,7 @@ function render(){
     const bl=document.createElement("label");const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};bl.append(bc,document.createTextNode("घंटी बजे"));
     const play=document.createElement("button");play.className="small";play.textContent="▶ बजाकर सुनें";
     play.onclick=()=>{const go=()=>speak(it.say||"");if(bc.checked){ringFor(it,go);}else{go();}};
-    const bf=document.createElement("input");bf.type="file";bf.accept="audio/*";
-    bf.onchange=async()=>{const f=bf.files[0];if(!f)return;const key="bell:"+it.id;await idbSet(key,f);bellCache[key]=f;delete urlCache[key];it.bellFile=key;it.bellName=f.name;save();bn.textContent="आपकी: "+f.name;toast("घंटी सेव हो गई");};
-    const bn=document.createElement("span");bn.className="muted";bn.textContent=it.bellName?("आपकी: "+it.bellName):"आम घंटी";
-    r3.append(bl,play,bf,bn);
+    r3.append(bl,play);
     r.append(r1,s,r3);box.appendChild(r);
   });
   showNext();
@@ -285,12 +254,8 @@ function loadSpeakOpts(){
   for(let i=1;i<=5;i++){const o=document.createElement("option");o.value=i;o.textContent=i+" बार";rp.appendChild(o);}
   rp.value=String(st.repeat);rp.onchange=()=>{st.repeat=parseInt(rp.value);save();};
 }
-(async()=>{
-  const b=await idbGet("bell");
-  if(b){bellBlob=b;audioEl.src=URL.createObjectURL(b);document.getElementById("bellState").textContent="पहले से सेव है";}
-  loadSpeakOpts();render();
-  setInterval(tick,1000);
-})();
+loadSpeakOpts();render();
+setInterval(tick,1000);
 </script>
 </body>
 </html>
