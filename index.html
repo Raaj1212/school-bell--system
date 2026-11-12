@@ -24,7 +24,6 @@ input[type=text]{flex:1;min-width:120px}
 .item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
 .r1{display:flex;gap:8px;align-items:center}
 .r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
-.announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
 .days label{margin-right:6px;font-size:13px}
 .hint{font-size:13px;color:#6b7280;margin:6px 0}
 .muted{color:#6b7280;font-size:12px}
@@ -36,43 +35,18 @@ input[type=text]{flex:1;min-width:120px}
 <main>
 
 <section class="card">
-  <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
+  <h2>ऑटो घंटी सिस्टम (ऑनलाइन और लोकल हाइब्रिड मोड)</h2>
   <div class="row">
-    <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
-    <button onclick="testGeneral()">🔊 घंटी + अनाउंसमेंट टेस्ट करें</button>
-    <button onclick="stopSound()">रोकें</button>
+    <button onclick="stopSound()">साउंड रोकें</button>
   </div>
-  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है (फिक्सड ऑडियो TTS के साथ)।</div>
+  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है। आप GitHub लिंक या डायरेक्ट अपलोड दोनों इस्तेमाल कर सकते हैं।</div>
 </section>
 
 <section class="card">
-  <h2>📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h2>
-  <div class="row">
-    <input type="text" id="annTitle" placeholder="नाम (जैसे: First Period)">
-    <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट (जैसे: प्रथम घंटी लग चुकी है)">
-    <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
-  </div>
-  <div id="annList"></div>
-</section>
-
-<section class="card">
-  <h2>घंटी के बाद बोलने का गैप</h2>
-  <div class="row">
-    <span class="muted">गैप चुनें:</span>
-    <select id="delaySelect" onchange="updateDelay(this)">
-      <option value="100">तुरंत (0.1 सेकंड)</option>
-      <option value="300" selected>सामान्य (0.3 सेकंड)</option>
-      <option value="600">थोड़ा रुककर (0.6 सेकंड)</option>
-      <option value="1000">1 सेकंड</option>
-    </select>
-  </div>
-</section>
-
-<section class="card">
-  <h2>⏰ टाइमटेबल (हर घंटी के सामने अनाउंसमेंट या सिर्फ घंटी सेट करें)</h2>
+  <h2>⏰ टाइमटेबल (कंबाइंड MP3 ऑडियो लिंक या अपलोड)</h2>
   <div class="row days" id="daysRow"></div>
   <div id="items"></div>
-  <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
+  <div class="row"><button onclick="addItem()">+ नया समय/पीरियड जोड़ें</button></div>
 </section>
 
 </main>
@@ -83,26 +57,11 @@ const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
-  announcements: [
-    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
-    { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
-  ],
-  items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
-  days:"all",
-  bellDelay:300
+  items:[{time:"08:00", label:"Assembly", audioUrl:""}],
+  days:"all"
 };
-st.bellDelay = st.bellDelay || 300;
-st.announcements = st.announcements || [];
 
-let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
-const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
-audioEl.src = DEFAULT_BELL_URL;
-
-function updateDelay(sel){
-  st.bellDelay = parseInt(sel.value);
-  save();
-  toast("गैप बदल गया: "+sel.options[sel.selectedIndex].text);
-}
+let running=false, activeAudio=new Audio(), quietEl=null;
 
 function makeQuietLoop(){
   try{
@@ -122,100 +81,16 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-// 100% काम करने वाला रिलायबल ऑडियो TTS इंजन
-function speakText(text, cb){
-  if(!text){if(cb)cb();return;}
-  try{
-    ttsAudioEl.pause();
-    // डायरेक्ट Google Translate TTS ऑडियो URL (जो हमेशा MP3 रिटर्न करता है)
-    const encoded = encodeURIComponent(text);
-    ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
-    ttsAudioEl.currentTime = 0;
-    
-    ttsAudioEl.onended = () => {
-      ttsAudioEl.onended = null;
-      if(cb) cb();
-    };
-    
-    ttsAudioEl.play().catch(e => {
-      console.log("Audio play error, falling back to browser synth:", e);
-      // फॉलबैक: यदि ऑनलाइन ऑडियो ब्लॉक हो, तो ब्राउज़र का अपना बोल 
-      try {
-        window.speechSynthesis.cancel();
-        let u = new SpeechSynthesisUtterance(text);
-        u.lang = "hi-IN";
-        u.rate = 0.95;
-        u.onend = () => { if(cb) cb(); };
-        window.speechSynthesis.speak(u);
-      } catch(ex) {
-        if(cb) cb();
-      }
-    });
-  }catch(e){
-    if(cb) cb();
-  }
-}
-
-function ringAndSpeak(text, playBell, onlyBell, cb){
-  if(playBell === false){
-    if(!onlyBell) speakText(text, cb);
-    else if(cb) cb();
-    return;
-  }
-  
-  audioEl.pause();
-  audioEl.currentTime = 0;
-  
-  audioEl.onended = () => {
-    audioEl.onended = null;
-    if(onlyBell){
-      if(cb) cb();
-      return;
-    }
-    setTimeout(() => {
-      speakText(text, cb);
-    }, st.bellDelay || 300);
-  };
-  
-  audioEl.play().catch(() => {
-    if(!onlyBell) speakText(text, cb);
-    else if(cb) cb();
-  });
-}
-
-function testBellOnly(){
-  ringAndSpeak("", true, true, null);
-  toast("सिर्फ घंटी बज रही है");
-}
-
-function testGeneral(){
-  ringAndSpeak("प्रथम घंटी बज चुकी है, कक्षा में जाएं", true, false, null);
-  toast("घंटी और अनाउंसमेंट टेस्ट हो रही है");
+function playAudioFile(url){
+  if(!url){ toast("कृपया पहले MP3 लिंक डालें या फाइल अपलोड करें!"); return; }
+  activeAudio.pause();
+  activeAudio.src = url;
+  activeAudio.currentTime = 0;
+  activeAudio.play().catch(e => toast("ऑडियो प्ले करने में त्रुटि: "+e.message));
 }
 
 function stopSound(){
-  try{ ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
-  audioEl.pause();
-  audioEl.currentTime = 0;
-}
-
-function saveAnnouncement(){
-  const title = document.getElementById("annTitle").value.trim();
-  const text = document.getElementById("annText").value.trim();
-  if(!title || !text){ toast("कृपया नाम और टेक्स्ट दोनों भरें!"); return; }
-  st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
-  save();
-  document.getElementById("annTitle").value = "";
-  document.getElementById("annText").value = "";
-  toast("अनाउंसमेंट लाइब्रेरी में सेव हो गई!");
-  render();
-}
-
-function deleteAnnouncement(id){
-  st.announcements = st.announcements.filter(a => a.id !== id);
-  save();
-  toast("अनाउंसमेंट डिलीट कर दी गई");
-  render();
+  try{ activeAudio.pause(); }catch(e){}
 }
 
 function startSys(){
@@ -241,12 +116,7 @@ function tick(){
       hits.sort((a,b)=>String(a.label).localeCompare(String(b.label)));
       
       hits.forEach(i=>{
-        let textToSay = "";
-        if(!i.onlyBell && i.annId){
-          const found = st.announcements.find(a => a.id === i.annId);
-          if(found) textToSay = found.text;
-        }
-        ringAndSpeak(textToSay, i.bell!==false, i.onlyBell===true, null);
+        if(i.audioUrl) playAudioFile(i.audioUrl);
       });
       showNext();
     }
@@ -265,37 +135,6 @@ function showNext(){
 }
 
 function render(){
-  const annDiv = document.getElementById("annList");
-  annDiv.innerHTML = "";
-  if(st.announcements.length === 0){
-    annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट सेव नहीं है।</div>';
-  } else {
-    st.announcements.forEach(a => {
-      const box = document.createElement("div");
-      box.className = "announcement-box";
-      
-      const infoSpan = document.createElement("span");
-      infoSpan.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
-      
-      const btnGroup = document.createElement("div");
-      
-      const playBtn = document.createElement("button");
-      playBtn.className = "small primary";
-      playBtn.textContent = "▶ सुनें";
-      playBtn.onclick = () => speakText(a.text, null);
-
-      const delBtn = document.createElement("button");
-      delBtn.className = "small danger";
-      delBtn.textContent = "✕";
-      delBtn.style.marginLeft = "5px";
-      delBtn.onclick = () => deleteAnnouncement(a.id);
-
-      btnGroup.append(playBtn, delBtn);
-      box.append(infoSpan, btnGroup);
-      annDiv.appendChild(box);
-    });
-  }
-
   const dr=document.getElementById("daysRow");dr.innerHTML="";
   const days=daysToArr(st.days);
   DAYS.forEach(dd=>{const l=document.createElement("label");l.className="chk";const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
@@ -315,66 +154,49 @@ function render(){
 
     const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
     
-    const selectAnn = document.createElement("select");
-    selectAnn.style.flex = "1";
-    const defaultOpt = document.createElement("option");
-    defaultOpt.value = "";
-    defaultOpt.textContent = "-- कोई अनाउंसमेंट अटैच न करें --";
-    selectAnn.appendChild(defaultOpt);
+    // ऑनलाइन लिंक इनपुट बॉक्स (GitHub Raw URL यहाँ डालें)
+    const urlInput = document.createElement("input");
+    urlInput.type = "text";
+    urlInput.value = it.audioUrl || "";
+    urlInput.placeholder = "GitHub Raw MP3 लिंक यहाँ पेस्ट करें (या नीचे अपलोड करें)";
+    urlInput.style.flex = "1";
+    urlInput.oninput = () => { it.audioUrl = urlInput.value; save(); };
 
-    st.announcements.forEach(a => {
-      const opt = document.createElement("option");
-      opt.value = a.id;
-      opt.textContent = `📢 ${a.title} -> "${a.text.substring(0, 30)}..."`;
-      if(it.annId === a.id) opt.selected = true;
-      selectAnn.appendChild(opt);
-    });
-
-    selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
-    if(it.onlyBell) selectAnn.disabled = true;
-    r2.append(selectAnn);
-
-    const r3=document.createElement("div");r3.className="r3";
-    const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};
-    const bl=document.createElement("label");bl.append(bc,document.createTextNode("घंटी बजे"));
-
-    const onlyBellChk = document.createElement("input");
-    onlyBellChk.type = "checkbox";
-    onlyBellChk.checked = it.onlyBell === true;
-    onlyBellChk.onchange = () => {
-      it.onlyBell = onlyBellChk.checked;
-      selectAnn.disabled = it.onlyBell;
-      save();
+    // लोकल फाइल अपलोड ऑप्शन (बैकअप के लिए)
+    const fileInp = document.createElement("input");
+    fileInp.type = "file"; fileInp.accept = "audio/*"; fileInp.style.display = "none";
+    fileInp.onchange = (e) => {
+      const file = e.target.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          it.audioUrl = uploadEvent.target.result;
+          urlInput.value = it.audioUrl;
+          save();
+          toast("ऑडियो फाइल सफलताપૂર્વक अटैच हो गई!");
+          render();
+        };
+        reader.readAsDataURL(file);
+      }
     };
-    const onlyBellLbl = document.createElement("label");
-    onlyBellLbl.style.color = "#d97706";
-    onlyBellLbl.style.fontWeight = "600";
-    onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी बजे"));
+
+    const uploadBtn = document.createElement("button");
+    uploadBtn.className = "small";
+    uploadBtn.textContent = "📁 लोकल अपलोड";
+    uploadBtn.onclick = () => fileInp.click();
 
     const playBtn = document.createElement("button");
     playBtn.className = "small primary";
     playBtn.textContent = "▶ टेस्ट सुनें";
-    playBtn.onclick = () => {
-      let tText = "";
-      if(!it.onlyBell && it.annId){
-        const f = st.announcements.find(a => a.id === it.annId);
-        if(f) tText = f.text;
-      }
-      ringAndSpeak(tText, it.bell!==false, it.onlyBell===true, null);
-    };
+    playBtn.onclick = () => playAudioFile(urlInput.value);
 
-    r3.append(bl, onlyBellLbl, playBtn);
-    r.append(r1, r2, r3); box.appendChild(r);
+    r2.append(urlInput, uploadBtn, fileInp, playBtn);
+    r.append(r1, r2); box.appendChild(r);
   });
   showNext();
 }
 
-function addItem(){st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});save();render();}
-
-loadSpeakOpts();
-function loadSpeakOpts(){
-  document.getElementById("delaySelect").value = String(st.bellDelay || 300);
-}
+function addItem(){st.items.push({time:"09:00",label:"",audioUrl:""});save();render();}
 
 render();
 setInterval(tick,1000);
