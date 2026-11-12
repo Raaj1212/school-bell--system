@@ -37,12 +37,12 @@ input[type=text]{flex:1;min-width:120px}
 <main>
 
 <section class="card">
-  <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
+  <h2>ऑटो घंटी सिस्टम (मैनुअल और ऑटोमैटिक दोनों)</h2>
   <div class="row">
-    <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
+    <button onclick="testBellOnly()">🔔 सिर्फ घंटी बजाएं (मैनुअल)</button>
     <button onclick="stopSound()">साउंड रोकें</button>
   </div>
-  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है।</div>
+  <div class="hint">सिस्टम ऑटोमैटिक मोड में है। आप नीचे से कभी भी मैनुअल टेस्ट या प्ले कर सकते हैं।</div>
 </section>
 
 <section class="card">
@@ -54,13 +54,13 @@ input[type=text]{flex:1;min-width:120px}
 </section>
 
 <section class="card">
-  <h2>📢 अनाउंसमेंट लाइब्रेरी & 100% फुल-वॉल्यूम MP3 जनरेटर</h2>
+  <h2>📢 अनाउंसमेंट लाइब्रेरी (टेक्स्ट सेव करें और मैनुअल कंबाइंड सुनें)</h2>
   <div class="row">
     <input type="text" id="annTitle" placeholder="नाम (जैसे: First Period)">
     <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट (जैसे: प्रथम घंटी लग चुकी है)">
     <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
   </div>
-  <div class="hint">"कंबाइंड MP3 डाउनलोड" बटन दबाने से बिना आवाज़ कम हुए एकदम साफ़ और तेज़ आवाज़ की मिक्स्ड फाइल डाउनलोड हो जाएगी।</div>
+  <div class="hint">यहाँ से आप टेक्स्ट को सेव करके <b>"▶ मैनुअल कंबाइंड सुनें"</b> से घंटी + आवाज़ एक साथ मैनुअल प्ले कर सकते हैं।</div>
   <div id="annList"></div>
 </section>
 
@@ -111,7 +111,8 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-function playCombinedTest(text){
+// मैनुअल कंबाइंड प्ले (पहले घंटी, फिर बिना किसी रुकावट के टेक्स्ट)
+function playManualCombined(text){
   let bellTest = new Audio(DEFAULT_BELL_URL);
   bellTest.onended = () => {
     if(!text) return;
@@ -125,68 +126,8 @@ function playCombinedTest(text){
       window.speechSynthesis.speak(u);
     });
   };
-  bellTest.play().catch(e => toast("टेस्ट प्ले त्रुटि: "+e.message));
-}
-
-// नया सुरक्षित और पक्का तरीका: ब्राउज़र के ऑडियो रिकॉर्डर (MediaRecorder) का उपयोग करके बिना आवाज़ कम हुए कंबाइंड फाइल रिकॉर्ड करना
-async function downloadCombinedAudioReal(text, title) {
-  toast("ऑडियो रिकॉर्डिंग शुरू हो रही है, कृपया इंतज़ार करें...");
-  try {
-    const actx = new (window.AudioContext || window.webkitAudioContext)();
-    if(actx.state === 'suspended') await actx.resume();
-
-    // डेस्टिनेशन स्ट्रीम नोड बनाएँ ताकि स्पीकर की आवाज़ को कैप्चर किया जा सके
-    const dest = actx.createMediaStreamDestination();
-    const mediaRecorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
-    let chunks = [];
-
-    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'audio/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = (title ? title.replace(/\s+/g, '_') : 'bell_announcement') + '.webm';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      toast("कंबाइंड ऑडियो फाइल सफलताપૂર્વक डाउनलोड हो गई! (फुल वॉल्यूम)");
-    };
-
-    mediaRecorder.start();
-
-    // 1. घंटी बजाएं और उसे रिकॉर्डिंग स्ट्रीम से कनेक्ट करें
-    const bellAudio = new Audio(DEFAULT_BELL_URL);
-    const source1 = actx.createMediaElementSource(bellAudio);
-    source1.connect(dest);
-    source1.connect(actx.destination); // ताकि आपको भी सुनाई दे
-
-    bellAudio.onended = async () => {
-      // 2. घंटी खत्म होने के तुरंत बाद टेक्स्ट-टू-स्पीच ऑडियो प्ले करें और उसे भी कनेक्ट करें
-      const encoded = encodeURIComponent(text);
-      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
-      const ttsAudio = new Audio(ttsUrl);
-      
-      const source2 = actx.createMediaElementSource(ttsAudio);
-      source2.connect(dest);
-      source2.connect(actx.destination);
-
-      ttsAudio.onended = () => {
-        setTimeout(() => {
-          mediaRecorder.stop();
-          actx.close();
-        }, 500);
-      };
-
-      await ttsAudio.play();
-    };
-
-    await bellAudio.play();
-
-  } catch (err) {
-    toast("रिकॉर्डर त्रुटि: कृपया ब्राउज़र की अनुमति जांचें।");
-  }
+  bellTest.play().catch(e => toast("प्ले त्रुटि: "+e.message));
+  toast("मैनुअल कंबाइंड प्ले हो रहा है...");
 }
 
 function playAudioFile(url){
@@ -308,14 +249,8 @@ function render(){
       
       const playBtn = document.createElement("button");
       playBtn.className = "small primary";
-      playBtn.textContent = "▶ टेस्ट सुनें";
-      playBtn.onclick = () => playCombinedTest(a.text);
-
-      const dlBtn = document.createElement("button");
-      dlBtn.className = "small";
-      dlBtn.style.marginLeft = "5px";
-      dlBtn.textContent = "💾 कंबाइंड MP3 डाउनलोड";
-      dlBtn.onclick = () => downloadCombinedAudioReal(a.text, a.title);
+      playBtn.textContent = "▶ मैनुअल कंबाइंड सुनें";
+      playBtn.onclick = () => playManualCombined(a.text);
 
       const delBtn = document.createElement("button");
       delBtn.className = "small danger";
@@ -323,7 +258,7 @@ function render(){
       delBtn.style.marginLeft = "5px";
       delBtn.onclick = () => deleteAnnouncement(a.id);
 
-      btnGroup.append(playBtn, dlBtn, delBtn);
+      btnGroup.append(playBtn, delBtn);
       box.append(info, btnGroup);
       annDiv.appendChild(box);
     });
