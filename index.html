@@ -25,7 +25,7 @@ input[type=text]{flex:1;min-width:120px}
 .item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
 .r1{display:flex;gap:8px;align-items:center}
 .r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
-.announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.announcement-box{background:#f0f4f8;padding:10px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .days label{margin-right:6px;font-size:13px}
 .hint{font-size:13px;color:#6b7280;margin:6px 0}
 .muted{color:#6b7280;font-size:12px}
@@ -40,7 +40,7 @@ input[type=text]{flex:1;min-width:120px}
   <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
   <div class="row">
     <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
-    <button onclick="stopSound()">रोकें</button>
+    <button onclick="stopSound()">साउंड रोकें</button>
   </div>
   <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है।</div>
 </section>
@@ -54,18 +54,18 @@ input[type=text]{flex:1;min-width:120px}
 </section>
 
 <section class="card">
-  <h2>📢 अनाउंसमेंट लाइब्रेरी & MP3 डाउनलोडर</h2>
+  <h2>📢 अनाउंसमेंट लाइब्रेरी & 100% फुल-वॉल्यूम MP3 जनरेटर</h2>
   <div class="row">
     <input type="text" id="annTitle" placeholder="नाम (जैसे: First Period)">
     <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट (जैसे: प्रथम घंटी लग चुकी है)">
     <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
   </div>
-  <div class="hint">यहाँ आप टेक्स्ट लिखकर सुन सकते हैं और उसे कंबाइंड MP3 के रूप में डाउनलोड करके GitHub पर अपलोड कर सकते हैं।</div>
+  <div class="hint">"कंबाइंड MP3 डाउनलोड" बटन दबाने से बिना आवाज़ कम हुए एकदम साफ़ और तेज़ आवाज़ की मिक्स्ड फाइल डाउनलोड हो जाएगी।</div>
   <div id="annList"></div>
 </section>
 
 <section class="card">
-  <h2>⏰ टाइमटेबल (हर घंटी के सामने कंबाइंड MP3 लिंक या फाइल डालें)</h2>
+  <h2>⏰ टाइमटेबल (हर घंटी के सामने कंबाइंड MP3 का GitHub लिंक डालें)</h2>
   <div class="row days" id="daysRow"></div>
   <div id="items"></div>
   <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
@@ -80,18 +80,18 @@ const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"�
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
   announcements: [
-    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" }
+    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
+    { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
   ],
-  items:[{time:"08:00", label:"Assembly", bell:true, audioUrl:""}],
+  items:[{time:"08:00", label:"Assembly", audioUrl:""}],
   days:"all"
 };
 st.announcements = st.announcements || [];
 
-let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
+let running=false, activeAudio=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let mediaStream=null, audioCtx=null, micSource=null;
 
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
-audioEl.src = DEFAULT_BELL_URL;
 
 function makeQuietLoop(){
   try{
@@ -111,134 +111,100 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-// कंबाइंड प्ले (घंटी + टेक्स्ट)
-function playCombined(text, cb){
-  audioEl.pause();
-  audioEl.currentTime = 0;
-  audioEl.onended = () => {
-    audioEl.onended = null;
-    if(!text){ if(cb) cb(); return; }
-    // बिना किसी डिले के तुरंत टेक्स्ट बोलेगा
-    try{
-      const encoded = encodeURIComponent(text);
-      ttsAudioEl.pause();
-      ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
-      ttsAudioEl.currentTime = 0;
-      ttsAudioEl.onended = () => { ttsAudioEl.onended = null; if(cb) cb(); };
-      ttsAudioEl.play().catch(e => {
-        // फॉलबैक ब्राउज़र TTS
-        let u = new SpeechSynthesisUtterance(text);
-        u.lang = "hi-IN";
-        u.onend = () => { if(cb) cb(); };
-        window.speechSynthesis.speak(u);
-      });
-    }catch(e){ if(cb) cb(); }
-  };
-  audioEl.play().catch(e => { if(cb) cb(); });
-}
-
-// नया फीचर: वेब ऑडियो का इस्तेमाल करके कंबाइंड ऑडियो को MP3/WAV फाइल के रूप में डाउनलोड कराना
-async function downloadCombinedAudio(text, title) {
-  toast("कंबाइंड ऑडियो तैयार की जा रही है...");
-  try {
-    // 1. घंटी की ऑडियो लोड करें
-    const bellResp = await fetch(DEFAULT_BELL_URL);
-    const bellArrayBuf = await bellResp.arrayBuffer();
-
-    // 2. गूगल TTS ऑडियो लोड करें
+function playCombinedTest(text){
+  let bellTest = new Audio(DEFAULT_BELL_URL);
+  bellTest.onended = () => {
+    if(!text) return;
     const encoded = encodeURIComponent(text);
-    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
-    const ttsResp = await fetch(ttsUrl);
-    const ttsArrayBuf = await ttsResp.arrayBuffer();
-
-    // 3. दोनों को ब्राउज़र के ऑडियो कॉंटेक्स्ट से कंबाइन करें
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const bellBuffer = await audioCtx.decodeAudioData(bellArrayBuf);
-    const ttsBuffer = await audioCtx.decodeAudioData(ttsArrayBuf);
-
-    const totalLength = bellBuffer.length + ttsBuffer.length;
-    const combinedBuffer = audioCtx.createBuffer(bellBuffer.numberOfChannels, totalLength, bellBuffer.sampleRate);
-
-    for (let channel = 0; channel < bellBuffer.numberOfChannels; channel++) {
-      const outputData = combinedBuffer.getChannelData(channel);
-      outputData.set(bellBuffer.getChannelData(channel), 0);
-      outputData.set(ttsBuffer.getChannelData(channel), bellBuffer.length);
-    }
-
-    // WAV फॉर्मेट में कन्वर्ट करके डाउनलोड लिंक बनाना
-    const wavBlob = bufferToWave(combinedBuffer, totalLength);
-    const url = URL.createObjectURL(wavBlob);
-    
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = (title ? title.replace(/\s+/g, '_') : 'bell_announcement') + '.wav';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast("कंबाइंड ऑडियो फाइल डाउनलोड हो गई!");
-  } catch (err) {
-    toast("डाउनलोड करने में त्रुटि: डायरेक्ट लिंक का उपयोग करें।");
-  }
+    ttsAudioEl.pause();
+    ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
+    ttsAudioEl.currentTime = 0;
+    ttsAudioEl.play().catch(e => {
+      let u = new SpeechSynthesisUtterance(text);
+      u.lang = "hi-IN";
+      window.speechSynthesis.speak(u);
+    });
+  };
+  bellTest.play().catch(e => toast("टेस्ट प्ले त्रुटि: "+e.message));
 }
 
-// सहायक फंक्शन WAV बफर बनाने के लिए
-function bufferToWave(abuffer, len) {
-  let numOfChan = abuffer.numberOfChannels,
-      btwLength = len * numOfChan * 2 + 44,
-      btwArrBuff = new ArrayBuffer(btwLength),
-      view = new DataView(btwArrBuff),
-      channels = [], sampleRate = abuffer.sampleRate, offset = 0, pos = 0;
+// नया सुरक्षित और पक्का तरीका: ब्राउज़र के ऑडियो रिकॉर्डर (MediaRecorder) का उपयोग करके बिना आवाज़ कम हुए कंबाइंड फाइल रिकॉर्ड करना
+async function downloadCombinedAudioReal(text, title) {
+  toast("ऑडियो रिकॉर्डिंग शुरू हो रही है, कृपया इंतज़ार करें...");
+  try {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') await actx.resume();
 
-  function writeString(str) {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(pos++, str.charCodeAt(i));
-    }
+    // डेस्टिनेशन स्ट्रीम नोड बनाएँ ताकि स्पीकर की आवाज़ को कैप्चर किया जा सके
+    const dest = actx.createMediaStreamDestination();
+    const mediaRecorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+    let chunks = [];
+
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = (title ? title.replace(/\s+/g, '_') : 'bell_announcement') + '.webm';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast("कंबाइंड ऑडियो फाइल सफलताપૂર્વक डाउनलोड हो गई! (फुल वॉल्यूम)");
+    };
+
+    mediaRecorder.start();
+
+    // 1. घंटी बजाएं और उसे रिकॉर्डिंग स्ट्रीम से कनेक्ट करें
+    const bellAudio = new Audio(DEFAULT_BELL_URL);
+    const source1 = actx.createMediaElementSource(bellAudio);
+    source1.connect(dest);
+    source1.connect(actx.destination); // ताकि आपको भी सुनाई दे
+
+    bellAudio.onended = async () => {
+      // 2. घंटी खत्म होने के तुरंत बाद टेक्स्ट-टू-स्पीच ऑडियो प्ले करें और उसे भी कनेक्ट करें
+      const encoded = encodeURIComponent(text);
+      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
+      const ttsAudio = new Audio(ttsUrl);
+      
+      const source2 = actx.createMediaElementSource(ttsAudio);
+      source2.connect(dest);
+      source2.connect(actx.destination);
+
+      ttsAudio.onended = () => {
+        setTimeout(() => {
+          mediaRecorder.stop();
+          actx.close();
+        }, 500);
+      };
+
+      await ttsAudio.play();
+    };
+
+    await bellAudio.play();
+
+  } catch (err) {
+    toast("रिकॉर्डर त्रुटि: कृपया ब्राउज़र की अनुमति जांचें।");
   }
-
-  writeString('RIFF');
-  view.setUint32(pos, btwLength - 8, true); pos += 4;
-  writeString('WAVE');
-  writeString('fmt ');
-  view.setUint32(pos, 16, true); pos += 4;
-  view.setUint16(pos, 1, true); pos += 2;
-  view.setUint16(pos, numOfChan, true); pos += 2;
-  view.setUint32(pos, sampleRate, true); pos += 4;
-  view.setUint32(pos, sampleRate * numOfChan * 2, true); pos += 4;
-  view.setUint16(pos, numOfChan * 2, true); pos += 2;
-  view.setUint16(pos, 16, true); pos += 2;
-  writeString('data');
-  view.setUint32(pos, btwLength - pos - 4, true); pos += 4;
-
-  for (let i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
-
-  while (offset < len) {
-    for (let i = 0; i < numOfChan; i++) {
-      let sample = Math.max(-1, Math.min(1, channels[i][offset]));
-      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767);
-      view.setInt16(pos, sample, true); pos += 2;
-    }
-    offset++;
-  }
-  return new Blob([btwArrBuff], { type: 'audio/wav' });
 }
 
 function playAudioFile(url){
   if(!url){ toast("कृपया पहले MP3 लिंक डालें!"); return; }
-  audioEl.pause();
-  audioEl.src = url;
-  audioEl.currentTime = 0;
-  audioEl.play().catch(e => toast("प्ले करने में त्रुटि: "+e.message));
+  activeAudio.pause();
+  activeAudio.src = url;
+  activeAudio.currentTime = 0;
+  activeAudio.play().catch(e => toast("प्ले करने में त्रुटि: "+e.message));
 }
 
 function testBellOnly(){
-  audioEl.pause(); audioEl.currentTime = 0;
-  audioEl.play();
+  let b = new Audio(DEFAULT_BELL_URL);
+  b.play();
   toast("सिर्फ घंटी बज रही है");
 }
 
 function stopSound(){
-  try{ audioEl.pause(); ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
+  try{ activeAudio.pause(); ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
 }
 
 function saveAnnouncement(){
@@ -334,21 +300,22 @@ function render(){
     st.announcements.forEach(a => {
       const box = document.createElement("div");
       box.className = "announcement-box";
-      box.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
       
+      const info = document.createElement("span");
+      info.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
+
       const btnGroup = document.createElement("div");
       
       const playBtn = document.createElement("button");
       playBtn.className = "small primary";
       playBtn.textContent = "▶ टेस्ट सुनें";
-      playBtn.onclick = () => playCombined(a.text, null);
+      playBtn.onclick = () => playCombinedTest(a.text);
 
-      // नया डाउनलोड बटन: कंबाइन करके सीधा MP3/WAV फाइल डाउनलोड करें
       const dlBtn = document.createElement("button");
       dlBtn.className = "small";
       dlBtn.style.marginLeft = "5px";
-      dlBtn.textContent = "💾 कंबाइंड MP3 डाउनलोड करें";
-      dlBtn.onclick = () => downloadCombinedAudio(a.text, a.title);
+      dlBtn.textContent = "💾 कंबाइंड MP3 डाउनलोड";
+      dlBtn.onclick = () => downloadCombinedAudioReal(a.text, a.title);
 
       const delBtn = document.createElement("button");
       delBtn.className = "small danger";
@@ -357,7 +324,7 @@ function render(){
       delBtn.onclick = () => deleteAnnouncement(a.id);
 
       btnGroup.append(playBtn, dlBtn, delBtn);
-      box.append(btnGroup);
+      box.append(info, btnGroup);
       annDiv.appendChild(box);
     });
   }
