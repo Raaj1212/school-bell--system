@@ -45,24 +45,28 @@ input[type=text]{flex:1;min-width:120px}
     <button onclick="testGeneral()">🔊 घंटी + अनाउंसमेंट टेस्ट करें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है।</div>
+  <div class="hint">वेक-लॉक एक्टिव है। स्क्रीन बंद रहने पर भी टाइमर और घंटी बिना फोन गर्म हुए काम करती रहेगी।</div>
 </section>
 
 <section class="card">
-  <h2>🎙️ रिमोट लाइव माइक (इंटरनेट के ज़रिए अलग-अलग मोबाइल डेटा से आवाज़ भेजने के लिए)</h2>
+  <h2>🎙️ रिमोट लाइव माइक (एडमिन कंट्रोल पैनल)</h2>
   <div class="row">
-    <input type="text" id="roomCode" placeholder="रूम कोड डालें (जैसे: bps-bell-123)" style="flex:1;">
-    <button class="primary" onclick="startBroadcasting()">ब्रॉडकास्ट शुरू करें (माइक)</button>
-    <button onclick="startListening()">सुने (एम्प्लीफायर फोन)</button>
+    <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
+    <button class="primary" onclick="startBroadcasting()">बोलें (ब्रॉडकास्ट ऑन)</button>
+    <button class="danger" onclick="stopBroadcasting()">ब्रॉडकास्ट बंद करें</button>
   </div>
-  <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb;">स्टेटस: डिस्कनेक्टेड</div>
+  <div class="row" style="margin-top:8px;">
+    <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
+    <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
+  </div>
+  <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb;">स्टेटस: तैयार है</div>
 </section>
 
 <section class="card">
   <h2>📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h2>
   <div class="row">
-    <input type="text" id="annTitle" placeholder="नाम (जैसे: First Period)">
-    <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट (जैसे: प्रथम घंटी लग चुकी है)">
+    <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
+    <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट जैसे: प्रथम घंटी लग चुकी है">
     <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
   </div>
   <div id="annList"></div>
@@ -102,16 +106,34 @@ let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
   ],
   items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
   days:"all",
-  bellDelay:300
+  bellDelay:300,
+  roomCode:"bps-school-123",
+  isAmplifierDevice:false
 };
 st.bellDelay = st.bellDelay || 300;
 st.announcements = st.announcements || [];
+st.roomCode = st.roomCode || "bps-school-123";
+st.isAmplifierDevice = st.isAmplifierDevice || false;
 
 let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
-let peer=null, localStream=null;
+let peer=null, localStream=null, wakeLock=null;
 
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (err) {}
+}
+
+document.addEventListener('visibilitychange', async () => {
+  if (wakeLock !== null && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
 
 function updateDelay(sel){
   st.bellDelay = parseInt(sel.value);
@@ -188,42 +210,74 @@ function stopSound(){
   audioEl.currentTime = 0;
 }
 
-// ---- रिमोट लाइव माइक (WebRTC / PeerJS) फंक्शन्स ----
+// ---- रिमोट लाइव माइक फंक्शन्स ----
+function initRoomCodeField(){
+  const rcInput = document.getElementById("roomCode");
+  rcInput.value = st.roomCode;
+  rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); };
+}
+
+function setAsAmplifierPhone(){
+  st.isAmplifierDevice = true;
+  save();
+  toast("यह डिवाइस 'एम्प्लीफायर फोन' के रूप में सेट हो गया है। अब यह हमेशा सुनने के लिए तैयार रहेगा।");
+  startAutoListener();
+}
+
+function unsetAmplifierPhone(){
+  st.isAmplifierDevice = false;
+  save();
+  if(peer) peer.destroy();
+  toast("एम्प्लीफायर मोड हटा दिया गया है।");
+  document.getElementById("streamStatus").textContent = "स्टेटस: तैयार है";
+}
+
+function startAutoListener(){
+  const code = st.roomCode;
+  if(!code) return;
+  if(peer) peer.destroy();
+  
+  const connId = "bps_school_room_" + code;
+  peer = new Peer(connId);
+  
+  peer.on('call', call => {
+    call.answer();
+    call.on('stream', remoteStream => {
+      const audio = new Audio();
+      audio.srcObject = remoteStream;
+      audio.play().catch(e => console.log("Audio play error:", e));
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ एम्प्लीफायर पर आ रही है...";
+      toast("लाइव अनाउंसमेंट आ रही है!");
+    });
+  });
+  document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर फोन लाइव सुनने की स्थिति में है...";
+}
+
 function startBroadcasting(){
   const code = document.getElementById("roomCode").value.trim();
   if(!code){ toast("कृपया रूम कोड दर्ज करें!"); return; }
   
   navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
     localStream = stream;
+    if(peer) peer.destroy();
     peer = new Peer();
     peer.on('open', id => {
-      // कॉलर ब्रॉडकास्ट करने के लिए रिसीवर को कॉल करेगा
       const connId = "bps_school_room_" + code;
       const call = peer.call(connId, stream);
-      document.getElementById("streamStatus").textContent = "स्टेटस: लाइव बोल रहे हैं...";
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 आप बोल रहे हैं (ब्रॉडकास्ट लाइव है)";
       toast("ब्रॉडकास्ट शुरू हो गया है!");
     });
   }).catch(e => toast("माइक की अनुमति नहीं मिली"));
 }
 
-function startListening(){
-  const code = document.getElementById("roomCode").value.trim();
-  if(!code){ toast("कृपया रूम कोड दर्ज करें!"); return; }
-  
-  const connId = "bps_school_room_" + code;
-  peer = new Peer(connId);
-  
-  peer.on('call', call => {
-    call.answer(); // इनकमिंग कॉल स्वीकार करें
-    call.on('stream', remoteStream => {
-      const audio = new Audio();
-      audio.srcObject = remoteStream;
-      audio.play();
-      document.getElementById("streamStatus").textContent = "स्टेटस: लाइव आवाज़ आ रही है (एम्प्लीफायर मोड)";
-      toast("लाइव कनेक्शन जुड़ गया है!");
-    });
-  });
-  toast("एम्प्लीफायर फोन सुनने के लिए तैयार है...");
+function stopBroadcasting(){
+  if(localStream){
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+  }
+  if(peer) peer.destroy();
+  document.getElementById("streamStatus").textContent = "स्टेटस: ब्रॉडकास्ट बंद कर दिया गया है";
+  toast("ब्रॉडकास्ट बंद हो गया।");
 }
 // ----------------------------------------------
 
@@ -250,6 +304,7 @@ function startSys(){
   if(running)return;running=true;
   document.getElementById("runState").textContent="चालू है";
   try{if(!quietEl)makeQuietLoop();quietEl.currentTime=0;quietEl.play();}catch(e){}
+  requestWakeLock();
 }
 
 function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
@@ -336,7 +391,7 @@ function render(){
     
     const r1=document.createElement("div");r1.className="r1";
     const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";t.oninput=()=>{it.time=t.value;save();showNext();};
-    const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम (जैसे: First Period)";lblInput.style.flex="1";lblInput.oninput=()=>{it.label=lblInput.value;save();showNext();};
+    const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम जैसे: First Period";lblInput.style.flex="1";lblInput.oninput=()=>{it.label=lblInput.value;save();showNext();};
     const del=document.createElement("button");del.className="danger small";del.textContent="✕";
     del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
     r1.append(t,lblInput,del);
@@ -405,6 +460,15 @@ function loadSpeakOpts(){
 }
 
 render();
+initRoomCodeField();
+
+// यदि यह डिवाइस एम्प्लीफायर फोन के रूप में सेट है, तो ऑटोमैटिक लिसनिंग चालू हो जाएगी
+if(st.isAmplifierDevice){
+  setTimeout(() => {
+    startAutoListener();
+  }, 1000);
+}
+
 setInterval(tick,1000);
 
 window.addEventListener('DOMContentLoaded', () => {
