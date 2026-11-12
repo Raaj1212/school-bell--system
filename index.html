@@ -12,23 +12,23 @@ header{background:#12213a;color:#fff;padding:12px 16px;display:flex;gap:10px;fle
 header h1{font-size:18px;margin:0;font-weight:600}
 main{max-width:720px;margin:14px auto;padding:0 10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
-.card h2{font-size:16px;margin:0 0 10px}
+.card h2{font-size:16px;margin:0 0 10px;color:#12213a;font-weight:700}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
 button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:15px}
 button.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
 button.danger{color:var(--red);border-color:#f3c1c1}
-button.mic-on{background:var(--red);color:#fff;border-color:var(--red);font-weight:700}
 button.small{padding:5px 10px;font-size:13px}
 input,select{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px}
 input[type=text]{flex:1;min-width:120px}
 #nextBell{font-size:17px;font-weight:700;color:var(--green)}
-.item{border:1px solid var(--line);border-radius:10px;padding:9px;margin:8px 0}
+.item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
 .r1{display:flex;gap:8px;align-items:center}
 .r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
 .days label{margin-right:6px;font-size:13px}
 .hint{font-size:13px;color:#6b7280;margin:6px 0}
 .muted{color:#6b7280;font-size:12px}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12213a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12213a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:9999}
 </style>
 </head>
 <body>
@@ -38,22 +38,25 @@ input[type=text]{flex:1;min-width:120px}
 <section class="card">
   <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
   <div class="row">
-    <button onclick="testBellGeneral()">घंटी टेस्ट करें</button>
+    <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
+    <button onclick="testGeneral()">🔊 घंटी + कंबाइंड अनाउंसमेंट टेस्ट करें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है (घंटी + टेक्स्ट TTS समर्थित)।</div>
+  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है (कंबाइंड सीक्वेंस के साथ)।</div>
 </section>
 
 <section class="card">
-  <h2>लाइव अनाउंसमेंट (माइक से सीधे बोलें)</h2>
+  <h2>📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h2>
   <div class="row">
-    <button id="micBtn" onclick="toggleMic()">लाइव माइक चालू करें</button>
-    <span id="micState" class="muted">माइक बंद है</span>
+    <input type="text" id="annTitle" placeholder="नाम (जैसे: First Period)">
+    <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट (जैसे: प्रथम घंटी लग चुकी है)">
+    <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
   </div>
+  <div id="annList"></div>
 </section>
 
 <section class="card">
-  <h2>गैप सेटिंग्स (घंटी के बाद बोलने का समय)</h2>
+  <h2>घंटी और अनाउंसमेंट के बीच का गैप</h2>
   <div class="row">
     <span class="muted">गैप चुनें:</span>
     <select id="delaySelect" onchange="updateDelay(this)">
@@ -66,10 +69,10 @@ input[type=text]{flex:1;min-width:120px}
 </section>
 
 <section class="card">
-  <h2>टाइमटेबल & टेक्स्ट घोषणा (हर पीरियड के लिए टेक्स्ट)</h2>
+  <h2>⏰ टाइमटेबल (हर घंटी के सामने लाइब्रेरी से अनाउंसमेंट चुनें)</h2>
   <div class="row days" id="daysRow"></div>
   <div id="items"></div>
-  <div class="row"><button onclick="addItem()">+ नया पीरियड/घंटी जोड़ें</button></div>
+  <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
 </section>
 
 </main>
@@ -79,15 +82,19 @@ input[type=text]{flex:1;min-width:120px}
 const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
 
-let st=JSON.parse(localStorage.getItem("bellphone")||"null")||{
-  items:[{time:"08:00",label:"Assembly",bell:true,sayText:"प्रार्थना का समय हो गया है"}],
-  days:"all",bellDelay:300
+let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
+  announcements: [
+    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
+    { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
+  ],
+  items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
+  days:"all",
+  bellDelay:300
 };
 st.bellDelay = st.bellDelay || 300;
+st.announcements = st.announcements || [];
 
-let running=false, audioEl=new Audio(), quietEl=null;
-let mediaStream=null, audioCtx=null, micSource=null;
-
+let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
 
@@ -115,84 +122,82 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-// ब्राउज़र TTS (इंडियन फीमेल वॉइस के साथ)
-function speak(text){
-  if(!text)return;
+// ऑडियो TTS प्ले करने का फंक्शन
+function speakAudio(text, cb){
+  if(!text){if(cb)cb();return;}
   try{
-    window.speechSynthesis.cancel();
-    let u = new SpeechSynthesisUtterance(text);
-    u.lang = "hi-IN";
-    u.rate = 0.95;
-    
-    let voices = window.speechSynthesis.getVoices();
-    let hiVoice = voices.find(v => /hi|India|female|Google/i.test(v.lang) || /female|heera|kalpana|swara/i.test(v.name));
-    if(hiVoice) u.voice = hiVoice;
-    
-    window.speechSynthesis.speak(u);
-  }catch(e){console.log("TTS error", e);}
+    ttsAudioEl.pause();
+    const encoded = encodeURIComponent(text);
+    ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
+    ttsAudioEl.currentTime = 0;
+    ttsAudioEl.onended = () => { ttsAudioEl.onended = null; if(cb) cb(); };
+    ttsAudioEl.play().catch(e => { if(cb) cb(); });
+  }catch(e){ if(cb) cb(); }
 }
 
-// घंटी बजाने के बाद गैप देकर टेक्स्ट बोलने का पक्का सीक्वेंस
-function ringAndSpeak(text, playBell, cb){
+// यह मास्टर फंक्शन घंटी और टेक्स्ट को बिल्कुल परफेक्ट तरीके से कंबाइन (क्रम में) बजाता है
+function ringAndSpeak(text, playBell, onlyBell, cb){
   if(playBell === false){
-    speak(text);
-    if(cb) cb();
+    if(!onlyBell) speakAudio(text, cb);
+    else if(cb) cb();
     return;
   }
   
   audioEl.pause();
   audioEl.currentTime = 0;
   
+  // पहले घंटी पूरी बजेगी
   audioEl.onended = () => {
     audioEl.onended = null;
-    setTimeout(() => {
-      if(text) speak(text);
+    if(onlyBell){
       if(cb) cb();
+      return;
+    }
+    // घंटी खत्म होने के बाद गैप देकर कंबाइंड टेक्स्ट (अनाउंसमेंट) बोलेगा
+    setTimeout(() => {
+      speakAudio(text, cb);
     }, st.bellDelay || 300);
   };
   
   audioEl.play().catch(() => {
-    if(text) speak(text);
-    if(cb) cb();
+    if(!onlyBell) speakAudio(text, cb);
+    else if(cb) cb();
   });
 }
 
-function testBellGeneral(){
-  ringAndSpeak("यह टेस्ट घोषणा है", true, null);
+function testBellOnly(){
+  ringAndSpeak("", true, true, null);
+  toast("सिर्फ घंटी बज रही है");
+}
+
+function testGeneral(){
+  ringAndSpeak("प्रथम घंटी बज चुकी है, कक्षा में जाएं", true, false, null);
+  toast("घंटी और कंबाइंड अनाउंसमेंट बज रही है");
 }
 
 function stopSound(){
-  try{ window.speechSynthesis.cancel(); }catch(e){}
+  try{ ttsAudioEl.pause(); }catch(e){}
   audioEl.pause();
   audioEl.currentTime = 0;
 }
 
-async function toggleMic(){
-  const btn=document.getElementById("micBtn");
-  const state=document.getElementById("micState");
-  if(mediaStream){
-    mediaStream.getTracks().forEach(track=>track.stop());
-    mediaStream=null;
-    if(audioCtx)audioCtx.close();
-    audioCtx=null;
-    btn.textContent="लाइव माइक चालू करें";
-    btn.className="";
-    state.textContent="माइक बंद है";
-    toast("लाइव माइक बंद कर दिया गया");
-    return;
-  }
-  try{
-    mediaStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    micSource=audioCtx.createMediaStreamSource(mediaStream);
-    micSource.connect(audioCtx.destination);
-    btn.textContent="माइक बंद करें";
-    btn.className="mic-on";
-    state.textContent="लाइव माइक चालू है";
-    toast("लाइव माइक चालू हो गया");
-  }catch(e){
-    toast("माइक की अनुमति नहीं मिली");
-  }
+function saveAnnouncement(){
+  const title = document.getElementById("annTitle").value.trim();
+  const text = document.getElementById("annText").value.trim();
+  if(!title || !text){ toast("कृपया नाम और टेक्स्ट दोनों भरें!"); return; }
+  st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
+  save();
+  document.getElementById("annTitle").value = "";
+  document.getElementById("annText").value = "";
+  toast("अनाउंसमेंट लाइब्रेरी में सेव हो गई!");
+  render();
+}
+
+function deleteAnnouncement(id){
+  st.announcements = st.announcements.filter(a => a.id !== id);
+  save();
+  toast("अनाउंसमेंट डिलीट कर दी गई");
+  render();
 }
 
 function startSys(){
@@ -218,7 +223,12 @@ function tick(){
       hits.sort((a,b)=>String(a.label).localeCompare(String(b.label)));
       
       hits.forEach(i=>{
-        ringAndSpeak(i.sayText, i.bell!==false, null);
+        let textToSay = "";
+        if(!i.onlyBell && i.annId){
+          const found = st.announcements.find(a => a.id === i.annId);
+          if(found) textToSay = found.text;
+        }
+        ringAndSpeak(textToSay, i.bell!==false, i.onlyBell===true, null);
       });
       showNext();
     }
@@ -237,15 +247,47 @@ function showNext(){
 }
 
 function render(){
+  const annDiv = document.getElementById("annList");
+  annDiv.innerHTML = "";
+  if(st.announcements.length === 0){
+    annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट सेव नहीं है।</div>';
+  } else {
+    st.announcements.forEach(a => {
+      const box = document.createElement("div");
+      box.className = "announcement-box";
+      
+      const infoSpan = document.createElement("span");
+      infoSpan.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
+      
+      const btnGroup = document.createElement("div");
+      
+      const playBtn = document.createElement("button");
+      playBtn.className = "small primary";
+      playBtn.textContent = "▶ सुनें";
+      playBtn.onclick = () => speakAudio(a.text, null);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "small danger";
+      delBtn.textContent = "✕";
+      delBtn.style.marginLeft = "5px";
+      delBtn.onclick = () => deleteAnnouncement(a.id);
+
+      btnGroup.append(playBtn, delBtn);
+      box.append(infoSpan, btnGroup);
+      annDiv.appendChild(box);
+    });
+  }
+
   const dr=document.getElementById("daysRow");dr.innerHTML="";
   const days=daysToArr(st.days);
   DAYS.forEach(dd=>{const l=document.createElement("label");l.className="chk";const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
+  
   const box=document.getElementById("items");box.innerHTML="";
   st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});save();
+  
   [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
     const r=document.createElement("div");r.className="item";
     
-    // पहली लाइन: समय और नाम
     const r1=document.createElement("div");r1.className="r1";
     const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";t.oninput=()=>{it.time=t.value;save();showNext();};
     const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम (जैसे: First Period)";lblInput.style.flex="1";lblInput.oninput=()=>{it.label=lblInput.value;save();showNext();};
@@ -253,38 +295,63 @@ function render(){
     del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
     r1.append(t,lblInput,del);
 
-    // दूसरी लाइन: बोलने वाला टेक्स्ट बॉक्स (यहीं पर आप लिखकर सेव करेंगे और जब चाहें बदलेंगे)
     const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
-    const sayInput = document.createElement("input");
-    sayInput.type = "text";
-    sayInput.value = it.sayText || "";
-    sayInput.placeholder = "घंटी के बाद क्या बोलना है वो यहाँ लिखें (जैसे: प्रथम घंटी बज चुकी है)";
-    sayInput.style.flex = "1";
-    sayInput.oninput = () => {
-      it.sayText = sayInput.value;
-      save(); // ऑटोमैटिक सेव होता रहेगा
-    };
-    r2.append(sayInput);
+    
+    const selectAnn = document.createElement("select");
+    selectAnn.style.flex = "1";
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "-- कोई अनाउंसमेंट अटैच न करें --";
+    selectAnn.appendChild(defaultOpt);
 
-    // तीसरी लाइन: घंटी का चेकबॉक्स और टेस्ट बटन
+    st.announcements.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = `📢 ${a.title} -> "${a.text.substring(0, 30)}..."`;
+      if(it.annId === a.id) opt.selected = true;
+      selectAnn.appendChild(opt);
+    });
+
+    selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
+    if(it.onlyBell) selectAnn.disabled = true;
+    r2.append(selectAnn);
+
     const r3=document.createElement("div");r3.className="r3";
     const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};
     const bl=document.createElement("label");bl.append(bc,document.createTextNode("घंटी बजे"));
 
+    const onlyBellChk = document.createElement("input");
+    onlyBellChk.type = "checkbox";
+    onlyBellChk.checked = it.onlyBell === true;
+    onlyBellChk.onchange = () => {
+      it.onlyBell = onlyBellChk.checked;
+      selectAnn.disabled = it.onlyBell;
+      save();
+    };
+    const onlyBellLbl = document.createElement("label");
+    onlyBellLbl.style.color = "#d97706";
+    onlyBellLbl.style.fontWeight = "600";
+    onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी बजे"));
+
     const playBtn = document.createElement("button");
     playBtn.className = "small primary";
-    playBtn.textContent = "▶ टेस्ट बजाकर सुनें";
+    playBtn.textContent = "▶ टेस्ट सुनें";
     playBtn.onclick = () => {
-      ringAndSpeak(it.sayText, it.bell!==false, null);
+      let tText = "";
+      if(!it.onlyBell && it.annId){
+        const f = st.announcements.find(a => a.id === it.annId);
+        if(f) tText = f.text;
+      }
+      ringAndSpeak(tText, it.bell!==false, it.onlyBell===true, null);
     };
 
-    r3.append(bl, playBtn);
+    r3.append(bl, onlyBellLbl, playBtn);
     r.append(r1, r2, r3); box.appendChild(r);
   });
   showNext();
 }
 
-function addItem(){st.items.push({time:"09:00",label:"",bell:true,sayText:""});save();render();}
+function addItem(){st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});save();render();}
 
 loadSpeakOpts();
 function loadSpeakOpts(){
