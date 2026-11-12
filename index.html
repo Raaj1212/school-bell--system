@@ -17,6 +17,7 @@ main{max-width:720px;margin:14px auto;padding:0 10px}
 button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:15px}
 button.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
 button.danger{color:var(--red);border-color:#f3c1c1}
+button.mic-on{background:var(--red);color:#fff;border-color:var(--red);font-weight:700}
 button.small{padding:5px 10px;font-size:13px}
 input,select{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px}
 input[type=text]{flex:1;min-width:120px}
@@ -24,6 +25,7 @@ input[type=text]{flex:1;min-width:120px}
 .item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
 .r1{display:flex;gap:8px;align-items:center}
 .r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
 .days label{margin-right:6px;font-size:13px}
 .hint{font-size:13px;color:#6b7280;margin:6px 0}
 .muted{color:#6b7280;font-size:12px}
@@ -35,18 +37,38 @@ input[type=text]{flex:1;min-width:120px}
 <main>
 
 <section class="card">
-  <h2>ऑटो घंटी सिस्टम (ऑनलाइन और लोकल हाइब्रिड मोड)</h2>
+  <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
   <div class="row">
-    <button onclick="stopSound()">साउंड रोकें</button>
+    <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
+    <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है। आप GitHub लिंक या डायरेक्ट अपलोड दोनों इस्तेमाल कर सकते हैं।</div>
+  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है।</div>
 </section>
 
 <section class="card">
-  <h2>⏰ टाइमटेबल (कंबाइंड MP3 ऑडियो लिंक या अपलोड)</h2>
+  <h2>लाइव अनाउंसमेंट (माइक से सीधे बोलें)</h2>
+  <div class="row">
+    <button id="micBtn" onclick="toggleMic()">लाइव माइक चालू करें</button>
+    <span id="micState" class="muted">माइक बंद है</span>
+  </div>
+</section>
+
+<section class="card">
+  <h2>📢 अनाउंसमेंट लाइब्रेरी & MP3 डाउनलोडर</h2>
+  <div class="row">
+    <input type="text" id="annTitle" placeholder="नाम (जैसे: First Period)">
+    <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट (जैसे: प्रथम घंटी लग चुकी है)">
+    <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
+  </div>
+  <div class="hint">यहाँ आप टेक्स्ट लिखकर सुन सकते हैं और उसे कंबाइंड MP3 के रूप में डाउनलोड करके GitHub पर अपलोड कर सकते हैं।</div>
+  <div id="annList"></div>
+</section>
+
+<section class="card">
+  <h2>⏰ टाइमटेबल (हर घंटी के सामने कंबाइंड MP3 लिंक या फाइल डालें)</h2>
   <div class="row days" id="daysRow"></div>
   <div id="items"></div>
-  <div class="row"><button onclick="addItem()">+ नया समय/पीरियड जोड़ें</button></div>
+  <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
 </section>
 
 </main>
@@ -57,11 +79,19 @@ const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
-  items:[{time:"08:00", label:"Assembly", audioUrl:""}],
+  announcements: [
+    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" }
+  ],
+  items:[{time:"08:00", label:"Assembly", bell:true, audioUrl:""}],
   days:"all"
 };
+st.announcements = st.announcements || [];
 
-let running=false, activeAudio=new Audio(), quietEl=null;
+let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
+let mediaStream=null, audioCtx=null, micSource=null;
+
+const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
+audioEl.src = DEFAULT_BELL_URL;
 
 function makeQuietLoop(){
   try{
@@ -81,16 +111,177 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
+// कंबाइंड प्ले (घंटी + टेक्स्ट)
+function playCombined(text, cb){
+  audioEl.pause();
+  audioEl.currentTime = 0;
+  audioEl.onended = () => {
+    audioEl.onended = null;
+    if(!text){ if(cb) cb(); return; }
+    // बिना किसी डिले के तुरंत टेक्स्ट बोलेगा
+    try{
+      const encoded = encodeURIComponent(text);
+      ttsAudioEl.pause();
+      ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
+      ttsAudioEl.currentTime = 0;
+      ttsAudioEl.onended = () => { ttsAudioEl.onended = null; if(cb) cb(); };
+      ttsAudioEl.play().catch(e => {
+        // फॉलबैक ब्राउज़र TTS
+        let u = new SpeechSynthesisUtterance(text);
+        u.lang = "hi-IN";
+        u.onend = () => { if(cb) cb(); };
+        window.speechSynthesis.speak(u);
+      });
+    }catch(e){ if(cb) cb(); }
+  };
+  audioEl.play().catch(e => { if(cb) cb(); });
+}
+
+// नया फीचर: वेब ऑडियो का इस्तेमाल करके कंबाइंड ऑडियो को MP3/WAV फाइल के रूप में डाउनलोड कराना
+async function downloadCombinedAudio(text, title) {
+  toast("कंबाइंड ऑडियो तैयार की जा रही है...");
+  try {
+    // 1. घंटी की ऑडियो लोड करें
+    const bellResp = await fetch(DEFAULT_BELL_URL);
+    const bellArrayBuf = await bellResp.arrayBuffer();
+
+    // 2. गूगल TTS ऑडियो लोड करें
+    const encoded = encodeURIComponent(text);
+    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
+    const ttsResp = await fetch(ttsUrl);
+    const ttsArrayBuf = await ttsResp.arrayBuffer();
+
+    // 3. दोनों को ब्राउज़र के ऑडियो कॉंटेक्स्ट से कंबाइन करें
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const bellBuffer = await audioCtx.decodeAudioData(bellArrayBuf);
+    const ttsBuffer = await audioCtx.decodeAudioData(ttsArrayBuf);
+
+    const totalLength = bellBuffer.length + ttsBuffer.length;
+    const combinedBuffer = audioCtx.createBuffer(bellBuffer.numberOfChannels, totalLength, bellBuffer.sampleRate);
+
+    for (let channel = 0; channel < bellBuffer.numberOfChannels; channel++) {
+      const outputData = combinedBuffer.getChannelData(channel);
+      outputData.set(bellBuffer.getChannelData(channel), 0);
+      outputData.set(ttsBuffer.getChannelData(channel), bellBuffer.length);
+    }
+
+    // WAV फॉर्मेट में कन्वर्ट करके डाउनलोड लिंक बनाना
+    const wavBlob = bufferToWave(combinedBuffer, totalLength);
+    const url = URL.createObjectURL(wavBlob);
+    
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = (title ? title.replace(/\s+/g, '_') : 'bell_announcement') + '.wav';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast("कंबाइंड ऑडियो फाइल डाउनलोड हो गई!");
+  } catch (err) {
+    toast("डाउनलोड करने में त्रुटि: डायरेक्ट लिंक का उपयोग करें।");
+  }
+}
+
+// सहायक फंक्शन WAV बफर बनाने के लिए
+function bufferToWave(abuffer, len) {
+  let numOfChan = abuffer.numberOfChannels,
+      btwLength = len * numOfChan * 2 + 44,
+      btwArrBuff = new ArrayBuffer(btwLength),
+      view = new DataView(btwArrBuff),
+      channels = [], sampleRate = abuffer.sampleRate, offset = 0, pos = 0;
+
+  function writeString(str) {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(pos++, str.charCodeAt(i));
+    }
+  }
+
+  writeString('RIFF');
+  view.setUint32(pos, btwLength - 8, true); pos += 4;
+  writeString('WAVE');
+  writeString('fmt ');
+  view.setUint32(pos, 16, true); pos += 4;
+  view.setUint16(pos, 1, true); pos += 2;
+  view.setUint16(pos, numOfChan, true); pos += 2;
+  view.setUint32(pos, sampleRate, true); pos += 4;
+  view.setUint32(pos, sampleRate * numOfChan * 2, true); pos += 4;
+  view.setUint16(pos, numOfChan * 2, true); pos += 2;
+  view.setUint16(pos, 16, true); pos += 2;
+  writeString('data');
+  view.setUint32(pos, btwLength - pos - 4, true); pos += 4;
+
+  for (let i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
+
+  while (offset < len) {
+    for (let i = 0; i < numOfChan; i++) {
+      let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767);
+      view.setInt16(pos, sample, true); pos += 2;
+    }
+    offset++;
+  }
+  return new Blob([btwArrBuff], { type: 'audio/wav' });
+}
+
 function playAudioFile(url){
-  if(!url){ toast("कृपया पहले MP3 लिंक डालें या फाइल अपलोड करें!"); return; }
-  activeAudio.pause();
-  activeAudio.src = url;
-  activeAudio.currentTime = 0;
-  activeAudio.play().catch(e => toast("ऑडियो प्ले करने में त्रुटि: "+e.message));
+  if(!url){ toast("कृपया पहले MP3 लिंक डालें!"); return; }
+  audioEl.pause();
+  audioEl.src = url;
+  audioEl.currentTime = 0;
+  audioEl.play().catch(e => toast("प्ले करने में त्रुटि: "+e.message));
+}
+
+function testBellOnly(){
+  audioEl.pause(); audioEl.currentTime = 0;
+  audioEl.play();
+  toast("सिर्फ घंटी बज रही है");
 }
 
 function stopSound(){
-  try{ activeAudio.pause(); }catch(e){}
+  try{ audioEl.pause(); ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
+}
+
+function saveAnnouncement(){
+  const title = document.getElementById("annTitle").value.trim();
+  const text = document.getElementById("annText").value.trim();
+  if(!title || !text){ toast("कृपया नाम और टेक्स्ट दोनों भरें!"); return; }
+  st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
+  save();
+  document.getElementById("annTitle").value = "";
+  document.getElementById("annText").value = "";
+  toast("अनाउंसमेंट सेव हो गई!");
+  render();
+}
+
+function deleteAnnouncement(id){
+  st.announcements = st.announcements.filter(a => a.id !== id);
+  save();
+  toast("डिलीट कर दी गई");
+  render();
+}
+
+async function toggleMic(){
+  const btn=document.getElementById("micBtn");
+  const state=document.getElementById("micState");
+  if(mediaStream){
+    mediaStream.getTracks().forEach(track=>track.stop());
+    mediaStream=null;
+    if(audioCtx)audioCtx.close();
+    audioCtx=null;
+    btn.textContent="लाइव माइक चालू करें";
+    btn.className="";
+    state.textContent="माइक बंद है";
+    return;
+  }
+  try{
+    mediaStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    micSource=audioCtx.createMediaStreamSource(mediaStream);
+    micSource.connect(audioCtx.destination);
+    btn.textContent="माइक बंद करें";
+    btn.className="mic-on";
+    state.textContent="लाइव माइक चालू है";
+  }catch(e){ toast("माइक अनुमति नहीं मिली"); }
 }
 
 function startSys(){
@@ -135,6 +326,42 @@ function showNext(){
 }
 
 function render(){
+  const annDiv = document.getElementById("annList");
+  annDiv.innerHTML = "";
+  if(st.announcements.length === 0){
+    annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट सेव नहीं है।</div>';
+  } else {
+    st.announcements.forEach(a => {
+      const box = document.createElement("div");
+      box.className = "announcement-box";
+      box.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
+      
+      const btnGroup = document.createElement("div");
+      
+      const playBtn = document.createElement("button");
+      playBtn.className = "small primary";
+      playBtn.textContent = "▶ टेस्ट सुनें";
+      playBtn.onclick = () => playCombined(a.text, null);
+
+      // नया डाउनलोड बटन: कंबाइन करके सीधा MP3/WAV फाइल डाउनलोड करें
+      const dlBtn = document.createElement("button");
+      dlBtn.className = "small";
+      dlBtn.style.marginLeft = "5px";
+      dlBtn.textContent = "💾 कंबाइंड MP3 डाउनलोड करें";
+      dlBtn.onclick = () => downloadCombinedAudio(a.text, a.title);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "small danger";
+      delBtn.textContent = "✕";
+      delBtn.style.marginLeft = "5px";
+      delBtn.onclick = () => deleteAnnouncement(a.id);
+
+      btnGroup.append(playBtn, dlBtn, delBtn);
+      box.append(btnGroup);
+      annDiv.appendChild(box);
+    });
+  }
+
   const dr=document.getElementById("daysRow");dr.innerHTML="";
   const days=daysToArr(st.days);
   DAYS.forEach(dd=>{const l=document.createElement("label");l.className="chk";const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
@@ -154,43 +381,19 @@ function render(){
 
     const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
     
-    // ऑनलाइन लिंक इनपुट बॉक्स (GitHub Raw URL यहाँ डालें)
     const urlInput = document.createElement("input");
     urlInput.type = "text";
     urlInput.value = it.audioUrl || "";
-    urlInput.placeholder = "GitHub Raw MP3 लिंक यहाँ पेस्ट करें (या नीचे अपलोड करें)";
+    urlInput.placeholder = "GitHub Raw MP3 लिंक यहाँ पेस्ट करें";
     urlInput.style.flex = "1";
     urlInput.oninput = () => { it.audioUrl = urlInput.value; save(); };
-
-    // लोकल फाइल अपलोड ऑप्शन (बैकअप के लिए)
-    const fileInp = document.createElement("input");
-    fileInp.type = "file"; fileInp.accept = "audio/*"; fileInp.style.display = "none";
-    fileInp.onchange = (e) => {
-      const file = e.target.files[0];
-      if(file){
-        const reader = new FileReader();
-        reader.onload = (uploadEvent) => {
-          it.audioUrl = uploadEvent.target.result;
-          urlInput.value = it.audioUrl;
-          save();
-          toast("ऑडियो फाइल सफलताપૂર્વक अटैच हो गई!");
-          render();
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-
-    const uploadBtn = document.createElement("button");
-    uploadBtn.className = "small";
-    uploadBtn.textContent = "📁 लोकल अपलोड";
-    uploadBtn.onclick = () => fileInp.click();
 
     const playBtn = document.createElement("button");
     playBtn.className = "small primary";
     playBtn.textContent = "▶ टेस्ट सुनें";
     playBtn.onclick = () => playAudioFile(urlInput.value);
 
-    r2.append(urlInput, uploadBtn, fileInp, playBtn);
+    r2.append(urlInput, playBtn);
     r.append(r1, r2); box.appendChild(r);
   });
   showNext();
@@ -202,9 +405,7 @@ render();
 setInterval(tick,1000);
 
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    startSys();
-  }, 1000);
+  setTimeout(() => { startSys(); }, 1000);
 });
 </script>
 </body>
