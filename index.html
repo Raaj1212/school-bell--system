@@ -32,19 +32,17 @@ input[type=text]{flex:1;min-width:100px}
 </style>
 </head>
 <body>
-<header><h1>School Bell & Mic</h1><span id="runState">बंद है</span><span id="nextBell"></span></header>
+<header><h1>School Bell & Mic</h1><span id="runState">चालू है</span><span id="nextBell"></span></header>
 <main>
 
 <section class="card">
   <h2>ऑटो घंटी सिस्टम (सर्वर मोड)</h2>
   <div class="row">
-    <button class="primary" id="startBtn" onclick="startSys()">सिस्टम चालू करें</button>
-    <button id="stopBtn" onclick="stopSys()" style="display:none">सिस्टम बंद करें</button>
     <button onclick="testBell()">घंटी बजाकर सुनें</button>
     <button onclick="testSay()">बोलकर सुनें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">कंप्यूटर का ब्लूटूथ एम्पलीफायर से कनेक्टेड होना चाहिए।</div>
+  <div class="hint">कंप्यूटर का ब्लूटूथ एम्पलीफायर से कनेक्टेड होना चाहिए। सिस्टम ऑटोमैटिक मोड में है।</div>
 </section>
 
 <section class="card">
@@ -79,7 +77,7 @@ st.rate=st.rate||0.95;st.repeat=st.repeat||1;
 let running=false, audioEl=new Audio(), quietEl=null;
 let mediaStream=null, audioCtx=null, micSource=null;
 
-// आपकी घंटी का सही और वेरिफाइड Raw लिंक यहाँ सेट है
+// आपकी घंटी का सही Raw लिंक
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
 
@@ -175,16 +173,11 @@ async function toggleMic(){
 
 function startSys(){
   if(running)return;running=true;
-  document.getElementById("startBtn").style.display="none";
-  document.getElementById("stopBtn").style.display="";
   document.getElementById("runState").textContent="चालू है";
   try{if(!quietEl)makeQuietLoop();quietEl.currentTime=0;quietEl.play();}catch(e){}
-  toast("सिस्टम चालू हो गया");
 }
 function stopSys(){
   running=false;
-  document.getElementById("startBtn").style.display="";
-  document.getElementById("stopBtn").style.display="none";
   document.getElementById("runState").textContent="बंद है";
   try{if(quietEl)quietEl.pause();}catch(e){}
   stopSound();
@@ -257,14 +250,11 @@ function loadSpeakOpts(){
 loadSpeakOpts();render();
 setInterval(tick,1000);
 
-// ऑटो-स्टार्ट स्क्रिप्ट: लिंक में ?auto=1 होने पर बिना किसी क्लिक के सिस्टम चालू हो जाएगा
+// पेज खुलते ही बिना किसी क्लिक के ऑटो-स्टार्ट हो जाएगा
 window.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('auto') === '1') {
-    setTimeout(() => {
-      startSys();
-    }, 1500);
-  }
+  setTimeout(() => {
+    startSys();
+  }, 1000);
 });
 </script>
 </body>
