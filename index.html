@@ -42,7 +42,7 @@ input[type=text]{flex:1;min-width:100px}
     <button onclick="testSay()">बोलकर सुनें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">सिस्टम ऑटोमैटिक मोड में है (नॉन-ओवरलैपिंग सीक्वेंस)।</div>
+  <div class="hint">सिस्टम ऑटोमैटिक मोड में है (घंटी + टेक्स्ट अनाउंसमेंट सिंक्रोनाइज़्ड)।</div>
 </section>
 
 <section class="card">
@@ -61,7 +61,7 @@ input[type=text]{flex:1;min-width:100px}
   </div>
   <div class="row">
     <span class="muted">घंटी खत्म होने के बाद बोलने का गैप:</span>
-    <select id="delaySelect" onchange="updateDelay(this)">
+    <select id="delaySelect" onclick="updateDelay(this)" onchange="updateDelay(this)">
       <option value="100">तुरंत (0.1 सेकंड)</option>
       <option value="300" selected>सामान्य (0.3 सेकंड)</option>
       <option value="600">थोड़ा रुककर (0.6 सेकंड)</option>
@@ -158,28 +158,28 @@ function speak(text){
   }catch(e){}
 }
 
-// यह फंक्शन सुनिश्चित करता है कि घंटी पूरी बजने के बाद ही स्पीच (TTS) शुरू हो
-function ringFor(item,cb){
+// यह फंक्शन सुनिश्चित करता है कि पहले घंटी पूरी बजे, फिर गैप के बाद टेक्स्ट (TTS) बोले
+function ringFor(itemSay, cb){
   audioEl.pause();
   audioEl.currentTime=0;
   
   audioEl.onended=()=>{
     audioEl.onended=null;
     setTimeout(()=>{
-      if(cb)cb();
+      if(itemSay) speak(itemSay);
+      if(cb) cb();
     }, st.bellDelay || 300);
   };
   
   audioEl.play().catch(()=>{
-    if(cb)cb();
+    if(itemSay) speak(itemSay);
+    if(cb) cb();
   });
 }
 
 function testBell(){
   const t = document.getElementById("testText").value.trim();
-  ringFor(null, () => {
-    if(t) speak(t);
-  });
+  ringFor(t, null);
 }
 function testSay(){const t=document.getElementById("testText").value.trim();if(!t){toast("पहले कुछ लिखें");return;}speak(t);}
 function stopSound(){try{speechSynthesis.cancel();}catch(e){}audioEl.pause();audioEl.currentTime=0;}
@@ -234,10 +234,13 @@ function tick(){
       cur.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(cur));
       hits.sort((a,b)=>String(a.label).localeCompare(String(b.label)));
       
-      // कतार में चलाना ताकि ओवरलैप न हो
+      // ऑटोमैटिक टाइमर पर भी अब घंटी के साथ-साथ 'say' टेक्स्ट भी बिल्कुल सही से बजेगा
       hits.forEach(i=>{
-        const go=()=>speak(i.say||"");
-        if(i.bell===false){go();}else{ringFor(i,go);}
+        if(i.bell===false){
+          speak(i.say||"");
+        }else{
+          ringFor(i.say||"", null);
+        }
       });
       showNext();
     }
@@ -272,7 +275,7 @@ function render(){
     const r3=document.createElement("div");r3.className="r3";
     const bl=document.createElement("label");const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};bl.append(bc,document.createTextNode("घंटी बजे"));
     const play=document.createElement("button");play.className="small";play.textContent="▶ बजाकर सुनें";
-    play.onclick=()=>{const go=()=>speak(it.say||"");if(bc.checked){ringFor(it,go);}else{go();}};
+    play.onclick=()=>{if(bc.checked){ringFor(it.say||"", null);}else{speak(it.say||"");}};
     r3.append(bl,play);
     r.append(r1,s,r3);box.appendChild(r);
   });
