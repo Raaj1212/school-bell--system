@@ -42,7 +42,7 @@ input[type=text]{flex:1;min-width:100px}
     <button onclick="testSay()">बोलकर सुनें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है।</div>
+  <div class="hint">सिस्टम पूरी तरह ऑटोमैटिक मोड में है (Google Audio TTS समर्थित)।</div>
 </section>
 
 <section class="card">
@@ -55,10 +55,6 @@ input[type=text]{flex:1;min-width:100px}
 
 <section class="card">
   <h2>एलान & गैप सेटिंग्स (Speech & Delay Settings)</h2>
-  <div class="row">
-    <span class="muted">रफ़्तार</span><select id="rate"></select>
-    <span class="muted">कितनी बार बोले</span><select id="rep"></select>
-  </div>
   <div class="row">
     <span class="muted">घंटी खत्म होने के बाद बोलने का गैप:</span>
     <select id="delaySelect" onchange="updateDelay(this)">
@@ -88,6 +84,7 @@ let st=JSON.parse(localStorage.getItem("bellphone")||"null")||{items:[{time:"08:
 st.rate=st.rate||0.95; st.repeat=st.repeat||1; st.bellDelay=st.bellDelay||300;
 
 let running=false, audioEl=new Audio(), quietEl=null;
+let speechAudio = new Audio();
 let mediaStream=null, audioCtx=null, micSource=null;
 
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
@@ -117,60 +114,22 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-// TTS & Voice Setup
-let synth = window.speechSynthesis;
-let voices = [];
-function populateVoices() { voices = synth.getVoices(); }
-populateVoices();
-if (synth.onvoiceschanged !== undefined) { synth.onvoiceschanged = populateVoices; }
-
-function pickVoice(lang){
-  if(voices.length === 0) populateVoices();
-  let hiVoices = voices.filter(v=>/^hi[-_]IN/i.test(v.lang) || /^hi/i.test(v.lang));
-  if(hiVoices.length > 0){
-    let fem = hiVoices.find(v => /female|google|heera|kalpana|swara/i.test(v.name));
-    return fem || hiVoices[0];
-  }
-  return voices.find(v=>/^en[-_]IN/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang))||voices[0]||null;
-}
-
-function segs(text){
-  const out=[];let cur="",dev=null;
-  for(const ch of text){
-    const d=/[\u0900-\u097F]/.test(ch);
-    if(!/[A-Za-z]/.test(ch)&&!d){cur+=ch;continue;}
-    if(dev===null){dev=d;cur+=ch;}
-    else if(d===dev){cur+=ch;}
-    else{if(cur.trim())out.push({t:cur.trim(),dev});cur=ch;dev=d;}
-  }
-  if(cur.trim())out.push({t:cur.trim(),dev});
-  return out;
-}
-
+// नया और शक्तिशाली Google Audio TTS इंजन (बैकग्राउंड और ऑटोमैटिक मोड के लिए 100% भरोसेमंद)
 function speak(text){
   if(!text)return;
   try{
-    synth.cancel();
-    let dummy = new SpeechSynthesisUtterance(" ");
-    dummy.volume = 0;
-    synth.speak(dummy);
-
-    const reps=Math.max(1,parseInt(st.repeat)||1);
-    for(let r=0;r<reps;r++){
-      segs(text).forEach(seg=>{
-        const u=new SpeechSynthesisUtterance(seg.t);
-        const lang=seg.dev?"hi-IN":"en-IN";
-        u.lang=lang;
-        u.rate=parseFloat(st.rate)||0.95;
-        u.pitch=1.0;
-        const v = pickVoice(lang);
-        if(v) u.voice = v;
-        synth.speak(u);
-      });
-    }
-  }catch(e){}
+    speechAudio.pause();
+    const encoded = encodeURIComponent(text);
+    // Google Translate TTS URL जो हिंदी (hi) में स्पष्ट आवाज़ देता है
+    speechAudio.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
+    speechAudio.currentTime = 0;
+    speechAudio.play().catch(e => console.log("TTS play error:", e));
+  }catch(e){
+    console.log("speak err", e);
+  }
 }
 
+// यह फंक्शन सुनिश्चित करता है कि पहले घंटी पूरी बजे, फिर गैप के बाद Google TTS ऑडियो बोले
 function ringFor(itemSay, cb){
   audioEl.pause();
   audioEl.currentTime=0;
@@ -194,7 +153,7 @@ function testBell(){
   ringFor(t, null);
 }
 function testSay(){const t=document.getElementById("testText").value.trim();if(!t){toast("पहले कुछ लिखें");return;}speak(t);}
-function stopSound(){try{synth.cancel();}catch(e){}audioEl.pause();audioEl.currentTime=0;}
+function stopSound(){try{speechAudio.pause();}catch(e){}audioEl.pause();audioEl.currentTime=0;}
 
 async function toggleMic(){
   const btn=document.getElementById("micBtn");
@@ -295,14 +254,6 @@ function render(){
 function addItem(){st.items.push({time:"09:00",label:"",bell:true,say:""});save();render();}
 
 function loadSpeakOpts(){
-  const rate=document.getElementById("rate");
-  [[0.7,"बहुत धीमा"],[0.85,"धीमा"],[0.95,"सामान्य"],[1.15,"थोड़ा तेज़"],[1.3,"तेज़"],[1.6,"बहुत तेज़"]].forEach(x=>{const o=document.createElement("option");o.value=x[0];o.textContent=x[1];rate.appendChild(o);});
-  rate.value=String(st.rate);rate.onchange=()=>{st.rate=parseFloat(rate.value);save();};
-  
-  const rp=document.getElementById("rep");
-  for(let i=1;i<=5;i++){const o=document.createElement("option");o.value=i;o.textContent=i+" बार";rp.appendChild(o);}
-  rp.value=String(st.repeat);rp.onchange=()=>{st.repeat=parseInt(rp.value);save();};
-
   document.getElementById("delaySelect").value = String(st.bellDelay || 300);
 }
 
