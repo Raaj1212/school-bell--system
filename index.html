@@ -79,8 +79,8 @@ st.rate=st.rate||0.95;st.repeat=st.repeat||1;
 let running=false, audioEl=new Audio(), quietEl=null;
 let mediaStream=null, audioCtx=null, micSource=null;
 
-// यहाँ अपनी घंटी की फिक्स ऑनलाइन लिंक डालें (जो GitHub से कॉपी किया है)
-const DEFAULT_BELL_URL = "https://github.com/Raaj1212/school-bell--system/blob/main/bell.mp3.mpeg"; 
+// आपकी घंटी का सही और वेरिफाइड Raw लिंक यहाँ सेट है
+const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
 
 function makeQuietLoop(){
@@ -256,6 +256,16 @@ function loadSpeakOpts(){
 }
 loadSpeakOpts();render();
 setInterval(tick,1000);
+
+// ऑटो-स्टार्ट स्क्रिप्ट: लिंक में ?auto=1 होने पर बिना किसी क्लिक के सिस्टम चालू हो जाएगा
+window.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('auto') === '1') {
+    setTimeout(() => {
+      startSys();
+    }, 1500);
+  }
+});
 </script>
 </body>
 </html>
