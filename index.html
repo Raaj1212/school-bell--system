@@ -42,7 +42,7 @@ input[type=text]{flex:1;min-width:100px}
     <button onclick="testSay()">बोलकर सुनें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  <div class="hint">कंप्यूटर का ब्लूटूथ एम्पलीफायर से कनेक्टेड होना चाहिए। सिस्टम ऑटोमैटिक मोड में है।</div>
+  <div class="hint">सिस्टम ऑटोमैटिक मोड में है (नॉन-ओवरलैपिंग सीक्वेंस)।</div>
 </section>
 
 <section class="card">
@@ -54,8 +54,20 @@ input[type=text]{flex:1;min-width:100px}
 </section>
 
 <section class="card">
-  <h2>एलान (Speech Settings)</h2>
-  <div class="row"><span class="muted">रफ़्तार</span><select id="rate"></select><span class="muted">कितनी बार बोले</span><select id="rep"></select></div>
+  <h2>एलान & गैप सेटिंग्स (Speech & Delay Settings)</h2>
+  <div class="row">
+    <span class="muted">रफ़्तार</span><select id="rate"></select>
+    <span class="muted">कितनी बार बोले</span><select id="rep"></select>
+  </div>
+  <div class="row">
+    <span class="muted">घंटी खत्म होने के बाद बोलने का गैप:</span>
+    <select id="delaySelect" onchange="updateDelay(this)">
+      <option value="100">तुरंत (0.1 सेकंड)</option>
+      <option value="300" selected>सामान्य (0.3 सेकंड)</option>
+      <option value="600">थोड़ा रुककर (0.6 सेकंड)</option>
+      <option value="1000">1 सेकंड</option>
+    </select>
+  </div>
   <div class="row"><input type="text" id="testText" placeholder="कुछ लिखकर बोलकर सुनें"><button onclick="testSay()">बोलकर सुनें</button></div>
 </section>
 
@@ -72,14 +84,20 @@ input[type=text]{flex:1;min-width:100px}
 "use strict";
 const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
-let st=JSON.parse(localStorage.getItem("bellphone")||"null")||{items:[{time:"08:00",label:"Assembly",bell:true,say:""}],days:"all",voice:"",rate:0.95,repeat:1};
-st.rate=st.rate||0.95;st.repeat=st.repeat||1;
+let st=JSON.parse(localStorage.getItem("bellphone")||"null")||{items:[{time:"08:00",label:"Assembly",bell:true,say:""}],days:"all",voice:"",rate:0.95,repeat:1,bellDelay:300};
+st.rate=st.rate||0.95; st.repeat=st.repeat||1; st.bellDelay=st.bellDelay||300;
+
 let running=false, audioEl=new Audio(), quietEl=null;
 let mediaStream=null, audioCtx=null, micSource=null;
 
-// आपकी घंटी का सही Raw लिंक
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
+
+function updateDelay(sel){
+  st.bellDelay = parseInt(sel.value);
+  save();
+  toast("गैप बदल गया: "+sel.options[sel.selectedIndex].text);
+}
 
 function makeQuietLoop(){
   try{
@@ -91,7 +109,7 @@ function makeQuietLoop(){
     for(let i=0;i<buf.length;i+=CHUNK){out+=String.fromCharCode.apply(null,buf.subarray(i,Math.min(i+CHUNK,buf.length)));}
     quietEl=new Audio("data:audio/wav;base64,"+btoa(out));
     quietEl.loop=true;quietEl.volume=0.05;
-  }catch(e){console.log("quiet fail",e);}
+  }catch(e){}
 }
 const dstr=()=>new Date().toDateString();
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",3000);}
@@ -99,11 +117,17 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
+// इंडियन फीमेल वॉइस प्राथमिकता
 function pickVoice(lang){
   const vs=speechSynthesis.getVoices();
-  if(/^hi/.test(lang))return vs.find(v=>/^hi[-_]IN/i.test(v.lang))||vs.find(v=>/^hi/i.test(v.lang))||null;
-  return vs.find(v=>/^en[-_]IN/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;
+  let hiVoices = vs.filter(v=>/^hi[-_]IN/i.test(v.lang) || /^hi/i.test(v.lang));
+  if(hiVoices.length > 0){
+    let fem = hiVoices.find(v => /female|google|heera|kalpana|swara/i.test(v.name));
+    return fem || hiVoices[0];
+  }
+  return vs.find(v=>/^en[-_]IN/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||vs[0]||null;
 }
+
 function segs(text){
   const out=[];let cur="",dev=null;
   for(const ch of text){
@@ -116,6 +140,7 @@ function segs(text){
   if(cur.trim())out.push({t:cur.trim(),dev});
   return out;
 }
+
 function speak(text){
   if(!text)return;
   try{
@@ -130,15 +155,32 @@ function speak(text){
         speechSynthesis.speak(u);
       });
     }
-  }catch(e){console.log("speak fail",e);}
+  }catch(e){}
 }
 
+// यह फंक्शन सुनिश्चित करता है कि घंटी पूरी बजने के बाद ही स्पीच (TTS) शुरू हो
 function ringFor(item,cb){
-  audioEl.onended=()=>{if(cb)cb();};
+  audioEl.pause();
   audioEl.currentTime=0;
-  audioEl.play().catch(()=>{if(cb)cb();});
+  
+  audioEl.onended=()=>{
+    audioEl.onended=null;
+    setTimeout(()=>{
+      if(cb)cb();
+    }, st.bellDelay || 300);
+  };
+  
+  audioEl.play().catch(()=>{
+    if(cb)cb();
+  });
 }
-function testBell(){ringFor(null,null);}
+
+function testBell(){
+  const t = document.getElementById("testText").value.trim();
+  ringFor(null, () => {
+    if(t) speak(t);
+  });
+}
 function testSay(){const t=document.getElementById("testText").value.trim();if(!t){toast("पहले कुछ लिखें");return;}speak(t);}
 function stopSound(){try{speechSynthesis.cancel();}catch(e){}audioEl.pause();audioEl.currentTime=0;}
 
@@ -166,7 +208,6 @@ async function toggleMic(){
     state.textContent="लाइव माइक चालू है";
     toast("लाइव माइक चालू हो गया");
   }catch(e){
-    console.error(e);
     toast("माइक की अनुमति नहीं मिली");
   }
 }
@@ -175,12 +216,6 @@ function startSys(){
   if(running)return;running=true;
   document.getElementById("runState").textContent="चालू है";
   try{if(!quietEl)makeQuietLoop();quietEl.currentTime=0;quietEl.play();}catch(e){}
-}
-function stopSys(){
-  running=false;
-  document.getElementById("runState").textContent="बंद है";
-  try{if(quietEl)quietEl.pause();}catch(e){}
-  stopSound();
 }
 
 function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
@@ -198,12 +233,18 @@ function tick(){
     if(hits.length){
       cur.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(cur));
       hits.sort((a,b)=>String(a.label).localeCompare(String(b.label)));
-      hits.forEach(i=>{const go=()=>speak(i.say||"");if(i.bell===false){go();}else{ringFor(i,go);}});
+      
+      // कतार में चलाना ताकि ओवरलैप न हो
+      hits.forEach(i=>{
+        const go=()=>speak(i.say||"");
+        if(i.bell===false){go();}else{ringFor(i,go);}
+      });
       showNext();
     }
   }
   showNext();
 }
+
 function showNext(){
   const d=new Date();const now=hhmm(d);
   const days=daysToArr(st.days);
@@ -242,15 +283,19 @@ function addItem(){st.items.push({time:"09:00",label:"",bell:true,say:""});save(
 function loadSpeakOpts(){
   const rate=document.getElementById("rate");
   [[0.7,"बहुत धीमा"],[0.85,"धीमा"],[0.95,"सामान्य"],[1.15,"थोड़ा तेज़"],[1.3,"तेज़"],[1.6,"बहुत तेज़"]].forEach(x=>{const o=document.createElement("option");o.value=x[0];o.textContent=x[1];rate.appendChild(o);});
-  rate.value=String(st.rate);rate.onchange=()=>{st.rate=parseFloat(rate.value);save();};
+  rate.value=String(st.rate);rate.onchange=()=>{st.rate=parseFloat(rate.rate||rate.value);save();};
+  
   const rp=document.getElementById("rep");
   for(let i=1;i<=5;i++){const o=document.createElement("option");o.value=i;o.textContent=i+" बार";rp.appendChild(o);}
   rp.value=String(st.repeat);rp.onchange=()=>{st.repeat=parseInt(rp.value);save();};
+
+  document.getElementById("delaySelect").value = String(st.bellDelay || 300);
 }
+
 loadSpeakOpts();render();
 setInterval(tick,1000);
 
-// पेज खुलते ही बिना किसी क्लिक के ऑटो-स्टार्ट हो जाएगा
+// ऑटो-स्टार्ट
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     startSys();
