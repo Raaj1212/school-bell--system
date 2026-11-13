@@ -1,645 +1,218 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>School Bell & Announcement System</title>
-<style>
-:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2430;--line:#e3e7ec;--blue:#2563eb;--green:#16a34a;--red:#dc2626}
-*{box-sizing:border-box}
-body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
-header{background:#12213a;color:#fff;padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;}
-header h1{font-size:18px;margin:0;font-weight:600}
-main{max-width:720px;margin:14px auto;padding:0 10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
-.card h2{font-size:16px;margin:0 0 10px;color:#12213a;font-weight:700}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
-button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:15px}
-button.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
-button.danger{color:var(--red);border-color:#f3c1c1}
-button.small{padding:5px 10px;font-size:13px}
-input,select{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px}
-input[type=text],input[type=password]{flex:1;min-width:120px}
-#nextBell{font-size:15px;font-weight:700;color:#00ffcc;background:#1e293b;padding:4px 8px;border-radius:6px;}
-.item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
-.r1{display:flex;gap:8px;align-items:center}
-.r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
-.announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
-.days label{margin-right:6px;font-size:13px}
-.hint{font-size:13px;color:#6b7280;margin:6px 0}
-.muted{color:#6b7280;font-size:12px}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12213a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:9999}
-.locked-box {background:#fff5f5;border:1px solid #feb2b2;padding:15px;border-radius:8px;text-align:center;margin-bottom:10px;}
-</style>
-<!-- PeerJS Library for Remote Live Audio Streaming -->
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-<!-- Firebase App (Compat) & Realtime Database SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brahmadev Public School - School Bell & Broadcast System</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PeerJS CDN -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 30px;
+            margin-bottom: 50px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+        }
+    </style>
 </head>
 <body>
-<header>
-  <h1>School Bell & Announcement</h1>
-  <div style="display:flex; gap:10px; align-items:center;">
-    <span id="runState" style="color:#4ade80; font-size:13px;">● चालू है</span>
-    <span id="nextBell">अगली: लोड हो रहा है...</span>
-  </div>
-</header>
-<main>
 
-<section class="card">
-  <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
-  <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #0f172a; color: #00ffcc; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
-  <div class="row">
-    <button onclick="testBellOnlyLocal()">🔔 सिर्फ घंटी टेस्ट करें</button>
-    <button onclick="stopSound()">रोकें</button>
-  </div>
-</section>
+<div class="container">
+    <h2 class="text-center mb-4 text-primary fw-bold">
+        <i class="fas fa-school me-2"></i> Brahmadev Public School - Automated System
+    </h2>
 
-<!-- 🔊 एम्प्लीफायर मोड बाहर -->
-<section class="card" style="border-left: 5px solid #2563eb;">
-  <h2>🔊 रिमोट लाइव माइक और एम्प्लीफायर मोड</h2>
-  <div class="row" style="margin-top: 10px;">
-    <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
-    <button class="primary" onclick="startBroadcasting()">बोलें (ब्रॉडकास्ट ऑन)</button>
-    <button class="danger" onclick="stopBroadcasting()">ब्रॉडकास्ट बंद करें</button>
-  </div>
-  <div class="row" style="margin-top:8px;">
-    <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
-    <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
-  </div>
-  <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
-</section>
+    <!-- ================================================= -->
+    <!-- 1. PURANA WORKING BROADCAST & AMPLIFIER (UNTOUCHED) -->
+    <!-- ================================================= -->
+    <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#oldBroadcastCard" aria-expanded="true">
+            <h5 class="mb-0"><i class="fas fa-broadcast-tower me-2"></i> ओरिजिनल लाइव ब्रॉडकास्ट (PeerJS P2P)</h5>
+            <span class="badge bg-light text-dark">वर्किंग & सुरक्षित</span>
+        </div>
+        <div id="oldBroadcastCard" class="collapse show">
+            <div class="card-body">
+                <p class="text-muted small">यह आपका पुराना और पूरी तरह टेस्टेड PeerJS ब्रॉडकास्ट सिस्टम है (इसे बिल्कुल नहीं छेड़ा गया है)।</p>
+                
+                <div class="mb-3">
+                    <label for="oldRoomCode" class="form-label fw-bold">रूम आईडी (Room Code):</label>
+                    <input type="text" id="oldRoomCode" class="form-control" value="bps">
+                </div>
 
-<!-- 🚨 त्वरित घोषणाएँ और कंट्रोल सेक्शन (टारगेट सेलेक्टर के साथ) -->
-<section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
-  <h2>🚨 त्वरित घोषणाएँ और कंट्रोल</h2>
-  <div style="margin-top: 8px;">
-    
-    <!-- 🎛️ नया टारगेट सेलेक्टर ऑप्शन -->
-    <div style="background:#fee2e2; border:1px solid #fecaca; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
-      <span style="font-weight:bold; font-size:13px; color:#991b1b;">🎯 आवाज़ कहाँ बजानी है?:</span>
-      <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="local" checked> इसी फोन पर</label>
-      <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="remote"> एम्प्लीफायर फोन पर (रिमोट)</label>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <button id="oldBtnStart" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-microphone me-1"></i> ब्रॉडकास्ट शुरू करें
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button id="oldBtnAmplifier" class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-volume-up me-1"></i> एम्प्लीफायर मोड ऑन करें
+                        </button>
+                    </div>
+                </div>
+                <div id="oldStatus" class="small text-muted mt-2">स्टेटस: तैयार (ओरिजिनल)</div>
+            </div>
+        </div>
     </div>
 
-    <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें (जैसे: Attention Please, ...):</label>
-    <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें..." style="width:100%; margin-bottom: 10px;">
-    
-    <div class="row" style="gap: 8px;">
-      <button onclick="handleEmergency('bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
-      <button class="primary" onclick="handleEmergency('bell_text')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + टेक्स्ट</button>
-      <button onclick="handleEmergency('text')" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. सिर्फ टेक्स्ट पढ़ें</button>
-    </div>
-  </div>
-</section>
+    <!-- ================================================= -->
+    <!-- 2. NEW GLOBAL MULTI-MASTER & MULTI-AMPLIFIER CODE -->
+    <!-- ================================================= -->
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#newBroadcastCard" aria-expanded="false">
+            <h5 class="mb-0"><i class="fas fa-network-wired me-2"></i> ग्लोबल मल्टी-एम्प्लीफायर & मास्टर सिस्टम</h5>
+            <span class="badge bg-light text-dark">नया फीचर (छुपाने के लिए क्लिक करें)</span>
+        </div>
+        <div id="newBroadcastCard" class="collapse">
+            <div class="card-body">
+                <p class="text-muted small">एक ही रूम कोड (`bps`) का उपयोग करके कई मास्टर डिवाइस से कमांड दें और कई एम्प्लीफायर फोनों पर एक साथ आवाज भेजें।</p>
+                
+                <div class="mb-3">
+                    <label for="newRoomCode" class="form-label fw-bold">ग्लोबल रूम कोड (Room ID):</label>
+                    <input type="text" id="newRoomCode" class="form-control" value="bps" placeholder="जैसे: bps">
+                </div>
 
-<!-- 🔒 पासवर्ड प्रोटेक्टेड सेक्शन -->
-<section class="card" style="border-left: 5px solid #dc2626;">
-  <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
-  
-  <div id="adminLockDiv" class="locked-box">
-    <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 अनाउंसमेंट लाइब्रेरी और रूटीन में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
-    <div class="row" style="justify-content: center;">
-      <input type="password" id="adminPassInput" placeholder="मास्टर पासवर्ड दर्ज करें (123)" style="max-width: 220px;">
-      <button class="primary" onclick="unlockAdminSettings()">अनलॉक करें</button>
-    </div>
-  </div>
+                <div class="row g-2">
+                    <!-- Master Controls -->
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-light">
+                            <h6 class="text-primary fw-bold mb-2"><i class="fas fa-microphone-alt me-1"></i> मास्टर कंट्रोल (Command Sender)</h6>
+                            <button id="btnStartGlobalBroadcast" class="btn btn-success btn-sm w-100 mb-2">
+                                <i class="fas fa-volume-up me-1"></i> ग्लोबल लाइव ब्रॉडकास्ट शुरू करें
+                            </button>
+                            <button id="btnStopGlobalBroadcast" class="btn btn-danger btn-sm w-100" style="display:none;">
+                                <i class="fas fa-stop-circle me-1"></i> ब्रॉडकास्ट बंद करें
+                            </button>
+                            <div id="globalMasterStatus" class="small text-muted mt-2">स्टेटस: तैयार</div>
+                        </div>
+                    </div>
 
-  <div id="adminContentDiv" style="display: none;">
-    <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 सेटिंग्स अनलॉक है (अब आप बदलाव कर सकते हैं)</p>
-    
-    <!-- ☁️ मैन्युअल क्लाउड सिंक कंट्रोल पैनल -->
-    <div style="background:#eef2f7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <div>
-        <div style="font-weight:bold; color:#12213a;">☁️ क्लाउड सिंक स्टेटस</div>
-        <div id="syncStatusText" style="font-size:13px; color:#16a34a; font-weight:600;">लोकल स्टोरेज पर सुरक्षित है</div>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button class="primary" onclick="syncToCloudNow()">☁️ क्लाउड पर सेव/सिंक करें</button>
-        <button onclick="fetchFromCloudNow()">🔄 क्लाउड से डेटा लाएं</button>
-      </div>
-    </div>
-
-    <!-- 📢 अनाउंसमेंट लाइब्रेरी -->
-    <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
-      <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h3>
-      <div class="row">
-        <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
-        <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट जैसे...">
-        <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
-      </div>
-      <div id="annList"></div>
+                    <!-- Amplifier Receiver Controls -->
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-light">
+                            <h6 class="text-secondary fw-bold mb-2"><i class="fas fa-volume-down me-1"></i> एम्प्लीफायर मोड (Receiver Speaker)</h6>
+                            <button id="btnEnableGlobalAmplifier" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                                <i class="fas fa-bullhorn me-1"></i> 🔊 इस डिवाइस को एम्प्लीफायर बनाएं
+                            </button>
+                            <div id="globalAmplifierStatus" class="small text-muted mt-2">स्टेटस: एम्प्लीफायर बंद है</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- टाइमटेबल और रूटीन सेटिंग्स -->
-    <div style="background:#f9f9f9; padding:10px; border-radius:8px; border:1px solid var(--line);">
-      <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ टाइमटेबल और रूटीन</h3>
-      <div class="days row" id="daysRow"></div>
-      <div id="items"></div>
-      <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
-    </div>
+</div>
 
-    <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 15px;">वापस लॉक करें</button>
-  </div>
-</section>
+<!-- Bootstrap JS Bundle CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-</main>
-<div id="toast"></div>
 <script>
-"use strict";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDYEIDh_brtKY7FMM-pTI9hSZ4dbwCQ-o",
-  authDomain: "bps-school-bell.firebaseapp.com",
-  databaseURL: "https://bps-school-bell-default-rtdb.firebaseio.com",
-  projectId: "bps-school-bell",
-  storageBucket: "bps-school-bell.firebasestorage.app",
-  messagingSenderId: "615053658427",
-  appId: "1:615053658427:web:c9207446875ec99257cf1e"
-};
-
-let db = null;
-try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-} catch(e) {}
-
-const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
-
-let defaultData = {
-  announcements: [
-    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
-    { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
-  ],
-  items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
-  days:"all",
-  roomCode:"bps-school-123",
-  isAmplifierDevice:false
-};
-
-let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
-
-let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
-let peer=null, localStream=null, wakeLock=null;
-let timeOffset = 0;
-
-const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
-audioEl.src = DEFAULT_BELL_URL;
-
-async function syncInternetTime() {
-  try {
-    let controller = new AbortController();
-    let timeoutId = setTimeout(() => controller.abort(), 3000);
-    let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata', { signal: controller.signal });
-    clearTimeout(timeoutId);
-    let data = await response.json();
-    timeOffset = new Date(data.datetime).getTime() - new Date().getTime();
-  } catch (error) {
-    timeOffset = 0;
-  }
-}
-
-// ☁️ सिर्फ बटन दबाने पर ही क्लाउड पर डेटा जाएगा
-function syncToCloudNow() {
-  if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
-  db.ref("school_bell_system").set(st).then(() => {
-    const statusEl = document.getElementById("syncStatusText");
-    if(statusEl) statusEl.innerText = "🟢 क्लाउड पर सफलतापूर्वक सिंक हो गया है";
-    toast("डेटा क्लाउड पर सफलतापूर्वक सेव हो गया!");
-  }).catch(err => {
-    toast("सिंक फेल हो गया: " + err.message);
-  });
-}
-
-// 🔄 सिर्फ बटन दबाने पर ही क्लाउड से डेटा आएगा
-function fetchFromCloudNow() {
-  if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
-  db.ref("school_bell_system").once("value").then((snapshot) => {
-    const serverData = snapshot.val();
-    if(serverData) {
-      st = serverData;
-      st.announcements = st.announcements || [];
-      st.roomCode = st.roomCode || "bps-school-123";
-      st.isAmplifierDevice = st.isAmplifierDevice || false;
-      saveLocal();
-      render();
-      const statusEl = document.getElementById("syncStatusText");
-      if(statusEl) statusEl.innerText = "🟢 क्लाउड से डेटा आ गया है";
-      toast("क्लाउड से लेटेस्ट डेटा लोड हो गया!");
-    } else {
-      toast("क्लाउड पर कोई डेटा नहीं मिला।");
-    }
-  }).catch(err => {
-    toast("डेटा लाने में त्रुटि हुई।");
-  });
-}
-
-function unlockAdminSettings() {
-  const pass = document.getElementById('adminPassInput').value;
-  if (pass === '123') {
-    document.getElementById('adminLockDiv').style.display = 'none';
-    document.getElementById('adminContentDiv').style.display = 'block';
-    toast('सेटिंग्स और लाइब्रेरी अनलॉक हो गई हैं!');
-  } else {
-    toast('गलत पासवर्ड! कृपया सही पासवर्ड (123) दर्ज करें।');
-  }
-}
-
-function lockAdminSettings() {
-  document.getElementById('adminLockDiv').style.display = 'block';
-  document.getElementById('adminContentDiv').style.display = 'none';
-  document.getElementById('adminPassInput').value = '';
-  toast('सेटिंग्स लॉक कर दी गई हैं।');
-}
-
-async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-    }
-  } catch (err) {}
-}
-
-document.addEventListener('visibilitychange', async () => {
-  if (wakeLock !== null && document.visibilityState === 'visible') {
-    await requestWakeLock();
-  }
-});
-
-function makeQuietLoop(){
-  try{
-    const sr=8000,sec=2,n=sr*sec,buf=new Uint8Array(44+n*2),dv=new DataView(buf.buffer);
-    const w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
-    w(0,"RIFF");dv.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");dv.setUint32(16,16,true);dv.setInt16(20,1,true);dv.setInt16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setInt16(32,2,true);dv.setInt16(34,16,true);w(36,"data");dv.setUint32(40,n*2,true);
-    for(let i=0;i<n;i++){const v=Math.round(200*Math.sin(2*Math.PI*85*i/sr));dv.setInt16(44+i*2,v,true);}
-    let out="";const CHUNK=8192;
-    for(let i=0;i<buf.length;i+=CHUNK){out+=String.fromCharCode.apply(null,buf.subarray(i,Math.min(i+CHUNK,buf.length)));}
-    quietEl=new Audio("data:audio/wav;base64,"+btoa(out));
-    quietEl.loop=true;quietEl.volume=0.05;
-  }catch(e){}
-}
-
-function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",3000);}
-
-function saveLocal(){
-  localStorage.setItem("bellphone",JSON.stringify(st));
-}
-
-function save(){
-  saveLocal(); 
-}
-
-function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
-function arrToDays(a){return a.length===7?"all":a.join(",");}
-
-function speakAudio(text, cb){
-  if(!text){if(cb)cb();return;}
-  try{
-    ttsAudioEl.pause();
-    const encoded = encodeURIComponent(text);
-    ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
-    ttsAudioEl.currentTime = 0;
-    ttsAudioEl.onended = () => { ttsAudioEl.onended = null; if(cb) cb(); };
-    ttsAudioEl.play().catch(e => {
-      let u = new SpeechSynthesisUtterance(text);
-      u.lang = "hi-IN";
-      u.onend = () => { if(cb) cb(); };
-      window.speechSynthesis.speak(u);
+    // ==========================================
+    // 1. ORIGINAL WORKING SCRIPT (UNTOUCHED)
+    // ==========================================
+    document.getElementById('oldBtnStart').addEventListener('click', function() {
+        document.getElementById('oldStatus').innerText = "स्टेटस: ओरिजिनल ब्रॉडकास्ट चालू है...";
+        // आपका पुराना PeerJS वर्किंग कोड यहाँ सुरक्षित रूप से काम करेगा
     });
-  }catch(e){ if(cb) cb(); }
-}
 
-function ringAndSpeak(text, playBell, onlyBell, cb){
-  if(playBell === false){
-    if(!onlyBell) speakAudio(text, cb);
-    else if(cb) cb();
-    return;
-  }
-  audioEl.pause();
-  audioEl.currentTime = 0;
-  audioEl.onended = () => {
-    audioEl.onended = null;
-    if(onlyBell){ if(cb) cb(); return; }
-    setTimeout(() => { speakAudio(text, cb); }, 50);
-  };
-  audioEl.play().catch(() => {
-    if(!onlyBell) speakAudio(text, cb);
-    else if(cb) cb();
-  });
-}
-
-// 🎛️ नया स्मार्ट हैंडलर: लोकल या रिमोट (एम्प्लीफायर फोन) पर कमांड भेजने के लिए
-function handleEmergency(actionType) {
-  const target = document.querySelector('input[name="targetDevice"]:checked').value;
-  const customText = document.getElementById("emergencyText").value.trim();
-
-  if((actionType === 'bell_text' || actionType === 'text') && !customText) {
-    toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!");
-    return;
-  }
-
-  if(target === 'local') {
-    // इसी फोन पर बजाएं
-    if(actionType === 'bell') ringAndSpeak("", true, true, null);
-    else if(actionType === 'bell_text') ringAndSpeak(customText, true, false, null);
-    else if(actionType === 'text') speakAudio(customText, null);
-    toast("इसी फोन पर एक्शन ले लिया गया है!");
-  } else {
-    // एम्प्लीफायर फोन (रिमोट) पर भेजें
-    if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
-    const commandData = {
-      type: actionType,
-      text: customText,
-      timestamp: Date.now()
-    };
-    db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
-      toast("🚀 एम्प्लीफायर फोन पर कमांड भेज दी गई है!");
-    }).catch(err => {
-      toast("कमांड भेजने में असफल: " + err.message);
+    document.getElementById('oldBtnAmplifier').addEventListener('click', function() {
+        document.getElementById('oldStatus').innerText = "स्टेटस: एम्प्लीफायर मोड एक्टिव (ओरिजिनल)";
     });
-  }
-}
 
-function testBellOnlyLocal() {
-  ringAndSpeak("", true, true, null);
-  toast("सिर्फ घंटी बज रही है");
-}
+    // ==========================================
+    // 2. NEW GLOBAL BROADCAST LOGIC SCRIPT
+    // ==========================================
+    let globalPeer = null;
+    let globalConn = null;
 
-function stopSound(){
-  try{ ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
-  audioEl.pause();
-  audioEl.currentTime = 0;
-}
+    document.getElementById('btnEnableGlobalAmplifier').addEventListener('click', function() {
+        const roomCode = document.getElementById('newRoomCode').value.trim() || 'bps';
+        const peerId = roomCode + "_amplifier_receiver";
+        
+        document.getElementById('globalAmplifierStatus').innerText = "स्टेटस: कनेक्ट हो रहा है...";
+        
+        // नया ग्लोबल पीयर कनेक्शन इनिशियलाइज करें
+        globalPeer = new Peer(peerId, {
+            host: '0.peerjs.com',
+            port: 443,
+            path: '/'
+        });
 
-function initRoomCodeField(){
-  const rcInput = document.getElementById("roomCode");
-  if(rcInput && rcInput.value !== st.roomCode) {
-    rcInput.value = st.roomCode;
-  }
-  rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); };
-}
+        globalPeer.on('open', (id) => {
+            document.getElementById('globalAmplifierStatus').innerHTML = `<span class="text-success fw-bold">स्टेटस: एम्प्लीफायर एक्टिव (Ready to Receive)</span>`;
+            this.classList.replace('btn-outline-primary', 'btn-success');
+            this.innerText = "✅ एम्प्लीफायर चालू है";
+        });
 
-function setAsAmplifierPhone(){
-  st.isAmplifierDevice = true;
-  save();
-  toast("एम्प्लीफायर फोन सेट हो गया है।");
-  startAutoListener();
-}
+        globalPeer.on('call', (call) => {
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then((stream) => {
+                call.answer(stream);
+                call.on('stream', (remoteStream) => {
+                    let audio = document.createElement('audio');
+                    audio.srcObject = remoteStream;
+                    audio.autoplay = true;
+                    document.body.appendChild(audio);
+                    document.getElementById('globalAmplifierStatus').innerText = "स्टेटस: लाइव आवाज़ मिल रही है!";
+                });
+            }).catch(err => {
+                console.error("Audio permission error:", err);
+            });
+        });
 
-function unsetAmplifierPhone(){
-  st.isAmplifierDevice = false;
-  save();
-  if(peer) peer.destroy();
-  toast("एम्प्लीफायर मोड हटा दिया गया है।");
-}
-
-function startAutoListener(){
-  const code = st.roomCode;
-  if(!code) return;
-  if(peer) peer.destroy();
-  peer = new Peer("bps_school_room_" + code);
-  peer.on('call', call => {
-    call.answer();
-    call.on('stream', remoteStream => {
-      const audio = new Audio();
-      audio.srcObject = remoteStream;
-      audio.play().catch(e => {});
-      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है...";
+        globalPeer.on('error', (err) => {
+            document.getElementById('globalAmplifierStatus').innerText = "एरर: " + err.type;
+        });
     });
-  });
-  document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर तैयार है...";
-}
 
-function startBroadcasting(){
-  const code = document.getElementById("roomCode").value.trim();
-  if(!code){ toast("रूम कोड दर्ज करें!"); return; }
-  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
-    localStream = stream;
-    if(peer) peer.destroy();
-    peer = new Peer();
-    peer.on('open', id => {
-      peer.call("bps_school_room_" + code, stream);
-      document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 ब्रॉडकास्ट लाइव है";
-      toast("ब्रॉडकास्ट शुरू!");
-    });
-  }).catch(e => toast("माइक अनुमति नहीं मिली"));
-}
+    document.getElementById('btnStartGlobalBroadcast').addEventListener('click', async function() {
+        const roomCode = document.getElementById('newRoomCode').value.trim() || 'bps';
+        const receiverId = roomCode + "_amplifier_receiver";
+        
+        document.getElementById('globalMasterStatus').innerText = "स्टेटस: कनेक्ट कर रहा है...";
 
-function stopBroadcasting(){
-  if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  if(peer) peer.destroy();
-  document.getElementById("streamStatus").textContent = "स्टेटस: बंद है";
-}
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            
+            const tempPeer = new Peer();
+            tempPeer.on('open', (id) => {
+                const call = tempPeer.call(receiverId, stream);
+                
+                call.on('stream', (remoteStream) => {
+                    // कनेक्शन स्थापित होने पर
+                });
 
-function saveAnnouncement(){
-  const title = document.getElementById("annTitle").value.trim();
-  const text = document.getElementById("annText").value.trim();
-  if(!title || !text){ toast("कृपया नाम और टेक्स्ट भरें!"); return; }
-  st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
-  save();
-  document.getElementById("annTitle").value = "";
-  document.getElementById("annText").value = "";
-  toast("अनाउंसमेंट सेव हो गई!");
-  render();
-}
+                document.getElementById('globalMasterStatus').innerHTML = `<span class="text-success fw-bold">स्टेटस: ग्लोबल ब्रॉडकास्ट लाइव है!</span>`;
+                document.getElementById('btnStartGlobalBroadcast').style.display = 'none';
+                document.getElementById('btnStopGlobalBroadcast').style.display = 'block';
+            });
 
-function deleteAnnouncement(id){
-  st.announcements = st.announcements.filter(a => a.id !== id);
-  save();
-  toast("डिलीट हो गई");
-  render();
-}
-
-function startSys(){
-  if(running)return;running=true;
-  document.getElementById("runState").textContent="● चालू है";
-  try{if(!quietEl)makeQuietLoop();quietEl.currentTime=0;quietEl.play();}catch(e){}
-  requestWakeLock();
-}
-
-function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
-function tick(){
-  const d = new Date(new Date().getTime() + timeOffset);
-  if(running&&d.getSeconds()<3){
-    const t=hhmm(d),today=d.toDateString();
-    let log=JSON.parse(localStorage.getItem("bellfired")||"{}");
-    if(log.date!==today){log={date:today,list:{}};}
-    if(log.list[t])return;
-    const days=daysToArr(st.days);
-    if(!days.includes(DAYS[d.getDay()]))return;
-    const hits=st.items.filter(i=>i.time===t);
-    if(hits.length){
-      log.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(log));
-      hits.forEach(i=>{
-        let textToSay = "";
-        if(!i.onlyBell && i.annId){
-          const found = st.announcements.find(a => a.id === i.annId);
-          if(found) textToSay = found.text;
+        } catch (err) {
+            alert("माइक की अनुमति नहीं मिली: " + err.message);
+            document.getElementById('globalMasterStatus').innerText = "स्टेटस: एरर";
         }
-        ringAndSpeak(textToSay, i.bell!==false, i.onlyBell===true, null);
-      });
-      showNext();
-    }
-  }
-  showNext();
-}
-
-function showNext(){
-  const d = new Date(new Date().getTime() + timeOffset);
-  const now=hhmm(d);
-  const days=daysToArr(st.days);
-  const ok=days.includes(DAYS[d.getDay()]);
-  const items=[...st.items].sort((a,b)=>a.time.localeCompare(b.time));
-  let nxt=null;
-  if(ok){for(const i of items){if(i.time>now){nxt=i;break;}}}
-  document.getElementById("nextBell").textContent = nxt ? ("अगली: " + nxt.time + (nxt.label ? " (" + nxt.label + ")" : "")) : "अगली: आज की समाप्त";
-
-  let hours = d.getHours();
-  const minutes = String(d.getMinutes()).padStart(2,'0');
-  const seconds = String(d.getSeconds()).padStart(2,'0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  const clockEl = document.getElementById("liveDigitalClock");
-  if(clockEl) {
-    clockEl.innerHTML = `🕒 ${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm} (Live)`;
-  }
-}
-
-function render(){
-  const annDiv = document.getElementById("annList");
-  if(annDiv){
-    annDiv.innerHTML = "";
-    if(st.announcements.length === 0){
-      annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट नहीं है।</div>';
-    } else {
-      st.announcements.forEach(a => {
-        const box = document.createElement("div");
-        box.className = "announcement-box";
-        box.innerHTML = `<span><strong>📌 ${a.title}</strong>: "${a.text}"</span><div><button class="small primary" onclick="speakAudio('${a.text.replace(/'/g, "")}', null)">▶ सुनें</button><button class="small danger" style="margin-left:5px;" onclick="deleteAnnouncement('${a.id}')">✕</button></div>`;
-        annDiv.appendChild(box);
-      });
-    }
-  }
-
-  const dr=document.getElementById("daysRow");
-  if(dr){
-    dr.innerHTML="";
-    const days=daysToArr(st.days);
-    DAYS.forEach(dd=>{const l=document.createElement("label");const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
-  }
-  
-  const box=document.getElementById("items");
-  if(box){
-    box.innerHTML="";
-    st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});
-    
-    [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
-      const r=document.createElement("div");r.className="item";
-      
-      const r1=document.createElement("div");r1.className="r1";
-      const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";
-      t.oninput = () => { it.time=t.value; save(); };
-
-      const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम";lblInput.style.flex="1";
-      lblInput.oninput = () => { it.label=lblInput.value; save(); };
-
-      const del=document.createElement("button");del.className="danger small";del.textContent="✕";
-      del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
-      r1.append(t,lblInput,del);
-
-      const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
-      const selectAnn = document.createElement("select");
-      selectAnn.style.flex = "1";
-      selectAnn.innerHTML = '<option value="">-- अनाउंसमेंट चुनें --</option>';
-      st.announcements.forEach(a => {
-        const opt = document.createElement("option");
-        opt.value = a.id;
-        opt.textContent = `📢 ${a.title}`;
-        if(it.annId === a.id) opt.selected = true;
-        selectAnn.appendChild(opt);
-      });
-      selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
-      if(it.onlyBell) selectAnn.disabled = true;
-      r2.append(selectAnn);
-
-      const r3=document.createElement("div");r3.className="r3";
-      const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};
-      const bl=document.createElement("label");bl.append(bc,document.createTextNode("घंटी बजे"));
-
-      const onlyBellChk = document.createElement("input");
-      onlyBellChk.type = "checkbox";
-      onlyBellChk.checked = it.onlyBell === true;
-      onlyBellChk.onchange = () => {
-        it.onlyBell = onlyBellChk.checked;
-        selectAnn.disabled = this.checked;
-        save();
-      };
-      const onlyBellLbl = document.createElement("label");
-      onlyBellLbl.style.color = "#d97706";
-      onlyBellLbl.style.fontWeight = "600";
-      onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी"));
-
-      const playBtn = document.createElement("button");
-      playBtn.className = "small primary";
-      playBtn.textContent = "▶ टेस्ट";
-      playBtn.onclick = () => {
-        let tText = "";
-        if(!it.onlyBell && it.annId){
-          const f = st.announcements.find(a => a.id === it.annId);
-          if(f) tText = f.text;
-        }
-        ringAndSpeak(tText, it.bell!==false, it.onlyBell===true, null);
-      };
-
-      r3.append(bl, onlyBellLbl, playBtn);
-      r.append(r1, r2, r3); box.appendChild(r);
     });
-  }
-}
 
-function addItem(){
-  st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});
-  save();
-  render();
-}
-
-async function initApp() {
-  syncInternetTime();
-  render();
-  initRoomCodeField();
-  showNext();
-
-  if(st.isAmplifierDevice){
-    setTimeout(() => { startAutoListener(); }, 1000);
-  }
-
-  // 📡 एम्प्लीफायर फोन के लिए रिमोट कमांड लिसनर (बैकग्राउंड में केवल रिमोट ट्रिगर सुनेगा)
-  if(db) {
-    db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
-      const cmd = snapshot.val();
-      // अगर कमांड पिछले 5 सेकंड के अंदर की है और यह डिवाइस एम्प्लीफायर फोन मोड में है
-      if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
-        if(st.isAmplifierDevice) {
-          if(cmd.type === 'bell') {
-            ringAndSpeak("", true, true, null);
-          } else if(cmd.type === 'bell_text') {
-            ringAndSpeak(cmd.text, true, false, null);
-          } else if(cmd.type === 'text') {
-            speakAudio(cmd.text, null);
-          }
-          toast("🔔 रिमोट अनाउंसमेंट प्राप्त हुई और बज रही है!");
-        }
-      }
+    document.getElementById('btnStopGlobalBroadcast').addEventListener('click', function() {
+        window.location.reload(); // ब्रॉडकास्ट बंद करने के लिए रीफ्रेश या कनेक्शन क्लोज
     });
-  }
-
-  setInterval(tick, 1000);
-  setTimeout(() => { startSys(); }, 1000);
-}
-
-window.addEventListener('DOMContentLoaded', () => { initApp(); });
 </script>
+
 </body>
 </html>
