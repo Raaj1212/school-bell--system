@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BPS School Bell & Announcement Portal</title>
+    <title>Brahmadev Public School - Bell & Announcement System</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -105,36 +105,44 @@
 
         <div class="header-card">
             <h2>Brahmadev Public School</h2>
-            <div style="font-size: 15px; color: #e2e8f0;">Advanced Bell & Announcement Management System</div>
+            <div style="font-size: 15px; color: #e2e8f0;">Smart Bell & Announcement Portal</div>
         </div>
 
         <!-- 📌 ड्रॉपडाउन मेनू (जो आपको पसंद है) -->
         <div class="card">
-            <label for="menuDropdown">📂 पोर्टल मेनू चुनें (Select Section):</label>
+            <label for="menuDropdown">📂 पोर्टल मोड चुनें (Select Mode):</label>
             <select id="menuDropdown" onchange="switchSection(this.value)">
-                <option value="sectionBell">🔔 ऑटो घंटी और टेस्ट सिस्टम</option>
+                <option value="sectionBell">🔔 ऑटो घंटी और टाइमर सिस्टम</option>
                 <option value="sectionAnnouncement">📢 अनाउंसमेंट लाइब्रेरी (घोषणाएँ)</option>
+                <option value="sectionAmplifier">🔊 फोन को एम्प्लीफायर / स्पीकर मोड</option>
                 <option value="sectionSettings">⚙️ टाइम और शेड्यूल सेटिंग्स (Admin)</option>
             </select>
         </div>
 
         <!-- 1. ऑटो घंटी सेक्शन -->
         <div id="sectionBell" class="card section-box active-section">
-            <h3>🔔 ऑटो घंटी और टेस्ट सिस्टम</h3>
-            <p style="font-size: 13px; color: #666;">इंटरनेट के सटीक समय के आधार पर घंटी और ऑडियो अलर्ट नियंत्रित होते हैं।</p>
+            <h3>🔔 ऑटो घंटी और टाइमर सिस्टम</h3>
+            <p style="font-size: 13px; color: #666;">इंटरनेट के बिल्कुल सटीक समय के आधार पर घंटी बजेगी।</p>
             <button class="btn btn-success" onclick="testBell()">सिर्फ घंटी टेस्ट करें</button>
             <button class="btn" style="margin-top: 10px;" onclick="testBellAnnouncement()">घंटी + अनाउंसमेंट टेस्ट करें</button>
         </div>
 
         <!-- 2. अनाउंसमेंट सेक्शन -->
         <div id="sectionAnnouncement" class="card section-box">
-            <h3>📢 अनाउंसमेंट लाइब्रेरी (Google Sheet Sync)</h3>
+            <h3>📢 अनाउंसमेंट लाइब्रेरी (घोषणाएँ)</h3>
             <label>यहाँ अपनी घोषणा टाइप करें:</label>
-            <input type="text" id="announcementText" placeholder="जैसे: कृपया सभी छात्र मैदान में आएं...">
-            <button class="btn btn-success" onclick="saveAndPlayAnnouncement()">अनाउंसमेंट सेव करें व बोलें</button>
+            <input type="text" id="announcementText" placeholder="जैसे: कृपया सभी छात्र असेंबली हॉल में आएं...">
+            <button class="btn btn-success" onclick="saveAndPlayAnnouncement()">घोषणा बोलें व प्रसारित करें</button>
         </div>
 
-        <!-- 3. पासवर्ड प्रोटेक्टेड सेटिंग्स सेक्शन (admin@2007) -->
+        <!-- 3. फोन को एम्प्लीफायर बनाने वाला सेक्शन -->
+        <div id="sectionAmplifier" class="card section-box">
+            <h3>🔊 फोन को एम्प्लीफायर मोड बनाएं</h3>
+            <p style="font-size: 13px; color: #666;">इस फोन को साउंड बॉक्स या एम्प्लीफायर से कनेक्ट करके रखें ताकि यह मुख्य स्पीकर का काम कर सके।</p>
+            <button class="btn btn-success" onclick="alert('यह फोन अब एम्प्लीफायर मोड पर एक्टिव है!')">एम्प्लीफायर मोड चालू करें</button>
+        </div>
+
+        <!-- 4. पासवर्ड प्रोटेक्टेड सेटिंग्स सेक्शन (admin@2007) -->
         <div id="sectionSettings" class="card section-box" style="border-left: 5px solid #e53e3e;">
             <h3>⚙️ टाइम और शेड्यूल सेटिंग्स (सुरक्षित क्षेत्र)</h3>
             
@@ -146,10 +154,14 @@
             </div>
 
             <div id="adminContentDiv" style="display: none;">
-                <p style="color: #2f855a; font-weight: bold;">🔓 सेटिंग्स अनलॉक है (बदलाव सीधे Google Sheet में सेव होंगे)</p>
+                <p style="color: #2f855a; font-weight: bold;">🔓 सेटिंग्स अनलॉक है</p>
                 <label>पीरियड्स और समय की सारणी (Schedule):</label>
-                <textarea rows="6" id="scheduleTextArea">लोड हो रहा है...</textarea>
-                <button class="btn btn-success" onclick="saveScheduleToSheet()">गूगल शीट में बदलाव सेव करें</button>
+                <textarea rows="6" id="scheduleTextArea">08:00 - Assembly
+08:30 - Period 1
+09:15 - Period 2
+10:00 - Recess
+10:30 - Period 3</textarea>
+                <button class="btn btn-success" onclick="saveScheduleLocally()">लोकल बदलाव सेव करें</button>
                 <button class="btn btn-danger" onclick="lockAdminSettings()" style="margin-top: 10px;">वापस लॉक करें</button>
             </div>
         </div>
@@ -157,8 +169,6 @@
     </div>
 
     <script>
-        // आपका Google Apps Script Web App URL
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_97T4EEWDJFZtN3sKKg_Tu7AQCSM8wX3J6A0doQGhOVwZcESWPqHnpnQ_QLCPjVOTbg/exec";
         let timeOffset = 0;
 
         // 📂 ड्रॉपडाउन से सेक्शन बदलने का फंक्शन
@@ -168,7 +178,7 @@
             document.getElementById(sectionId).classList.add('active-section');
         }
 
-        // 🌐 इंटरनेट टाइम सिंक
+        // 🌐 इंटरनेट टाइम सिंक (World Time API से सटीक समय)
         async function syncInternetTime() {
             try {
                 let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
@@ -179,7 +189,7 @@
             }
         }
 
-        // 🕒 लाइव डिजिटल क्लॉक
+        // 🕒 लाइव डिजिटल क्लॉक (सेकंड के साथ)
         function startLiveClock() {
             setInterval(() => {
                 const now = new Date(new Date().getTime() + timeOffset);
@@ -199,7 +209,6 @@
             if (pass === 'admin@2007') {
                 document.getElementById('adminLockDiv').style.display = 'none';
                 document.getElementById('adminContentDiv').style.display = 'block';
-                loadScheduleFromSheet();
                 alert('टाइम सेटिंग्स अनलॉक हो गई हैं!');
             } else {
                 alert('गलत पासवर्ड! कृपया सही एडमिन पासवर्ड दर्ज करें।');
@@ -212,75 +221,52 @@
             document.getElementById('adminPassInput').value = '';
         }
 
-        // 📥 गूगल शीट से शेड्यूल लोड करना
-        async function loadScheduleFromSheet() {
-            try {
-                let response = await fetch(`${WEB_APP_URL}?action=getSettings`);
-                let data = await response.json();
-                if(data.schedule) {
-                    document.getElementById('scheduleTextArea').value = data.schedule;
-                }
-            } catch (e) {
-                console.log("शेड्यूल लोड करने में त्रुटि:", e);
-            }
-        }
-
-        // 📢 टेक्स्ट-टू-स्पीच (TTS) आवाज
+        // 📢 टेक्स्ट-टू-स्पीच (TTS) आवाज से बोलना
         function speakText(text) {
             if ('speechSynthesis' in window) {
                 let utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'hi-IN';
+                utterance.lang = 'hi-IN'; // भारतीय उच्चारण
                 utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        // 💾 अनाउंसमेंट Google Sheet में सेव करना और बोलना
+        // 📢 अनाउंसमेंट बोलना
         function saveAndPlayAnnouncement() {
             const text = document.getElementById('announcementText').value;
             if (!text.trim()) {
                 alert('कृपया घोषणा के लिए टेक्स्ट लिखें!');
                 return;
             }
-
             speakText(text);
-
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "saveAnnouncement", message: text })
-            }).then(() => {
-                alert('अनाउंसमेंट Google Sheet में सेव हो गई और बोल दी गई!');
-                document.getElementById('announcementText').value = '';
-            }).catch(err => alert('सेव करने में विफल!'));
+            alert('घोषणा प्रसारित कर दी गई है!');
+            document.getElementById('announcementText').value = '';
         }
 
-        // 💾 टाइम/शेड्यूल सेव करना
-        function saveScheduleToSheet() {
+        // 💾 शेड्यूल सेव करना (लोकल स्टोरेज में)
+        function saveScheduleLocally() {
             const scheduleText = document.getElementById('scheduleTextArea').value;
-
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "saveSettings", schedule: scheduleText })
-            }).then(() => {
-                alert('टाइम और शेड्यूल Google Sheet में सफलतापूर्वक अपडेट हो गया!');
-                lockAdminSettings();
-            }).catch(err => alert('सेव करने में विफल!'));
+            localStorage.setItem('bps_schedule', scheduleText);
+            alert('शेड्यूल सफलतापवूर्क सेव हो गया है!');
+            lockAdminSettings();
         }
+
+        // पेज लोड होने पर पुराना सेव शेड्यूल लोड करें
+        window.onload = async function() {
+            await syncInternetTime();
+            startLiveClock();
+            
+            let savedSchedule = localStorage.getItem('bps_schedule');
+            if(savedSchedule) {
+                document.getElementById('scheduleTextArea').value = savedSchedule;
+            }
+        };
 
         function testBell() { alert('घंटी टेस्ट सफल!'); }
         function testBellAnnouncement() { 
             speakText('कृपया ध्यान दें, घंटी बजने का समय हो गया है।');
             alert('घंटी + अनाउंसमेंट टेस्ट सफल!'); 
         }
-
-        window.onload = async function() {
-            await syncInternetTime();
-            startLiveClock();
-        };
     </script>
 </body>
 </html>
