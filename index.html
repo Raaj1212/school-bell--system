@@ -49,7 +49,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
 
 <section class="card">
   <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
-  <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #0f172a; color: #00ffcc; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
+  <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #0f172a; color: #00ffcc; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय लोड हो रहा है...</div>
   <div class="row">
     <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
     <button onclick="stopSound()">रोकें</button>
@@ -99,8 +99,20 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   </div>
 
   <div id="adminContentDiv" style="display: none;">
-    <p style="color: #16a34a; font-weight: bold; margin-bottom: 15px;">🔓 सेटिंग्स अनलॉक है (अब आप बदलाव कर सकते हैं)</p>
+    <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 सेटिंग्स अनलॉक है (अब आप बदलाव कर सकते हैं)</p>
     
+    <!-- ☁️ क्लाउड सिंककंट्रोल पैनल -->
+    <div style="background:#eef2f7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <div style="font-weight:bold; color:#12213a;">☁️ क्लाउड सिंक स्टेटस</div>
+        <div id="syncStatusText" style="font-size:13px; color:#16a34a; font-weight:600;">लोकल स्टोरेज पर सुरक्षित है</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="primary" onclick="syncToCloudNow()">☁️ क्लाउड पर सेव/सिंक करें</button>
+        <button onclick="fetchFromCloudNow()">🔄 क्लाउड से डेटा लाएं</button>
+      </div>
+    </div>
+
     <!-- 📢 अनाउंसमेंट लाइब्रेरी -->
     <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
       <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h3>
@@ -160,44 +172,44 @@ let defaultData = {
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
-let isUserTyping = false; // टाइपिंग के दौरान रिफ्रेश रोकने के लिए
 
-if(db) {
-  db.ref("school_bell_system").on("value", (snapshot) => {
+let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
+let peer=null, localStream=null, wakeLock=null;
+
+const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
+audioEl.src = DEFAULT_BELL_URL;
+
+// मैन्युअल क्लाउड सिंक फंक्शन
+function syncToCloudNow() {
+  if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
+  db.ref("school_bell_system").set(st).then(() => {
+    document.getElementById("syncStatusTextinnerHTML").innerText = "🟢 क्लाउड पर सफलतापूर्वक सिंक हो गया है";
+    toast("डेटा क्लाउड पर सफलतापूर्वक सेव हो गया!");
+  }).catch(err => {
+    toast("सिंक फेल हो गया: " + err.message);
+  });
+}
+
+// मैन्युअल क्लाउड से डेटा फेच करने का फंक्शन
+function fetchFromCloudNow() {
+  if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
+  db.ref("school_bell_system").once("value").then((snapshot) => {
     const serverData = snapshot.val();
-    if(serverData && !isUserTyping) {
+    if(serverData) {
       st = serverData;
       st.announcements = st.announcements || [];
       st.roomCode = st.roomCode || "bps-school-123";
       st.isAmplifierDevice = st.isAmplifierDevice || false;
       saveLocal();
       render();
+      document.getElementById("syncStatusText").innerText = "🟢 क्लाउड से डेटा आ गया है";
+      toast("क्लाउड से लेटेस्ट डेटा लोड हो गया!");
+    } else {
+      toast("क्लाउड पर कोई डेटा नहीं मिला।");
     }
+  }).catch(err => {
+    toast("डेटा लाने में त्रुटि हुई।");
   });
-}
-
-st.announcements = st.announcements || [];
-st.roomCode = st.roomCode || "bps-school-123";
-st.isAmplifierDevice = st.isAmplifierDevice || false;
-
-let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
-let peer=null, localStream=null, wakeLock=null;
-let timeOffset = 0;
-
-const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
-audioEl.src = DEFAULT_BELL_URL;
-
-async function syncInternetTime() {
-  try {
-    let controller = new AbortController();
-    let timeoutId = setTimeout(() => controller.abort(), 2000);
-    let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata', { signal: controller.signal });
-    clearTimeout(timeoutId);
-    let data = await response.json();
-    timeOffset = new Date(data.datetime).getTime() - new Date().getTime();
-  } catch (error) {
-    timeOffset = 0;
-  }
 }
 
 function unlockAdminSettings() {
@@ -245,7 +257,6 @@ function makeQuietLoop(){
   }catch(e){}
 }
 
-const dstr=()=>new Date(new Date().getTime() + timeOffset).toDateString();
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",3000);}
 
 function saveLocal(){
@@ -253,10 +264,7 @@ function saveLocal(){
 }
 
 function save(){
-  saveLocal();
-  if(db) {
-    db.ref("school_bell_system").set(st).catch(err => {});
-  }
+  saveLocal(); // सिर्फ लोकल स्टोरेज में तुरंत सेव होगा, टाइपिंग बिल्कुल नहीं अटकेगी
 }
 
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
@@ -328,8 +336,6 @@ function initRoomCodeField(){
   if(rcInput && rcInput.value !== st.roomCode) {
     rcInput.value = st.roomCode;
   }
-  rcInput.onfocus = () => { isUserTyping = true; };
-  rcInput.onblur = () => { isUserTyping = false; };
   rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); };
 }
 
@@ -413,7 +419,7 @@ function startSys(){
 
 function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
 function tick(){
-  const d = new Date(new Date().getTime() + timeOffset);
+  const d = new Date();
   if(running&&d.getSeconds()<3){
     const t=hhmm(d),today=d.toDateString();
     let log=JSON.parse(localStorage.getItem("bellfired")||"{}");
@@ -439,7 +445,7 @@ function tick(){
 }
 
 function showNext(){
-  const d = new Date(new Date().getTime() + timeOffset);
+  const d = new Date();
   const now=hhmm(d);
   const days=daysToArr(st.days);
   const ok=days.includes(DAYS[d.getDay()]);
@@ -460,8 +466,6 @@ function showNext(){
 }
 
 function render(){
-  if(isUserTyping) return; // अगर यूजर टाइप कर रहा है, तो लेआउट रीफ्रेश नहीं होगा
-
   const annDiv = document.getElementById("annList");
   if(annDiv){
     annDiv.innerHTML = "";
@@ -494,13 +498,9 @@ function render(){
       
       const r1=document.createElement("div");r1.className="r1";
       const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";
-      t.onfocus = () => { isUserTyping = true; };
-      t.onblur = () => { isUserTyping = false; save(); showNext(); };
       t.oninput = () => { it.time=t.value; save(); };
 
       const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम";lblInput.style.flex="1";
-      lblInput.onfocus = () => { isUserTyping = true; };
-      lblInput.onblur = () => { isUserTyping = false; save(); };
       lblInput.oninput = () => { it.label=lblInput.value; save(); };
 
       const del=document.createElement("button");del.className="danger small";del.textContent="✕";
@@ -531,7 +531,7 @@ function render(){
       onlyBellChk.checked = it.onlyBell === true;
       onlyBellChk.onchange = () => {
         it.onlyBell = onlyBellChk.checked;
-        selectAnn.disabled = it.onlyBell;
+        selectAnn.disabled = this.checked;
         save();
       };
       const onlyBellLbl = document.createElement("label");
@@ -564,7 +564,21 @@ function addItem(){
 }
 
 async function initApp() {
-  syncInternetTime();
+  // पहले क्लाउड से एक बार लेटेस्ट डेटा ले आएंगे ताकि हमेशा अप-टू-डेट रहे
+  if(db) {
+    try {
+      let snapshot = await db.ref("school_bell_system").once("value");
+      let serverData = snapshot.val();
+      if(serverData) {
+        st = serverData;
+        st.announcements = st.announcements || [];
+        st.roomCode = st.roomCode || "bps-school-123";
+        st.isAmplifierDevice = st.isAmplifierDevice || false;
+        saveLocal();
+      }
+    } catch(e) {}
+  }
+
   render();
   initRoomCodeField();
   showNext();
