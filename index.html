@@ -1,272 +1,544 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brahmadev Public School - Bell & Announcement System</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #eef2f7;
-            margin: 0;
-            padding: 15px;
-            color: #333;
-        }
-        .container {
-            max-width: 650px;
-            margin: auto;
-        }
-        .header-card {
-            background: linear-gradient(135deg, #1a365d, #2b6cb0);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-        .card {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 15px;
-        }
-        h2, h3 {
-            margin-top: 0;
-            color: #1a365d;
-        }
-        label {
-            font-weight: bold;
-            font-size: 14px;
-            color: #4a5568;
-            display: block;
-            margin-bottom: 6px;
-        }
-        select, input, textarea {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 15px;
-            background: #fff;
-        }
-        .btn {
-            background: #3182ce;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            width: 100%;
-            transition: background 0.2s;
-        }
-        .btn:hover { background: #2b6cb0; }
-        .btn-success { background: #38a169; }
-        .btn-success:hover { background: #2f855a; }
-        .btn-danger { background: #e53e3e; }
-        
-        #liveDigitalClock {
-            font-size: 22px;
-            font-weight: bold;
-            background: #0f172a;
-            color: #00ffcc;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 15px;
-            letter-spacing: 1.5px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-        }
-        .section-box {
-            display: none;
-        }
-        .active-section {
-            display: block;
-        }
-        .locked-box {
-            background: #fff5f5;
-            border: 1px solid #feb2b2;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>School Bell & Announcement System</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2430;--line:#e3e7ec;--blue:#2563eb;--green:#16a34a;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+header{background:#12213a;color:#fff;padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+header h1{font-size:18px;margin:0;font-weight:600}
+main{max-width:720px;margin:14px auto;padding:0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 10px;color:#12213a;font-weight:700}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:15px}
+button.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+button.danger{color:var(--red);border-color:#f3c1c1}
+button.mic-on{background:var(--red);color:#fff;border-color:var(--red);font-weight:700}
+button.small{padding:5px 10px;font-size:13px}
+input,select{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px}
+input[type=text],input[type=password]{flex:1;min-width:120px}
+#nextBell{font-size:17px;font-weight:700;color:var(--green)}
+.item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
+.r1{display:flex;gap:8px;align-items:center}
+.r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.days label{margin-right:6px;font-size:13px}
+.hint{font-size:13px;color:#6b7280;margin:6px 0}
+.muted{color:#6b7280;font-size:12px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12213a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:9999}
+.locked-box {background:#fff5f5;border:1px solid #feb2b2;padding:15px;border-radius:8px;text-align:center;margin-bottom:10px;}
+</style>
+<!-- PeerJS Library for Remote Live Audio Streaming -->
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
-    <div class="container">
+<header><h1>School Bell & Announcement</h1><span id="runState">चालू है</span><span id="nextBell"></span></header>
+<main>
 
-        <!-- 🕒 इंटरनेट टाइम सिंक डिजिटल क्लॉक -->
-        <div id="liveDigitalClock">🕒 समय सिंक हो रहा है...</div>
+<section class="card">
+  <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
+  <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #0f172a; color: #00ffcc; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
+  <div class="row">
+    <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
+    <button onclick="testGeneral()">🔊 घंटी + अनाउंसमेंट टेस्ट करें</button>
+    <button onclick="stopSound()">रोकें</button>
+  </div>
+  <div class="hint">वेक-लॉक एक्टिव है। स्क्रीन बंद रहने पर भी इंटरनेट टाइमर और घंटी काम करती रहेगी।</div>
+</section>
 
-        <div class="header-card">
-            <h2>Brahmadev Public School</h2>
-            <div style="font-size: 15px; color: #e2e8f0;">Smart Bell & Announcement Portal</div>
-        </div>
+<!-- 🔊 एम्प्लीफायर मोड (अब बाहर उपलब्ध है) -->
+<section class="card" style="border-left: 5px solid #2563eb;">
+  <h2>🔊 रिमोट लाइव माइक और एम्प्लीफायर मोड (बाहर)</h2>
+  <div class="row">
+    <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
+    <button class="primary" onclick="startBroadcasting()">बोलें (ब्रॉडकास्ट ऑन)</button>
+    <button class="danger" onclick="stopBroadcasting()">ब्रॉडकास्ट बंद करें</button>
+  </div>
+  <div class="row" style="margin-top:8px;">
+    <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
+    <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
+  </div>
+  <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb;">स्टेटस: तैयार है</div>
+</section>
 
-        <!-- 📌 ड्रॉपडाउन मेनू (जो आपको पसंद है) -->
-        <div class="card">
-            <label for="menuDropdown">📂 पोर्टल मोड चुनें (Select Mode):</label>
-            <select id="menuDropdown" onchange="switchSection(this.value)">
-                <option value="sectionBell">🔔 ऑटो घंटी और टाइमर सिस्टम</option>
-                <option value="sectionAnnouncement">📢 अनाउंसमेंट लाइब्रेरी (घोषणाएँ)</option>
-                <option value="sectionAmplifier">🔊 फोन को एम्प्लीफायर / स्पीकर मोड</option>
-                <option value="sectionSettings">⚙️ टाइम और शेड्यूल सेटिंग्स (Admin)</option>
-            </select>
-        </div>
+<section class="card">
+  <h2>📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h2>
+  <div class="row">
+    <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
+    <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट जैसे: प्रथम घंटी लग चुकी है">
+    <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
+  </div>
+  <div id="annList"></div>
+</section>
 
-        <!-- 1. ऑटो घंटी सेक्शन -->
-        <div id="sectionBell" class="card section-box active-section">
-            <h3>🔔 ऑटो घंटी और टाइमर सिस्टम</h3>
-            <p style="font-size: 13px; color: #666;">इंटरनेट के बिल्कुल सटीक समय के आधार पर घंटी बजेगी।</p>
-            <button class="btn btn-success" onclick="testBell()">सिर्फ घंटी टेस्ट करें</button>
-            <button class="btn" style="margin-top: 10px;" onclick="testBellAnnouncement()">घंटी + अनाउंसमेंट टेस्ट करें</button>
-        </div>
+<section class="card">
+  <h2>घंटी के बाद बोलने का गैप</h2>
+  <div class="row">
+    <span class="muted">गैप चुनें:</span>
+    <select id="delaySelect" onchange="updateDelay(this)">
+      <option value="100">तुरंत (0.1 सेकंड)</option>
+      <option value="300" selected>सामान्य (0.3 सेकंड)</option>
+      <option value="600">थोड़ा रुककर (0.6 सेकंड)</option>
+      <option value="1000">1 सेकंड</option>
+    </select>
+  </div>
+</section>
 
-        <!-- 2. अनाउंसमेंट सेक्शन -->
-        <div id="sectionAnnouncement" class="card section-box">
-            <h3>📢 अनाउंसमेंट लाइब्रेरी (घोषणाएँ)</h3>
-            <label>यहाँ अपनी घोषणा टाइप करें:</label>
-            <input type="text" id="announcementText" placeholder="जैसे: कृपया सभी छात्र असेंबली हॉल में आएं...">
-            <button class="btn btn-success" onclick="saveAndPlayAnnouncement()">घोषणा बोलें व प्रसारित करें</button>
-        </div>
-
-        <!-- 3. फोन को एम्प्लीफायर बनाने वाला सेक्शन -->
-        <div id="sectionAmplifier" class="card section-box">
-            <h3>🔊 फोन को एम्प्लीफायर मोड बनाएं</h3>
-            <p style="font-size: 13px; color: #666;">इस फोन को साउंड बॉक्स या एम्प्लीफायर से कनेक्ट करके रखें ताकि यह मुख्य स्पीकर का काम कर सके।</p>
-            <button class="btn btn-success" onclick="alert('यह फोन अब एम्प्लीफायर मोड पर एक्टिव है!')">एम्प्लीफायर मोड चालू करें</button>
-        </div>
-
-        <!-- 4. पासवर्ड प्रोटेक्टेड सेटिंग्स सेक्शन (admin@2007) -->
-        <div id="sectionSettings" class="card section-box" style="border-left: 5px solid #e53e3e;">
-            <h3>⚙️ टाइम और शेड्यूल सेटिंग्स (सुरक्षित क्षेत्र)</h3>
-            
-            <div id="adminLockDiv" class="locked-box">
-                <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 यह सेटिंग पासवर्ड प्रोटेक्टेड है!</p>
-                <p style="font-size: 12px; color: #4a5568;">मास्टर पासवर्ड दर्ज करें (admin@2007)</p>
-                <input type="password" id="adminPassInput" placeholder="एडमिन पासवर्ड दर्ज करें">
-                <button class="btn btn-success" onclick="unlockAdminSettings()">सेटिंग्स अनलॉक करें</button>
-            </div>
-
-            <div id="adminContentDiv" style="display: none;">
-                <p style="color: #2f855a; font-weight: bold;">🔓 सेटिंग्स अनलॉक है</p>
-                <label>पीरियड्स और समय की सारणी (Schedule):</label>
-                <textarea rows="6" id="scheduleTextArea">08:00 - Assembly
-08:30 - Period 1
-09:15 - Period 2
-10:00 - Recess
-10:30 - Period 3</textarea>
-                <button class="btn btn-success" onclick="saveScheduleLocally()">लोकल बदलाव सेव करें</button>
-                <button class="btn btn-danger" onclick="lockAdminSettings()" style="margin-top: 10px;">वापस लॉक करें</button>
-            </div>
-        </div>
-
+<!-- 🔒 पासवर्ड प्रोटेक्टेड टाइमटेबल / रूटीन सेक्शन (पासवर्ड: 123) -->
+<section class="card" style="border-left: 5px solid #dc2626;">
+  <h2>⏰ टाइमटेबल और रूटीन सेटिंग्स (पासवर्ड प्रोटेक्टेड)</h2>
+  
+  <div id="adminLockDiv" class="locked-box">
+    <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 रूटीन और टाइमटेबल में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
+    <div class="row" style="justify-content: center;">
+      <input type="password" id="adminPassInput" placeholder="मास्टर पासवर्ड दर्ज करें (123)" style="max-width: 220px;">
+      <button class="primary" onclick="unlockAdminSettings()">अनलॉक करें</button>
     </div>
+  </div>
 
-    <script>
-        let timeOffset = 0;
+  <div id="adminContentDiv" style="display: none;">
+    <p style="color: #16a34a; font-weight: bold;">🔓 सेटिंग्स अनलॉक है (अब आप रूटीन बदल सकते हैं)</p>
+    <div class="days row" id="daysRow"></div>
+    <div id="items"></div>
+    <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
+    <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 10px;">वापस लॉक करें</button>
+  </div>
+</section>
 
-        // 📂 ड्रॉपडाउन से सेक्शन बदलने का फंक्शन
-        function switchSection(sectionId) {
-            const sections = document.querySelectorAll('.section-box');
-            sections.forEach(sec => sec.classList.remove('active-section'));
-            document.getElementById(sectionId).classList.add('active-section');
+</main>
+<div id="toast"></div>
+<script>
+"use strict";
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
+
+let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
+  announcements: [
+    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
+    { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
+  ],
+  items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
+  days:"all",
+  bellDelay:300,
+  roomCode:"bps-school-123",
+  isAmplifierDevice:false
+};
+st.bellDelay = st.bellDelay || 300;
+st.announcements = st.announcements || [];
+st.roomCode = st.roomCode || "bps-school-123";
+st.isAmplifierDevice = st.isAmplifierDevice || false;
+
+let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
+let peer=null, localStream=null, wakeLock=null;
+let timeOffset = 0; // इंटरनेट टाइम सिंक के लिए ऑफसेट
+
+const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
+audioEl.src = DEFAULT_BELL_URL;
+
+// 🌐 इंटरनेट टाइम सिंक फंक्शन
+async function syncInternetTime() {
+  try {
+    let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
+    let data = await response.json();
+    timeOffset = new Date(data.datetime).getTime() - new Date().getTime();
+  } catch (error) {
+    timeOffset = 0;
+  }
+}
+
+// 🔓 एडमिन अनलॉक फंक्शन (पासवर्ड: 123)
+function unlockAdminSettings() {
+  const pass = document.getElementById('adminPassInput').value;
+  if (pass === '123') {
+    document.getElementById('adminLockDiv').style.display = 'none';
+    document.getElementById('adminContentDiv').style.display = 'block';
+    toast('टाइमटेबल सेटिंग्स अनलॉक हो गई हैं!');
+  } else {
+    toast('गलत पासवर्ड! कृपया सही पासवर्ड (123) दर्ज करें।');
+  }
+}
+
+function lockAdminSettings() {
+  document.getElementById('adminLockDiv').style.display = 'block';
+  document.getElementById('adminContentDiv').style.display = 'none';
+  document.getElementById('adminPassInput').value = '';
+  toast('टाइमटेबल सेटिंग्स लॉक कर दी गई हैं।');
+}
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (err) {}
+}
+
+document.addEventListener('visibilitychange', async () => {
+  if (wakeLock !== null && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
+function updateDelay(sel){
+  st.bellDelay = parseInt(sel.value);
+  save();
+  toast("गैप बदल गया: "+sel.options[sel.selectedIndex].text);
+}
+
+function makeQuietLoop(){
+  try{
+    const sr=8000,sec=2,n=sr*sec,buf=new Uint8Array(44+n*2),dv=new DataView(buf.buffer);
+    const w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+    w(0,"RIFF");dv.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");dv.setUint32(16,16,true);dv.setInt16(20,1,true);dv.setInt16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setInt16(32,2,true);dv.setInt16(34,16,true);w(36,"data");dv.setUint32(40,n*2,true);
+    for(let i=0;i<n;i++){const v=Math.round(200*Math.sin(2*Math.PI*85*i/sr));dv.setInt16(44+i*2,v,true);}
+    let out="";const CHUNK=8192;
+    for(let i=0;i<buf.length;i+=CHUNK){out+=String.fromCharCode.apply(null,buf.subarray(i,Math.min(i+CHUNK,buf.length)));}
+    quietEl=new Audio("data:audio/wav;base64,"+btoa(out));
+    quietEl.loop=true;quietEl.volume=0.05;
+  }catch(e){}
+}
+
+const dstr=()=>new Date(new Date().getTime() + timeOffset).toDateString();
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",3000);}
+function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
+function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
+function arrToDays(a){return a.length===7?"all":a.join(",");}
+
+function speakAudio(text, cb){
+  if(!text){if(cb)cb();return;}
+  try{
+    ttsAudioEl.pause();
+    const encoded = encodeURIComponent(text);
+    ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
+    ttsAudioEl.currentTime = 0;
+    ttsAudioEl.onended = () => { ttsAudioEl.onended = null; if(cb) cb(); };
+    ttsAudioEl.play().catch(e => {
+      let u = new SpeechSynthesisUtterance(text);
+      u.lang = "hi-IN";
+      u.onend = () => { if(cb) cb(); };
+      window.speechSynthesis.speak(u);
+    });
+  }catch(e){ if(cb) cb(); }
+}
+
+function ringAndSpeak(text, playBell, onlyBell, cb){
+  if(playBell === false){
+    if(!onlyBell) speakAudio(text, cb);
+    else if(cb) cb();
+    return;
+  }
+  audioEl.pause();
+  audioEl.currentTime = 0;
+  audioEl.onended = () => {
+    audioEl.onended = null;
+    if(onlyBell){ if(cb) cb(); return; }
+    setTimeout(() => { speakAudio(text, cb); }, st.bellDelay || 300);
+  };
+  audioEl.play().catch(() => {
+    if(!onlyBell) speakAudio(text, cb);
+    else if(cb) cb();
+  });
+}
+
+function testBellOnly(){
+  ringAndSpeak("", true, true, null);
+  toast("सिर्फ घंटी बज रही है");
+}
+
+function testGeneral(){
+  ringAndSpeak("यह टेस्ट घोषणा है", true, false, null);
+}
+
+function stopSound(){
+  try{ ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
+  audioEl.pause();
+  audioEl.currentTime = 0;
+}
+
+// ---- रिमोट लाइव माइक फंक्शन्स ----
+function initRoomCodeField(){
+  const rcInput = document.getElementById("roomCode");
+  rcInput.value = st.roomCode;
+  rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); };
+}
+
+function setAsAmplifierPhone(){
+  st.isAmplifierDevice = true;
+  save();
+  toast("यह डिवाइस 'एम्प्लीफायर फोन' के रूप में सेट हो गया है। अब यह हमेशा सुनने के लिए तैयार रहेगा।");
+  startAutoListener();
+}
+
+function unsetAmplifierPhone(){
+  st.isAmplifierDevice = false;
+  save();
+  if(peer) peer.destroy();
+  toast("एम्प्लीफायर मोड हटा दिया गया है।");
+  document.getElementById("streamStatus").textContent = "स्टेटस: तैयार है";
+}
+
+function startAutoListener(){
+  const code = st.roomCode;
+  if(!code) return;
+  if(peer) peer.destroy();
+  
+  const connId = "bps_school_room_" + code;
+  peer = new Peer(connId);
+  
+  peer.on('call', call => {
+    call.answer();
+    call.on('stream', remoteStream => {
+      const audio = new Audio();
+      audio.srcObject = remoteStream;
+      audio.play().catch(e => console.log("Audio play error:", e));
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ एम्प्लीफायर पर आ रही है...";
+      toast("लाइव अनाउंसमेंट आ रही है!");
+    });
+  });
+  document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर फोन लाइव सुनने की स्थिति में है...";
+}
+
+function startBroadcasting(){
+  const code = document.getElementById("roomCode").value.trim();
+  if(!code){ toast("कृपया रूम कोड दर्ज करें!"); return; }
+  
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+    localStream = stream;
+    if(peer) peer.destroy();
+    peer = new Peer();
+    peer.on('open', id => {
+      const connId = "bps_school_room_" + code;
+      const call = peer.call(connId, stream);
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 आप बोल रहे हैं (ब्रॉडकास्ट लाइव है)";
+      toast("ब्रॉडकास्ट शुरू हो गया है!");
+    });
+  }).catch(e => toast("माइक की अनुमति नहीं मिली"));
+}
+
+function stopBroadcasting(){
+  if(localStream){
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+  }
+  if(peer) peer.destroy();
+  document.getElementById("streamStatus").textContent = "स्टेटस: ब्रॉडकास्ट बंद कर दिया गया है";
+  toast("ब्रॉडकास्ट बंद हो गया।");
+}
+// ----------------------------------------------
+
+function saveAnnouncement(){
+  const title = document.getElementById("annTitle").value.trim();
+  const text = document.getElementById("annText").value.trim();
+  if(!title || !text){ toast("कृपया नाम और टेक्स्ट दोनों भरें!"); return; }
+  st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
+  save();
+  document.getElementById("annTitle").value = "";
+  document.getElementById("annText").value = "";
+  toast("अनाउंसमेंट सेव हो गई!");
+  render();
+}
+
+function deleteAnnouncement(id){
+  st.announcements = st.announcements.filter(a => a.id !== id);
+  save();
+  toast("अनाउंसमेंट डिलीट कर दी गई");
+  render();
+}
+
+function startSys(){
+  if(running)return;running=true;
+  document.getElementById("runState").textContent="चालू है";
+  try{if(!quietEl)makeQuietLoop();quietEl.currentTime=0;quietEl.play();}catch(e){}
+  requestWakeLock();
+}
+
+function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
+function tick(){
+  const d = new Date(new Date().getTime() + timeOffset);
+  if(running&&d.getSeconds()<3){
+    const t=hhmm(d),today=d.toDateString();
+    const log=JSON.parse(localStorage.getItem("bellfired")||"{}");
+    if(log.date!==today){localStorage.setItem("bellfired",JSON.stringify({date:today,list:{}}));}
+    const cur=JSON.parse(localStorage.getItem("bellfired")||"{}");
+    if(cur.date===today&&cur.list[t])return;
+    const days=daysToArr(st.days);
+    if(!days.includes(DAYS[d.getDay()]))return;
+    const hits=st.items.filter(i=>i.time===t);
+    if(hits.length){
+      cur.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(cur));
+      hits.sort((a,b)=>String(a.label).localeCompare(String(b.label)));
+      
+      hits.forEach(i=>{
+        let textToSay = "";
+        if(!i.onlyBell && i.annId){
+          const found = st.announcements.find(a => a.id === i.annId);
+          if(found) textToSay = found.text;
         }
+        ringAndSpeak(textToSay, i.bell!==false, i.onlyBell===true, null);
+      });
+      showNext();
+    }
+  }
+  showNext();
+}
 
-        // 🌐 इंटरनेट टाइम सिंक (World Time API से सटीक समय)
-        async function syncInternetTime() {
-            try {
-                let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
-                let data = await response.json();
-                timeOffset = new Date(data.datetime).getTime() - new Date().getTime();
-            } catch (error) {
-                timeOffset = 0;
-            }
-        }
+function showNext(){
+  const d = new Date(new Date().getTime() + timeOffset);
+  const now=hhmm(d);
+  const days=daysToArr(st.days);
+  const ok=days.includes(DAYS[d.getDay()]);
+  const items=[...st.items].sort((a,b)=>a.time.localeCompare(b.time));
+  let nxt=null;
+  if(ok){for(const i of items){if(i.time>now){nxt=i;break;}}}
+  document.getElementById("nextBell").textContent=nxt?("अगली: "+nxt.time+" "+(nxt.label||"")):"आज की सब हो गईं";
 
-        // 🕒 लाइव डिजिटल क्लॉक (सेकंड के साथ)
-        function startLiveClock() {
-            setInterval(() => {
-                const now = new Date(new Date().getTime() + timeOffset);
-                let hours = now.getHours();
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-                
-                document.getElementById('liveDigitalClock').innerHTML = `🕒 ${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm} (Net Sync Live)`;
-            }, 1000);
-        }
+  // लाइव डिजिटल क्लॉक अपडेट (सेकंड के साथ)
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2,'0');
+  const seconds = String(d.getSeconds()).padStart(2,'0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  document.getElementById("liveDigitalClock").innerHTML = `🕒 ${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm} (Net Sync Live)`;
+}
 
-        // 🔓 एडमिन अनलॉक (पासवर्ड: admin@2007)
-        function unlockAdminSettings() {
-            const pass = document.getElementById('adminPassInput').value;
-            if (pass === 'admin@2007') {
-                document.getElementById('adminLockDiv').style.display = 'none';
-                document.getElementById('adminContentDiv').style.display = 'block';
-                alert('टाइम सेटिंग्स अनलॉक हो गई हैं!');
-            } else {
-                alert('गलत पासवर्ड! कृपया सही एडमिन पासवर्ड दर्ज करें।');
-            }
-        }
+function render(){
+  const annDiv = document.getElementById("annList");
+  annDiv.innerHTML = "";
+  if(st.announcements.length === 0){
+    annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट सेव नहीं है।</div>';
+  } else {
+    st.announcements.forEach(a => {
+      const box = document.createElement("div");
+      box.className = "announcement-box";
+      
+      const infoSpan = document.createElement("span");
+      infoSpan.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
+      
+      const btnGroup = document.createElement("div");
+      
+      const playBtn = document.createElement("button");
+      playBtn.className = "small primary";
+      playBtn.textContent = "▶ सुनें";
+      playBtn.onclick = () => speakAudio(a.text, null);
 
-        function lockAdminSettings() {
-            document.getElementById('adminLockDiv').style.display = 'block';
-            document.getElementById('adminContentDiv').style.display = 'none';
-            document.getElementById('adminPassInput').value = '';
-        }
+      const delBtn = document.createElement("button");
+      delBtn.className = "small danger";
+      delBtn.textContent = "✕";
+      delBtn.style.marginLeft = "5px";
+      delBtn.onclick = () => deleteAnnouncement(a.id);
 
-        // 📢 टेक्स्ट-टू-स्पीच (TTS) आवाज से बोलना
-        function speakText(text) {
-            if ('speechSynthesis' in window) {
-                let utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'hi-IN'; // भारतीय उच्चारण
-                utterance.rate = 0.9;
-                window.speechSynthesis.speak(utterance);
-            }
-        }
+      btnGroup.append(playBtn, delBtn);
+      box.append(infoSpan, btnGroup);
+      annDiv.appendChild(box);
+    });
+  }
 
-        // 📢 अनाउंसमेंट बोलना
-        function saveAndPlayAnnouncement() {
-            const text = document.getElementById('announcementText').value;
-            if (!text.trim()) {
-                alert('कृपया घोषणा के लिए टेक्स्ट लिखें!');
-                return;
-            }
-            speakText(text);
-            alert('घोषणा प्रसारित कर दी गई है!');
-            document.getElementById('announcementText').value = '';
-        }
+  const dr=document.getElementById("daysRow");dr.innerHTML="";
+  const days=daysToArr(st.days);
+  DAYS.forEach(dd=>{const l=document.createElement("label");l.className="chk";const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
+  
+  const box=document.getElementById("items");box.innerHTML="";
+  st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});save();
+  
+  [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
+    const r=document.createElement("div");r.className="item";
+    
+    const r1=document.createElement("div");r1.className="r1";
+    const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";t.oninput=()=>{it.time=t.value;save();showNext();};
+    const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम जैसे: First Period";lblInput.style.flex="1";lblInput.oninput=()=>{it.label=lblInput.value;save();showNext();};
+    const del=document.createElement("button");del.className="danger small";del.textContent="✕";
+    del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
+    r1.append(t,lblInput,del);
 
-        // 💾 शेड्यूल सेव करना (लोकल स्टोरेज में)
-        function saveScheduleLocally() {
-            const scheduleText = document.getElementById('scheduleTextArea').value;
-            localStorage.setItem('bps_schedule', scheduleText);
-            alert('शेड्यूल सफलतापवूर्क सेव हो गया है!');
-            lockAdminSettings();
-        }
+    const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
+    
+    const selectAnn = document.createElement("select");
+    selectAnn.style.flex = "1";
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "-- कोई अनाउंसमेंट अटैच न करें --";
+    selectAnn.appendChild(defaultOpt);
 
-        // पेज लोड होने पर पुराना सेव शेड्यूल लोड करें
-        window.onload = async function() {
-            await syncInternetTime();
-            startLiveClock();
-            
-            let savedSchedule = localStorage.getItem('bps_schedule');
-            if(savedSchedule) {
-                document.getElementById('scheduleTextArea').value = savedSchedule;
-            }
-        };
+    st.announcements.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = `📢 ${a.title} -> "${a.text.substring(0, 30)}..."`;
+      if(it.annId === a.id) opt.selected = true;
+      selectAnn.appendChild(opt);
+    });
 
-        function testBell() { alert('घंटी टेस्ट सफल!'); }
-        function testBellAnnouncement() { 
-            speakText('कृपया ध्यान दें, घंटी बजने का समय हो गया है।');
-            alert('घंटी + अनाउंसमेंट टेस्ट सफल!'); 
-        }
-    </script>
+    selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
+    if(it.onlyBell) selectAnn.disabled = true;
+    r2.append(selectAnn);
+
+    const r3=document.createElement("div");r3.className="r3";
+    const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};
+    const bl=document.createElement("label");bl.append(bc,document.createTextNode("घंटी बजे"));
+
+    const onlyBellChk = document.createElement("input");
+    onlyBellChk.type = "checkbox";
+    onlyBellChk.checked = it.onlyBell === true;
+    onlyBellChk.onchange = () => {
+      it.onlyBell = onlyBellChk.checked;
+      selectAnn.disabled = it.onlyBell;
+      save();
+    };
+    const onlyBellLbl = document.createElement("label");
+    onlyBellLbl.style.color = "#d97706";
+    onlyBellLbl.style.fontWeight = "600";
+    onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी बजे"));
+
+    const playBtn = document.createElement("button");
+    playBtn.className = "small primary";
+    playBtn.textContent = "▶ टेस्ट सुनें";
+    playBtn.onclick = () => {
+      let tText = "";
+      if(!it.onlyBell && it.annId){
+        const f = st.announcements.find(a => a.id === it.annId);
+        if(f) tText = f.text;
+      }
+      ringAndSpeak(tText, it.bell!==false, it.onlyBell===true, null);
+    };
+
+    r3.append(bl, onlyBellLbl, playBtn);
+    r.append(r1, r2, r3); box.appendChild(r);
+  });
+  showNext();
+}
+
+function addItem(){st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});save();render();}
+
+loadSpeakOpts();
+function loadSpeakOpts(){
+  document.getElementById("delaySelect").value = String(st.bellDelay || 300);
+}
+
+// सबसे पहले इंटरनेट टाइम सिंक करें, फिर सिस्टम शुरू करें
+async function initApp() {
+  await syncInternetTime();
+  render();
+  initRoomCodeField();
+
+  if(st.isAmplifierDevice){
+    setTimeout(() => {
+      startAutoListener();
+    }, 1000);
+  }
+
+  setInterval(tick, 1000);
+
+  setTimeout(() => {
+    startSys();
+  }, 1000);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initApp();
+});
+</script>
 </body>
 </html>
