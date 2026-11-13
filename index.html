@@ -51,17 +51,6 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
     <button onclick="testBellOnly()">🔔 सिर्फ घंटी टेस्ट करें</button>
     <button onclick="stopSound()">रोकें</button>
   </div>
-  
-  <!-- इमरजेंसी टेक्स्ट इनपुट के साथ घंटी + अनाउंसमेंट टेस्ट -->
-  <div style="margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px;">
-    <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">🚨 इमरजेंसी / टेस्ट अनाउंसमेंट (घंटी के बाद बजेगी):</label>
-    <div class="row">
-      <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें जैसे: अति आवश्यक सूचना..." style="flex:1;">
-      <button class="primary" onclick="testGeneralWithCustomText()">🔊 घंटी + यह टेक्स्ट बजाएं</button>
-    </div>
-  </div>
-
-  <div class="hint" style="margin-top: 8px;">वेक-लॉक एक्टिव है। स्क्रीन बंद रहने पर भी इंटरनेट टाइमर और घंटी काम करती रहेगी।</div>
 </section>
 
 <!-- 🔊 एम्प्लीफायर मोड बाहर -->
@@ -79,35 +68,29 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
 </section>
 
-<section class="card">
-  <h2>📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h2>
-  <div class="row">
-    <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
-    <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट जैसे: प्रथम घंटी लग चुकी है">
-    <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
-  </div>
-  <div id="annList"></div>
-</section>
-
-<section class="card">
-  <h2>घंटी के बाद बोलने का गैप</h2>
-  <div class="row">
-    <span class="muted">गैप चुनें:</span>
-    <select id="delaySelect" onchange="updateDelay(this)">
-      <option value="100">तुरंत (0.1 सेकंड)</option>
-      <option value="300" selected>सामान्य (0.3 सेकंड)</option>
-      <option value="600">थोड़ा रुककर (0.6 सेकंड)</option>
-      <option value="1000">1 सेकंड</option>
-    </select>
+<!-- 🚨 इमरजेंसी कंट्रोल सेक्शन (हमेशा बाहर, पासवर्ड से मुक्त) -->
+<section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
+  <h2>🚨 इमरजेंसी कंट्रोल और त्वरित घोषणाएँ</h2>
+  <div style="margin-top: 8px;">
+    <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें:</label>
+    <input type="text" id="emergencyText" placeholder="जैसे: अति आवश्यक सूचना..." style="width:100%; margin-bottom: 10px;">
+    
+    <div class="row" style="gap: 10px;">
+      <!-- बटन 1: सिर्फ घंटी (बिना 'अटेंशन प्लीज' के) -->
+      <button onclick="testGeneralWithCustomText()" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold;">🔔 1. नॉर्मल घंटी बजाएं (बिना अटेंशन प्लीज)</button>
+      
+      <!-- बटन 2: इमरजेंसी टोन + "Attention Please" के साथ -->
+      <button class="primary" onclick="triggerEmergencyAttention()" style="flex:1; background:#dc2626; border-color:#dc2626;">📢 2. इमरजेंसी टोन + "Attention Please"</button>
+    </div>
   </div>
 </section>
 
-<!-- 🔒 पासवर्ड प्रोटेक्टेड टाइमटेबल / रूटीन सेक्शन (पासवर्ड: 123) -->
+<!-- 🔒 पासवर्ड प्रोटेक्टेड सेक्शन (लाइब्रेरी, गैप और टाइमटेबल) -->
 <section class="card" style="border-left: 5px solid #dc2626;">
-  <h2>⏰ टाइमटेबल और रूटीन सेटिंग्स (पासवर्ड प्रोटेक्टेड)</h2>
+  <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
   
   <div id="adminLockDiv" class="locked-box">
-    <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 रूटीन और टाइमटेबल में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
+    <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 अनाउंसमेंट लाइब्रेरी, गैप और रूटीन में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
     <div class="row" style="justify-content: center;">
       <input type="password" id="adminPassInput" placeholder="मास्टर पासवर्ड दर्ज करें (123)" style="max-width: 220px;">
       <button class="primary" onclick="unlockAdminSettings()">अनलॉक करें</button>
@@ -115,11 +98,42 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   </div>
 
   <div id="adminContentDiv" style="display: none;">
-    <p style="color: #16a34a; font-weight: bold;">🔓 सेटिंग्स अनलॉक है (अब आप रूटीन बदल सकते हैं)</p>
-    <div class="days row" id="daysRow"></div>
-    <div id="items"></div>
-    <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
-    <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 10px;">वापस लॉक करें</button>
+    <p style="color: #16a34a; font-weight: bold; margin-bottom: 15px;">🔓 सेटिंग्स अनलॉक है (अब आप बदलाव कर सकते हैं)</p>
+    
+    <!-- 📢 अनाउंसमेंट लाइब्रेरी -->
+    <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
+      <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी (यहाँ अपनी घोषणाएँ लिखकर सेव करें)</h3>
+      <div class="row">
+        <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
+        <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट जैसे...">
+        <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
+      </div>
+      <div id="annList"></div>
+    </div>
+
+    <!-- घंटी के बाद बोलने का गैप -->
+    <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
+      <h3 style="font-size:15px; margin-top:0; color:#12213a;">घंटी के बाद बोलने का गैप</h3>
+      <div class="row">
+        <span class="muted">गैप चुनें:</span>
+        <select id="delaySelect" onchange="updateDelay(this)">
+          <option value="100">तुरंत (0.1 सेकंड)</option>
+          <option value="300" selected>सामान्य (0.3 सेकंड)</option>
+          <option value="600">थोड़ा रुककर (0.6 सेकंड)</option>
+          <option value="1000">1 सेकंड</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- टाइमटेबल और रूटीन सेटिंग्स -->
+    <div style="background:#f9f9f9; padding:10px; border-radius:8px; border:1px solid var(--line);">
+      <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ टाइमटेबल और रूटीन</h3>
+      <div class="days row" id="daysRow"></div>
+      <div id="items"></div>
+      <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
+    </div>
+
+    <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 15px;">वापस लॉक करें</button>
   </div>
 </section>
 
@@ -168,7 +182,7 @@ function unlockAdminSettings() {
   if (pass === '123') {
     document.getElementById('adminLockDiv').style.display = 'none';
     document.getElementById('adminContentDiv').style.display = 'block';
-    toast('टाइमटेबल सेटिंग्स अनलॉक हो गई हैं!');
+    toast('सेटिंग्स और लाइब्रेरी अनलॉक हो गई हैं!');
   } else {
     toast('गलत पासवर्ड! कृपया सही पासवर्ड (123) दर्ज करें।');
   }
@@ -178,7 +192,7 @@ function lockAdminSettings() {
   document.getElementById('adminLockDiv').style.display = 'block';
   document.getElementById('adminContentDiv').style.display = 'none';
   document.getElementById('adminPassInput').value = '';
-  toast('टाइमटेबल सेटिंग्स लॉक कर दी गई हैं।');
+  toast('सेटिंग्स लॉक कर दी गई हैं।');
 }
 
 async function requestWakeLock() {
@@ -261,6 +275,7 @@ function testBellOnly(){
   toast("सिर्फ घंटी बज रही है");
 }
 
+// बटन 1: नॉर्मल घंटी + कस्टम टेक्स्ट (बिना "अटेंशन प्लीज" के)
 function testGeneralWithCustomText(){
   const customText = document.getElementById("emergencyText").value.trim();
   if(!customText){
@@ -268,7 +283,25 @@ function testGeneralWithCustomText(){
     return;
   }
   ringAndSpeak(customText, true, false, null);
-  toast("घंटी और इमरजेंसी अनाउंसमेंट बज रही है");
+  toast("नॉर्मल घंटी और अनाउंसमेंट बज रही है");
+}
+
+// बटन 2: इमरजेंसी टोन + "Attention Please" के साथ तुरंत बोलना
+function triggerEmergencyAttention(){
+  const userMsg = document.getElementById("emergencyText").value.trim();
+  const fullTextToSpeak = "Attention Please. " + (userMsg ? userMsg : "");
+  
+  // पहले घंटी बजाएं या सीधे टोन/स्पीच दें (न्यूनतम डिले के साथ)
+  audioEl.pause();
+  audioEl.currentTime = 0;
+  audioEl.onended = () => {
+    audioEl.onended = null;
+    setTimeout(() => { speakAudio(fullTextToSpeak, null); }, 50);
+  };
+  audioEl.play().catch(() => {
+    setTimeout(() => { speakAudio(fullTextToSpeak, null); }, 50);
+  });
+  toast("इमरजेंसी अनाउंसमेंट प्रसारित हो रही है");
 }
 
 function stopSound(){
@@ -427,106 +460,114 @@ function showNext(){
 
 function render(){
   const annDiv = document.getElementById("annList");
-  annDiv.innerHTML = "";
-  if(st.announcements.length === 0){
-    annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट सेव नहीं है।</div>';
-  } else {
-    st.announcements.forEach(a => {
-      const box = document.createElement("div");
-      box.className = "announcement-box";
-      
-      const infoSpan = document.createElement("span");
-      infoSpan.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
-      
-      const btnGroup = document.createElement("div");
-      
-      const playBtn = document.createElement("button");
-      playBtn.className = "small primary";
-      playBtn.textContent = "▶ सुनें";
-      playBtn.onclick = () => speakAudio(a.text, null);
+  if(annDiv){
+    annDiv.innerHTML = "";
+    if(st.announcements.length === 0){
+      annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट सेव नहीं है।</div>';
+    } else {
+      st.announcements.forEach(a => {
+        const box = document.createElement("div");
+        box.className = "announcement-box";
+        
+        const infoSpan = document.createElement("span");
+        infoSpan.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
+        
+        const btnGroup = document.createElement("div");
+        
+        const playBtn = document.createElement("button");
+        playBtn.className = "small primary";
+        playBtn.textContent = "▶ सुनें";
+        playBtn.onclick = () => speakAudio(a.text, null);
 
-      const delBtn = document.createElement("button");
-      delBtn.className = "small danger";
-      delBtn.textContent = "✕";
-      delBtn.style.marginLeft = "5px";
-      delBtn.onclick = () => deleteAnnouncement(a.id);
+        const delBtn = document.createElement("button");
+        delBtn.className = "small danger";
+        delBtn.textContent = "✕";
+        delBtn.style.marginLeft = "5px";
+        delBtn.onclick = () => deleteAnnouncement(a.id);
 
-      btnGroup.append(playBtn, delBtn);
-      box.append(infoSpan, btnGroup);
-      annDiv.appendChild(box);
-    });
+        btnGroup.append(playBtn, delBtn);
+        box.append(infoSpan, btnGroup);
+        annDiv.appendChild(box);
+      });
+    }
   }
 
-  const dr=document.getElementById("daysRow");dr.innerHTML="";
-  const days=daysToArr(st.days);
-  DAYS.forEach(dd=>{const l=document.createElement("label");l.className="chk";const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
+  const dr=document.getElementById("daysRow");
+  if(dr){
+    dr.innerHTML="";
+    const days=daysToArr(st.days);
+    DAYS.forEach(dd=>{const l=document.createElement("label");l.className="chk";const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
+  }
   
-  const box=document.getElementById("items");box.innerHTML="";
-  st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});save();
-  
-  [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
-    const r=document.createElement("div");r.className="item";
+  const box=document.getElementById("items");
+  if(box){
+    box.innerHTML="";
+    st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});save();
     
-    const r1=document.createElement("div");r1.className="r1";
-    const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";t.oninput=()=>{it.time=t.value;save();showNext();};
-    const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम जैसे: First Period";lblInput.style.flex="1";lblInput.oninput=()=>{it.label=lblInput.value;save();showNext();};
-    const del=document.createElement("button");del.className="danger small";del.textContent="✕";
-    del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
-    r1.append(t,lblInput,del);
+    [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
+      const r=document.createElement("div");r.className="item";
+      
+      const r1=document.createElement("div");r1.className="r1";
+      const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";t.oninput=()=>{it.time=t.value;save();showNext();};
+      const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम जैसे: First Period";lblInput.style.flex="1";lblInput.oninput=()=>{it.label=lblInput.value;save();showNext();};
+      const del=document.createElement("button");del.className="danger small";del.textContent="✕";
+      del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
+      r1.append(t,lblInput,del);
 
-    const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
-    
-    const selectAnn = document.createElement("select");
-    selectAnn.style.flex = "1";
-    const defaultOpt = document.createElement("option");
-    defaultOpt.value = "";
-    defaultOpt.textContent = "-- कोई अनाउंसमेंट अटैच न करें --";
-    selectAnn.appendChild(defaultOpt);
+      const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
+      
+      const selectAnn = document.createElement("select");
+      selectAnn.style.flex = "1";
+      const defaultOpt = document.createElement("option");
+      defaultOpt.value = "";
+      defaultOpt.textContent = "-- कोई अनाउंसमेंट अटैच न करें --";
+      selectAnn.appendChild(defaultOpt);
 
-    st.announcements.forEach(a => {
-      const opt = document.createElement("option");
-      opt.value = a.id;
-      opt.textContent = `📢 ${a.title} -> "${a.text.substring(0, 30)}..."`;
-      if(it.annId === a.id) opt.selected = true;
-      selectAnn.appendChild(opt);
+      st.announcements.forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a.id;
+        opt.textContent = `📢 ${a.title} -> "${a.text.substring(0, 30)}..."`;
+        if(it.annId === a.id) opt.selected = true;
+        selectAnn.appendChild(opt);
+      });
+
+      selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
+      if(it.onlyBell) selectAnn.disabled = true;
+      r2.append(selectAnn);
+
+      const r3=document.createElement("div");r3.className="r3";
+      const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};
+      const bl=document.createElement("label");bl.append(bc,document.createTextNode("घंटी बजे"));
+
+      const onlyBellChk = document.createElement("input");
+      onlyBellChk.type = "checkbox";
+      onlyBellChk.checked = it.onlyBell === true;
+      onlyBellChk.onchange = () => {
+        it.onlyBell = onlyBellChk.checked;
+        selectAnn.disabled = it.onlyBell;
+        save();
+      };
+      const onlyBellLbl = document.createElement("label");
+      onlyBellLbl.style.color = "#d97706";
+      onlyBellLbl.style.fontWeight = "600";
+      onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी बजे"));
+
+      const playBtn = document.createElement("button");
+      playBtn.className = "small primary";
+      playBtn.textContent = "▶ टेस्ट सुनें";
+      playBtn.onclick = () => {
+        let tText = "";
+        if(!it.onlyBell && it.annId){
+          const f = st.announcements.find(a => a.id === it.annId);
+          if(f) tText = f.text;
+        }
+        ringAndSpeak(tText, it.bell!==false, it.onlyBell===true, null);
+      };
+
+      r3.append(bl, onlyBellLbl, playBtn);
+      r.append(r1, r2, r3); box.appendChild(r);
     });
-
-    selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
-    if(it.onlyBell) selectAnn.disabled = true;
-    r2.append(selectAnn);
-
-    const r3=document.createElement("div");r3.className="r3";
-    const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};
-    const bl=document.createElement("label");bl.append(bc,document.createTextNode("घंटी बजे"));
-
-    const onlyBellChk = document.createElement("input");
-    onlyBellChk.type = "checkbox";
-    onlyBellChk.checked = it.onlyBell === true;
-    onlyBellChk.onchange = () => {
-      it.onlyBell = onlyBellChk.checked;
-      selectAnn.disabled = it.onlyBell;
-      save();
-    };
-    const onlyBellLbl = document.createElement("label");
-    onlyBellLbl.style.color = "#d97706";
-    onlyBellLbl.style.fontWeight = "600";
-    onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी बजे"));
-
-    const playBtn = document.createElement("button");
-    playBtn.className = "small primary";
-    playBtn.textContent = "▶ टेस्ट सुनें";
-    playBtn.onclick = () => {
-      let tText = "";
-      if(!it.onlyBell && it.annId){
-        const f = st.announcements.find(a => a.id === it.annId);
-        if(f) tText = f.text;
-      }
-      ringAndSpeak(tText, it.bell!==false, it.onlyBell===true, null);
-    };
-
-    r3.append(bl, onlyBellLbl, playBtn);
-    r.append(r1, r2, r3); box.appendChild(r);
-  });
+  }
   showNext();
 }
 
@@ -534,7 +575,8 @@ function addItem(){st.items.push({time:"09:00",label:"",bell:true,onlyBell:false
 
 loadSpeakOpts();
 function loadSpeakOpts(){
-  document.getElementById("delaySelect").value = String(st.bellDelay || 300);
+  const dSel = document.getElementById("delaySelect");
+  if(dSel) dSel.value = String(st.bellDelay || 300);
 }
 
 async function initApp() {
