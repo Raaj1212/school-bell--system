@@ -33,6 +33,9 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
 </style>
 <!-- PeerJS Library for Remote Live Audio Streaming -->
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+<!-- Firebase App (Compat) & Realtime Database SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <header>
@@ -144,10 +147,30 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
 <div id="toast"></div>
 <script>
 "use strict";
+
+// ---- FIREBASE CONFIGURATION (BPS SCHOOL BELL) ----
+const firebaseConfig = {
+  apiKey: "AIzaSyDYEIDh_brtKY7FMM-pTI9hSZ4dbwCQ-o",
+  authDomain: "bps-school-bell.firebaseapp.com",
+  databaseURL: "https://bps-school-bell-default-rtdb.firebaseio.com",
+  projectId: "bps-school-bell",
+  storageBucket: "bps-school-bell.firebasestorage.app",
+  messagingSenderId: "615053658427",
+  appId: "1:615053658427:web:c9207446875ec99257cf1e"
+};
+
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+} catch(e) {
+  console.log("Firebase offline or not configured, using LocalStorage.");
+}
+
 const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
 
-let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
+let defaultData = {
   announcements: [
     { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
     { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
@@ -158,6 +181,26 @@ let st = JSON.parse(localStorage.getItem("bellphone")||"null")||{
   roomCode:"bps-school-123",
   isAmplifierDevice:false
 };
+
+let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
+
+// Firebase से लाइव डेटा सिंक करना
+if(db) {
+  db.ref("school_bell_system").on("value", (snapshot) => {
+    const serverData = snapshot.val();
+    if(serverData) {
+      st = serverData;
+      st.bellDelay = st.bellDelay || 300;
+      st.announcements = st.announcements || [];
+      st.roomCode = st.roomCode || "bps-school-123";
+      st.isAmplifierDevice = st.isAmplifierDevice || false;
+      saveLocal();
+      render();
+      loadSpeakOpts();
+    }
+  });
+}
+
 st.bellDelay = st.bellDelay || 300;
 st.announcements = st.announcements || [];
 st.roomCode = st.roomCode || "bps-school-123";
@@ -167,7 +210,6 @@ let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
 
-// आपकी नई गिटहब ऑडियो फाइल का अपडेटेड Raw लिंक
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
 
@@ -234,11 +276,23 @@ function makeQuietLoop(){
 
 const dstr=()=>new Date(new Date().getTime() + timeOffset).toDateString();
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",3000);}
-function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
+
+function saveLocal(){
+  localStorage.setItem("bellphone",JSON.stringify(st));
+}
+
+function save(){
+  saveLocal();
+  if(db) {
+    db.ref("school_bell_system").set(st).catch(err => {
+      console.log("Firebase sync error:", err);
+    });
+  }
+}
+
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-// 🌐 Google Translate TTS API (फ्री और बैकग्राउंड-फ्रेंडली)
 function speakAudio(text, cb){
   if(!text){if(cb)cb();return;}
   try{
@@ -368,6 +422,7 @@ function startBroadcasting(){
 
 function stopBroadcasting(){
   if(localStream){
+    localStream.getTracks().forceStop = true;
     localStream.getTracks().forEach(track => track.stop());
     localStream = null;
   }
@@ -498,7 +553,7 @@ function render(){
   const box=document.getElementById("items");
   if(box){
     box.innerHTML="";
-    st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});save();
+    st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});
     
     [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
       const r=document.createElement("div");r.className="item";
