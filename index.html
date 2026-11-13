@@ -237,6 +237,7 @@ function save(){localStorage.setItem("bellphone",JSON.stringify(st));}
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
+// 🌐 Google Translate TTS API (फ्री और बैकग्राउंड-फ्रेंडली)
 function speakAudio(text, cb){
   if(!text){if(cb)cb();return;}
   try{
