@@ -3,62 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Bell & Announcement System - BPS</title>
+    <title>BPS School Bell & Announcement Portal</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #eef2f7;
             margin: 0;
             padding: 15px;
             color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: auto;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #1a365d, #2b6cb0);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
         }
         .card {
             background: #fff;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             margin-bottom: 15px;
         }
         h2, h3 {
             margin-top: 0;
             color: #1a365d;
         }
+        label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #4a5568;
+            display: block;
+            margin-bottom: 6px;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fff;
+        }
         .btn {
             background: #3182ce;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
-            margin: 5px 0;
-            width: 100%;
-        }
-        .btn-success { background: #38a169; }
-        .btn-danger { background: #e53e3e; }
-        input, textarea {
-            padding: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            margin: 5px 0 12px 0;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        #liveDigitalClock {
-            font-size: 20px;
+            font-size: 15px;
             font-weight: bold;
-            background: #1a202c;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #2b6cb0; }
+        .btn-success { background: #38a169; }
+        .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; }
+        
+        #liveDigitalClock {
+            font-size: 22px;
+            font-weight: bold;
+            background: #0f172a;
             color: #00ffcc;
             padding: 12px;
             border-radius: 8px;
             text-align: center;
             margin-bottom: 15px;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .section-box {
+            display: none;
+        }
+        .active-section {
+            display: block;
         }
         .locked-box {
             background: #fff5f5;
@@ -67,42 +95,47 @@
             border-radius: 8px;
             text-align: center;
         }
-        .unlocked-box {
-            background: #f0fff4;
-            border: 1px solid #9ae6b4;
-            padding: 15px;
-            border-radius: 8px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
 
-        <!-- 🕒 लाइव डिजिटल क्लॉक -->
+        <!-- 🕒 इंटरनेट टाइम सिंक डिजिटल क्लॉक -->
         <div id="liveDigitalClock">🕒 समय सिंक हो रहा है...</div>
 
-        <div class="card" style="background: #1a365d; color: white; text-align: center;">
+        <div class="header-card">
             <h2>Brahmadev Public School</h2>
-            <div id="nextBellStatus" style="font-size: 15px; color: #cbd5e0;">School Bell & Announcement System</div>
+            <div style="font-size: 15px; color: #e2e8f0;">Advanced Bell & Announcement Management System</div>
         </div>
 
-        <!-- 1. ऑटो घंटी सिस्टम -->
+        <!-- 📌 ड्रॉपडाउन मेनू (जो आपको पसंद है) -->
         <div class="card">
-            <h3>🔔 ऑटो घंटी सिस्टम</h3>
+            <label for="menuDropdown">📂 पोर्टल मेनू चुनें (Select Section):</label>
+            <select id="menuDropdown" onchange="switchSection(this.value)">
+                <option value="sectionBell">🔔 ऑटो घंटी और टेस्ट सिस्टम</option>
+                <option value="sectionAnnouncement">📢 अनाउंसमेंट लाइब्रेरी (घोषणाएँ)</option>
+                <option value="sectionSettings">⚙️ टाइम और शेड्यूल सेटिंग्स (Admin)</option>
+            </select>
+        </div>
+
+        <!-- 1. ऑटो घंटी सेक्शन -->
+        <div id="sectionBell" class="card section-box active-section">
+            <h3>🔔 ऑटो घंटी और टेस्ट सिस्टम</h3>
+            <p style="font-size: 13px; color: #666;">इंटरनेट के सटीक समय के आधार पर घंटी और ऑडियो अलर्ट नियंत्रित होते हैं।</p>
             <button class="btn btn-success" onclick="testBell()">सिर्फ घंटी टेस्ट करें</button>
-            <button class="btn" onclick="testBellAnnouncement()">घंटी + अनाउंसमेंट टेस्ट करें</button>
+            <button class="btn" style="margin-top: 10px;" onclick="testBellAnnouncement()">घंटी + अनाउंसमेंट टेस्ट करें</button>
         </div>
 
-        <!-- 2. अनाउंसमेंट लाइब्रेरी (सीधे Google Sheet में सेव होगी और बोली जाएगी) -->
-        <div class="card">
-            <h3>📢 अनाउंसमेंट लाइब्रेरी (घोषणाएँ)</h3>
-            <p style="font-size: 13px; color: #666;">यहाँ टाइप करके सेव करने पर यह सीधे Google Sheet में दर्ज होगी और तुरंत बोली जाएगी।</p>
-            <input type="text" id="announcementText" placeholder="यहाँ घोषणा के लिए टेक्स्ट लिखें...">
+        <!-- 2. अनाउंसमेंट सेक्शन -->
+        <div id="sectionAnnouncement" class="card section-box">
+            <h3>📢 अनाउंसमेंट लाइब्रेरी (Google Sheet Sync)</h3>
+            <label>यहाँ अपनी घोषणा टाइप करें:</label>
+            <input type="text" id="announcementText" placeholder="जैसे: कृपया सभी छात्र मैदान में आएं...">
             <button class="btn btn-success" onclick="saveAndPlayAnnouncement()">अनाउंसमेंट सेव करें व बोलें</button>
         </div>
 
-        <!-- 3. टाइम और शेड्यूल सेटिंग्स (पासवर्ड प्रोटेक्टेड - admin@2007) -->
-        <div class="card" style="border-left: 5px solid #e53e3e;">
+        <!-- 3. पासवर्ड प्रोटेक्टेड सेटिंग्स सेक्शन (admin@2007) -->
+        <div id="sectionSettings" class="card section-box" style="border-left: 5px solid #e53e3e;">
             <h3>⚙️ टाइम और शेड्यूल सेटिंग्स (सुरक्षित क्षेत्र)</h3>
             
             <div id="adminLockDiv" class="locked-box">
@@ -112,21 +145,28 @@
                 <button class="btn btn-success" onclick="unlockAdminSettings()">सेटिंग्स अनलॉक करें</button>
             </div>
 
-            <div id="adminContentDiv" style="display: none;" class="unlocked-box">
-                <p style="color: #2f855a; font-weight: bold; margin-top: 0;">🔓 सेटिंग्स अनलॉक है</p>
-                <label style="font-size: 13px; font-weight: bold;">पीरियड्स और समय की सारणी (Schedule):</label>
-                <textarea rows="5" id="scheduleTextArea">लोड हो रहा है...</textarea>
+            <div id="adminContentDiv" style="display: none;">
+                <p style="color: #2f855a; font-weight: bold;">🔓 सेटिंग्स अनलॉक है (बदलाव सीधे Google Sheet में सेव होंगे)</p>
+                <label>पीरियड्स और समय की सारणी (Schedule):</label>
+                <textarea rows="6" id="scheduleTextArea">लोड हो रहा है...</textarea>
                 <button class="btn btn-success" onclick="saveScheduleToSheet()">गूगल शीट में बदलाव सेव करें</button>
-                <button class="btn btn-danger" onclick="lockAdminSettings()" style="margin-top: 8px;">वापस लॉक करें</button>
+                <button class="btn btn-danger" onclick="lockAdminSettings()" style="margin-top: 10px;">वापस लॉक करें</button>
             </div>
         </div>
 
     </div>
 
     <script>
-        // आपका नया Google Apps Script का Web App URL
+        // आपका Google Apps Script Web App URL
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_97T4EEWDJFZtN3sKKg_Tu7AQCSM8wX3J6A0doQGhOVwZcESWPqHnpnQ_QLCPjVOTbg/exec";
         let timeOffset = 0;
+
+        // 📂 ड्रॉपडाउन से सेक्शन बदलने का फंक्शन
+        function switchSection(sectionId) {
+            const sections = document.querySelectorAll('.section-box');
+            sections.forEach(sec => sec.classList.remove('active-section'));
+            document.getElementById(sectionId).classList.add('active-section');
+        }
 
         // 🌐 इंटरनेट टाइम सिंक
         async function syncInternetTime() {
@@ -139,7 +179,7 @@
             }
         }
 
-        // 🕒 लाइव क्लॉक
+        // 🕒 लाइव डिजिटल क्लॉक
         function startLiveClock() {
             setInterval(() => {
                 const now = new Date(new Date().getTime() + timeOffset);
@@ -185,11 +225,11 @@
             }
         }
 
-        // 📢 टेक्स्ट-टू-स्पीच (TTS) आवाज से बोलना
+        // 📢 टेक्स्ट-टू-स्पीच (TTS) आवाज
         function speakText(text) {
             if ('speechSynthesis' in window) {
                 let utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'hi-IN'; // भारतीय उच्चारण
+                utterance.lang = 'hi-IN';
                 utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
             }
