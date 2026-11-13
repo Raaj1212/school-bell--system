@@ -167,7 +167,8 @@ let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
 
-const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/e347b833a12976f21f67b2e1eec35a1052a97cd9/bell.mp3.mpeg"; 
+// नई गिटहब ऑडियो फाइल का लिंक यहाँ इंटीग्रेट कर दिया गया है
+const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/bbd1f7da93af4a3219ef30776ae6123b9edd29fe/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
 
 async function syncInternetTime() {
@@ -279,7 +280,6 @@ function testBellOnly(){
   toast("सिर्फ घंटी बज रही है");
 }
 
-// बटन 2: घंटी + टेक्स्ट बॉक्स में जो लिखा हो वह पढ़ना
 function testGeneralWithCustomText(){
   const customText = document.getElementById("emergencyText").value.trim();
   if(!customText){
@@ -290,7 +290,6 @@ function testGeneralWithCustomText(){
   toast("घंटी और टेक्स्ट अनाउंसमेंट प्रसारित हो रही है");
 }
 
-// बटन 3: केवल टेक्स्ट पढ़ना (बिना घंटी के)
 function triggerTextOnly(){
   const customText = document.getElementById("emergencyText").value.trim();
   if(!customText){
