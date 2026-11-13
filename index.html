@@ -71,7 +71,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
 </section>
 
-<!-- 🚨 त्वरित घोषणाएँ और कंट्रोल सेक्शन (हमेशा बाहर, पासवर्ड से मुक्त) -->
+<!-- 🚨 त्वरित घोषणाएँ और कंट्रोल सेक्शन -->
 <section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
   <h2>🚨 त्वरित घोषणाएँ और कंट्रोल</h2>
   <div style="margin-top: 8px;">
@@ -79,19 +79,14 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
     <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें..." style="width:100%; margin-bottom: 10px;">
     
     <div class="row" style="gap: 8px;">
-      <!-- बटन 1: सिर्फ घंटी -->
       <button onclick="testBellOnly()" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
-      
-      <!-- बटन 2: घंटी + टेक्स्ट पढ़ें -->
       <button class="primary" onclick="testGeneralWithCustomText()" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + टेक्स्ट</button>
-      
-      <!-- बटन 3: सिर्फ टेक्स्ट पढ़ें (बिना घंटी के) -->
       <button onclick="triggerTextOnly()" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. सिर्फ टेक्स्ट पढ़ें</button>
     </div>
   </div>
 </section>
 
-<!-- 🔒 पासवर्ड प्रोटेक्टेड सेक्शन (लाइब्रेरी, गैप और टाइमटेबल) -->
+<!-- 🔒 पासवर्ड प्रोटेक्टेड सेक्शन -->
 <section class="card" style="border-left: 5px solid #dc2626;">
   <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
   
@@ -134,7 +129,6 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
 <script>
 "use strict";
 
-// ---- FIREBASE CONFIGURATION (BPS SCHOOL BELL) ----
 const firebaseConfig = {
   apiKey: "AIzaSyDYEIDh_brtKY7FMM-pTI9hSZ4dbwCQ-o",
   authDomain: "bps-school-bell.firebaseapp.com",
@@ -149,9 +143,7 @@ let db = null;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
-} catch(e) {
-  console.log("Firebase offline or not configured, using LocalStorage.");
-}
+} catch(e) {}
 
 const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
@@ -168,12 +160,12 @@ let defaultData = {
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
+let isUserTyping = false; // टाइपिंग के दौरान रिफ्रेश रोकने के लिए
 
-// Firebase से लाइव डेटा सिंक करना[cite: 8]
 if(db) {
   db.ref("school_bell_system").on("value", (snapshot) => {
     const serverData = snapshot.val();
-    if(serverData) {
+    if(serverData && !isUserTyping) {
       st = serverData;
       st.announcements = st.announcements || [];
       st.roomCode = st.roomCode || "bps-school-123";
@@ -197,7 +189,10 @@ audioEl.src = DEFAULT_BELL_URL;
 
 async function syncInternetTime() {
   try {
-    let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
+    let controller = new AbortController();
+    let timeoutId = setTimeout(() => controller.abort(), 2000);
+    let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata', { signal: controller.signal });
+    clearTimeout(timeoutId);
     let data = await response.json();
     timeOffset = new Date(data.datetime).getTime() - new Date().getTime();
   } catch (error) {
@@ -260,9 +255,7 @@ function saveLocal(){
 function save(){
   saveLocal();
   if(db) {
-    db.ref("school_bell_system").set(st).catch(err => {
-      console.log("Firebase sync error:", err);
-    });
+    db.ref("school_bell_system").set(st).catch(err => {});
   }
 }
 
@@ -286,7 +279,6 @@ function speakAudio(text, cb){
   }catch(e){ if(cb) cb(); }
 }
 
-// ⚡ यहाँ बिना किसी गैप (Zero-Gap) के सीधे आवाज शुरू होगी
 function ringAndSpeak(text, playBell, onlyBell, cb){
   if(playBell === false){
     if(!onlyBell) speakAudio(text, cb);
@@ -298,7 +290,7 @@ function ringAndSpeak(text, playBell, onlyBell, cb){
   audioEl.onended = () => {
     audioEl.onended = null;
     if(onlyBell){ if(cb) cb(); return; }
-    speakAudio(text, cb); // तुरंत बिना गैप के TTS चलेगा
+    speakAudio(text, cb);
   };
   audioEl.play().catch(() => {
     if(!onlyBell) speakAudio(text, cb);
@@ -313,20 +305,14 @@ function testBellOnly(){
 
 function testGeneralWithCustomText(){
   const customText = document.getElementById("emergencyText").value.trim();
-  if(!customText){
-    toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!");
-    return;
-  }
+  if(!customText){ toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!"); return; }
   ringAndSpeak(customText, true, false, null);
   toast("घंटी और टेक्स्ट अनाउंसमेंट प्रसारित हो रही है");
 }
 
 function triggerTextOnly(){
   const customText = document.getElementById("emergencyText").value.trim();
-  if(!customText){
-    toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!");
-    return;
-  }
+  if(!customText){ toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!"); return; }
   speakAudio(customText, null);
   toast("टेक्स्ट अनाउंसमेंट बोली जा रही है");
 }
@@ -337,17 +323,20 @@ function stopSound(){
   audioEl.currentTime = 0;
 }
 
-// ---- रिमोट लाइव माइक फंक्शन्स ----
 function initRoomCodeField(){
   const rcInput = document.getElementById("roomCode");
-  rcInput.value = st.roomCode;
+  if(rcInput && rcInput.value !== st.roomCode) {
+    rcInput.value = st.roomCode;
+  }
+  rcInput.onfocus = () => { isUserTyping = true; };
+  rcInput.onblur = () => { isUserTyping = false; };
   rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); };
 }
 
 function setAsAmplifierPhone(){
   st.isAmplifierDevice = true;
   save();
-  toast("यह डिवाइस 'एम्प्लीफायर फोन' के रूप में सेट हो गया है। अब यह हमेशा सुनने के लिए तैयार रहेगा।");
+  toast("एम्प्लीफायर फोन सेट हो गया है।");
   startAutoListener();
 }
 
@@ -356,62 +345,50 @@ function unsetAmplifierPhone(){
   save();
   if(peer) peer.destroy();
   toast("एम्प्लीफायर मोड हटा दिया गया है।");
-  document.getElementById("streamStatus").textContent = "स्टेटस: तैयार है";
 }
 
 function startAutoListener(){
   const code = st.roomCode;
   if(!code) return;
   if(peer) peer.destroy();
-  
-  const connId = "bps_school_room_" + code;
-  peer = new Peer(connId);
-  
+  peer = new Peer("bps_school_room_" + code);
   peer.on('call', call => {
     call.answer();
     call.on('stream', remoteStream => {
       const audio = new Audio();
       audio.srcObject = remoteStream;
-      audio.play().catch(e => console.log("Audio play error:", e));
-      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ एम्प्लीफायर पर आ रही है...";
-      toast("लाइव अनाउंसमेंट आ रही है!");
+      audio.play().catch(e => {});
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है...";
     });
   });
-  document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर फोन लाइव सुनने की स्थिति में है...";
+  document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर तैयार है...";
 }
 
 function startBroadcasting(){
   const code = document.getElementById("roomCode").value.trim();
-  if(!code){ toast("कृपया रूम कोड दर्ज करें!"); return; }
-  
+  if(!code){ toast("रूम कोड दर्ज करें!"); return; }
   navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
     localStream = stream;
     if(peer) peer.destroy();
     peer = new Peer();
     peer.on('open', id => {
-      const connId = "bps_school_room_" + code;
-      const call = peer.call(connId, stream);
-      document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 आप बोल रहे हैं (ब्रॉडकास्ट लाइव है)";
-      toast("ब्रॉडकास्ट शुरू हो गया है!");
+      peer.call("bps_school_room_" + code, stream);
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 ब्रॉडकास्ट लाइव है";
+      toast("ब्रॉडकास्ट शुरू!");
     });
-  }).catch(e => toast("माइक की अनुमति नहीं मिली"));
+  }).catch(e => toast("माइक अनुमति नहीं मिली"));
 }
 
 function stopBroadcasting(){
-  if(localStream){
-    localStream.getTracks().forEach(track => track.stop());
-    localStream = null;
-  }
+  if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   if(peer) peer.destroy();
-  document.getElementById("streamStatus").textContent = "स्टेटस: ब्रॉडकास्ट बंद कर दिया गया है";
-  toast("ब्रॉडकास्ट बंद हो गया।");
+  document.getElementById("streamStatus").textContent = "स्टेटस: बंद है";
 }
-// ----------------------------------------------
 
 function saveAnnouncement(){
   const title = document.getElementById("annTitle").value.trim();
   const text = document.getElementById("annText").value.trim();
-  if(!title || !text){ toast("कृपया नाम और टेक्स्ट दोनों भरें!"); return; }
+  if(!title || !text){ toast("कृपया नाम और टेक्स्ट भरें!"); return; }
   st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
   save();
   document.getElementById("annTitle").value = "";
@@ -423,7 +400,7 @@ function saveAnnouncement(){
 function deleteAnnouncement(id){
   st.announcements = st.announcements.filter(a => a.id !== id);
   save();
-  toast("अनाउंसमेंट डिलीट कर दी गई");
+  toast("डिलीट हो गई");
   render();
 }
 
@@ -439,17 +416,14 @@ function tick(){
   const d = new Date(new Date().getTime() + timeOffset);
   if(running&&d.getSeconds()<3){
     const t=hhmm(d),today=d.toDateString();
-    const log=JSON.parse(localStorage.getItem("bellfired")||"{}");
-    if(log.date!==today){localStorage.setItem("bellfired",JSON.stringify({date:today,list:{}}));}
-    const cur=JSON.parse(localStorage.getItem("bellfired")||"{}");
-    if(cur.date===today&&cur.list[t])return;
+    let log=JSON.parse(localStorage.getItem("bellfired")||"{}");
+    if(log.date!==today){log={date:today,list:{}};}
+    if(log.list[t])return;
     const days=daysToArr(st.days);
     if(!days.includes(DAYS[d.getDay()]))return;
     const hits=st.items.filter(i=>i.time===t);
     if(hits.length){
-      cur.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(cur));
-      hits.sort((a,b)=>String(a.label).localeCompare(String(b.label)));
-      
+      log.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(log));
       hits.forEach(i=>{
         let textToSay = "";
         if(!i.onlyBell && i.annId){
@@ -481,39 +455,23 @@ function showNext(){
   hours = hours % 12 || 12;
   const clockEl = document.getElementById("liveDigitalClock");
   if(clockEl) {
-    clockEl.innerHTML = `🕒 ${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm} (Net Sync Live)`;
+    clockEl.innerHTML = `🕒 ${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm} (Live)`;
   }
 }
 
 function render(){
+  if(isUserTyping) return; // अगर यूजर टाइप कर रहा है, तो लेआउट रीफ्रेश नहीं होगा
+
   const annDiv = document.getElementById("annList");
   if(annDiv){
     annDiv.innerHTML = "";
     if(st.announcements.length === 0){
-      annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट सेव नहीं है।</div>';
+      annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट नहीं है।</div>';
     } else {
       st.announcements.forEach(a => {
         const box = document.createElement("div");
         box.className = "announcement-box";
-        
-        const infoSpan = document.createElement("span");
-        infoSpan.innerHTML = `<strong>📌 ${a.title}</strong>: "${a.text}"`;
-        
-        const btnGroup = document.createElement("div");
-        
-        const playBtn = document.createElement("button");
-        playBtn.className = "small primary";
-        playBtn.textContent = "▶ सुनें";
-        playBtn.onclick = () => speakAudio(a.text, null);
-
-        const delBtn = document.createElement("button");
-        delBtn.className = "small danger";
-        delBtn.textContent = "✕";
-        delBtn.style.marginLeft = "5px";
-        delBtn.onclick = () => deleteAnnouncement(a.id);
-
-        btnGroup.append(playBtn, delBtn);
-        box.append(infoSpan, btnGroup);
+        box.innerHTML = `<span><strong>📌 ${a.title}</strong>: "${a.text}"</span><div><button class="small primary" onclick="speakAudio('${a.text.replace(/'/g, "")}', null)">▶ सुनें</button><button class="small danger" style="margin-left:5px;" onclick="deleteAnnouncement('${a.id}')">✕</button></div>`;
         annDiv.appendChild(box);
       });
     }
@@ -523,7 +481,7 @@ function render(){
   if(dr){
     dr.innerHTML="";
     const days=daysToArr(st.days);
-    DAYS.forEach(dd=>{const l=document.createElement("label");l.className="chk";const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
+    DAYS.forEach(dd=>{const l=document.createElement("label");const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
   }
   
   const box=document.getElementById("items");
@@ -535,29 +493,31 @@ function render(){
       const r=document.createElement("div");r.className="item";
       
       const r1=document.createElement("div");r1.className="r1";
-      const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";t.oninput=()=>{it.time=t.value;save();showNext();};
-      const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम जैसे: First Period";lblInput.style.flex="1";lblInput.oninput=()=>{it.label=lblInput.value;save();showNext();};
+      const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";
+      t.onfocus = () => { isUserTyping = true; };
+      t.onblur = () => { isUserTyping = false; save(); showNext(); };
+      t.oninput = () => { it.time=t.value; save(); };
+
+      const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम";lblInput.style.flex="1";
+      lblInput.onfocus = () => { isUserTyping = true; };
+      lblInput.onblur = () => { isUserTyping = false; save(); };
+      lblInput.oninput = () => { it.label=lblInput.value; save(); };
+
       const del=document.createElement("button");del.className="danger small";del.textContent="✕";
       del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
       r1.append(t,lblInput,del);
 
       const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
-      
       const selectAnn = document.createElement("select");
       selectAnn.style.flex = "1";
-      const defaultOpt = document.createElement("option");
-      defaultOpt.value = "";
-      defaultOpt.textContent = "-- कोई अनाउंसमेंट अटैच न करें --";
-      selectAnn.appendChild(defaultOpt);
-
+      selectAnn.innerHTML = '<option value="">-- अनाउंसमेंट चुनें --</option>';
       st.announcements.forEach(a => {
         const opt = document.createElement("option");
         opt.value = a.id;
-        opt.textContent = `📢 ${a.title} -> "${a.text.substring(0, 30)}..."`;
+        opt.textContent = `📢 ${a.title}`;
         if(it.annId === a.id) opt.selected = true;
         selectAnn.appendChild(opt);
       });
-
       selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
       if(it.onlyBell) selectAnn.disabled = true;
       r2.append(selectAnn);
@@ -577,11 +537,11 @@ function render(){
       const onlyBellLbl = document.createElement("label");
       onlyBellLbl.style.color = "#d97706";
       onlyBellLbl.style.fontWeight = "600";
-      onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी बजे"));
+      onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी"));
 
       const playBtn = document.createElement("button");
       playBtn.className = "small primary";
-      playBtn.textContent = "▶ टेस्ट सुनें";
+      playBtn.textContent = "▶ टेस्ट";
       playBtn.onclick = () => {
         let tText = "";
         if(!it.onlyBell && it.annId){
@@ -595,33 +555,29 @@ function render(){
       r.append(r1, r2, r3); box.appendChild(r);
     });
   }
-  showNext();
 }
 
-function addItem(){st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});save();render();}
+function addItem(){
+  st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});
+  save();
+  render();
+}
 
 async function initApp() {
-  await syncInternetTime();
+  syncInternetTime();
   render();
   initRoomCodeField();
   showNext();
 
   if(st.isAmplifierDevice){
-    setTimeout(() => {
-      startAutoListener();
-    }, 1000);
+    setTimeout(() => { startAutoListener(); }, 1000);
   }
 
   setInterval(tick, 1000);
-
-  setTimeout(() => {
-    startSys();
-  }, 1000);
+  setTimeout(() => { startSys(); }, 1000);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  initApp();
-});
+window.addEventListener('DOMContentLoaded', () => { initApp(); });
 </script>
 </body>
 </html>
