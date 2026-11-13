@@ -96,7 +96,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
   
   <div id="adminLockDiv" class="locked-box">
-    <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 अनाउंसमेंट लाइब्रेरी, गैप और रूटीन में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
+    <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 अनाउंसमेंट लाइब्रेरी और रूटीन में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
     <div class="row" style="justify-content: center;">
       <input type="password" id="adminPassInput" placeholder="मास्टर पासवर्ड दर्ज करें (123)" style="max-width: 220px;">
       <button class="primary" onclick="unlockAdminSettings()">अनलॉक करें</button>
@@ -115,20 +115,6 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
         <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
       </div>
       <div id="annList"></div>
-    </div>
-
-    <!-- घंटी के बाद बोलने का गैप -->
-    <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
-      <h3 style="font-size:15px; margin-top:0; color:#12213a;">घंटी के बाद बोलने का गैप</h3>
-      <div class="row">
-        <span class="muted">गैप चुनें:</span>
-        <select id="delaySelect" onchange="updateDelay(this)">
-          <option value="100">तुरंत (0.1 सेकंड)</option>
-          <option value="300" selected>सामान्य (0.3 सेकंड)</option>
-          <option value="600">थोड़ा रुककर (0.6 सेकंड)</option>
-          <option value="1000">1 सेकंड</option>
-        </select>
-      </div>
     </div>
 
     <!-- टाइमटेबल और रूटीन सेटिंग्स -->
@@ -177,31 +163,27 @@ let defaultData = {
   ],
   items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
   days:"all",
-  bellDelay:300,
   roomCode:"bps-school-123",
   isAmplifierDevice:false
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
 
-// Firebase से लाइव डेटा सिंक करना
+// Firebase से लाइव डेटा सिंक करना[cite: 8]
 if(db) {
   db.ref("school_bell_system").on("value", (snapshot) => {
     const serverData = snapshot.val();
     if(serverData) {
       st = serverData;
-      st.bellDelay = st.bellDelay || 300;
       st.announcements = st.announcements || [];
       st.roomCode = st.roomCode || "bps-school-123";
       st.isAmplifierDevice = st.isAmplifierDevice || false;
       saveLocal();
       render();
-      loadSpeakOpts();
     }
   });
 }
 
-st.bellDelay = st.bellDelay || 300;
 st.announcements = st.announcements || [];
 st.roomCode = st.roomCode || "bps-school-123";
 st.isAmplifierDevice = st.isAmplifierDevice || false;
@@ -255,12 +237,6 @@ document.addEventListener('visibilitychange', async () => {
   }
 });
 
-function updateDelay(sel){
-  st.bellDelay = parseInt(sel.value);
-  save();
-  toast("गैप बदल गया: "+sel.options[sel.selectedIndex].text);
-}
-
 function makeQuietLoop(){
   try{
     const sr=8000,sec=2,n=sr*sec,buf=new Uint8Array(44+n*2),dv=new DataView(buf.buffer);
@@ -310,6 +286,7 @@ function speakAudio(text, cb){
   }catch(e){ if(cb) cb(); }
 }
 
+// ⚡ यहाँ बिना किसी गैप (Zero-Gap) के सीधे आवाज शुरू होगी
 function ringAndSpeak(text, playBell, onlyBell, cb){
   if(playBell === false){
     if(!onlyBell) speakAudio(text, cb);
@@ -321,7 +298,7 @@ function ringAndSpeak(text, playBell, onlyBell, cb){
   audioEl.onended = () => {
     audioEl.onended = null;
     if(onlyBell){ if(cb) cb(); return; }
-    setTimeout(() => { speakAudio(text, cb); }, st.bellDelay || 300);
+    speakAudio(text, cb); // तुरंत बिना गैप के TTS चलेगा
   };
   audioEl.play().catch(() => {
     if(!onlyBell) speakAudio(text, cb);
@@ -422,7 +399,6 @@ function startBroadcasting(){
 
 function stopBroadcasting(){
   if(localStream){
-    localStream.getTracks().forceStop = true;
     localStream.getTracks().forEach(track => track.stop());
     localStream = null;
   }
@@ -623,12 +599,6 @@ function render(){
 }
 
 function addItem(){st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});save();render();}
-
-loadSpeakOpts();
-function loadSpeakOpts(){
-  const dSel = document.getElementById("delaySelect");
-  if(dSel) dSel.value = String(st.bellDelay || 300);
-}
 
 async function initApp() {
   await syncInternetTime();
