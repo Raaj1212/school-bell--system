@@ -30,13 +30,46 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
 .muted{color:#6b7280;font-size:12px}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12213a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:9999}
 .locked-box {background:#fff5f5;border:1px solid #feb2b2;padding:15px;border-radius:8px;text-align:center;margin-bottom:10px;}
+
+/* 📑 टैब नेविगेशन स्टाइल */
+.nav-tabs-custom {
+  display: flex;
+  gap: 6px;
+  background: #e2e8f0;
+  padding: 6px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+.nav-tabs-custom button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: #475569;
+  border-radius: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nav-tabs-custom button.active {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.tab-pane {
+  display: none;
+}
+.tab-pane.active {
+  display: block;
+}
 </style>
 <!-- PeerJS Library for Remote Live Audio Streaming -->
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <!-- Firebase App (Compat) & Realtime Database SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<!-- Bootstrap JS Bundle CDN for Collapse functionality -->
+<!-- Bootstrap JS Bundle CDN -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
@@ -49,112 +82,61 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
 </header>
 <main>
 
-<section class="card">
-  <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
-  <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #0f172a; color: #00ffcc; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
-  <div class="row">
-    <button onclick="testBellOnlyLocal()">🔔 सिर्फ घंटी टेस्ट करें</button>
-    <button onclick="stopSound()">रोकें</button>
-  </div>
-</section>
+<!-- 📑 टैब बटन बार (अब स्क्रॉल करने की जरूरत नहीं) -->
+<div class="nav-tabs-custom">
+  <button onclick="switchTab('tabClock')" id="btnTabClock" class="active">🕒 मुख्य स्क्रीन</button>
+  <button onclick="switchTab('tabBroadcast')" id="btnTabBroadcast">🎙️ ब्रॉडकास्ट & एम्प्लीफायर</button>
+  <button onclick="switchTab('tabEmergency')" id="btnTabEmergency">🚨 त्वरित घोषणाएँ</button>
+  <button onclick="switchTab('tabAdmin')" id="btnTabAdmin">⚙️ सेटिंग्स & रूटीन</button>
+</div>
 
-<!-- 🔊 एम्प्लीफायर मोड बाहर (ओरिजिनल) -->
-<section class="card" style="border-left: 5px solid #2563eb;">
-  <h2>🔊 रिमोट लाइव माइक और एम्प्लीफायर मोड (ओरिजिनल)</h2>
-  <div class="row" style="margin-top: 10px;">
-    <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
-    <button class="primary" onclick="startBroadcasting()">बोलें (ब्रॉडकास्ट ऑन)</button>
-    <button class="danger" onclick="stopBroadcasting()">ब्रॉडकास्ट बंद करें</button>
-  </div>
-  <div class="row" style="margin-top:8px;">
-    <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
-    <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
-  </div>
-  <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
-</section>
-
-<!-- 🚨 त्वरित घोषणाएँ और कंट्रोल सेक्शन (टारगेट सेलेक्टर के साथ) -->
-<section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
-  <h2>🚨 त्वरित घोषणाएँ और कंट्रोल</h2>
-  <div style="margin-top: 8px;">
-    
-    <!-- 🎛️ नया टारगेट सेलेक्टर ऑप्शन -->
-    <div style="background:#fee2e2; border:1px solid #fecaca; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
-      <span style="font-weight:bold; font-size:13px; color:#991b1b;">🎯 आवाज़ कहाँ बजानी है?:</span>
-      <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="local" checked> इसी फोन पर</label>
-      <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="remote"> एम्प्लीफायर फोन पर (रिमोट)</label>
+<!-- ================= TAB 1: मुख्य स्क्रीन (क्लॉक और टेस्ट) ================= -->
+<div id="tabClock" class="tab-pane active">
+  <section class="card">
+    <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
+    <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #0f172a; color: #00ffcc; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
+    <div class="row">
+      <button onclick="testBellOnlyLocal()">🔔 सिर्फ घंटी टेस्ट करें</button>
+      <button onclick="stopSound()">रोकें</button>
     </div>
+  </section>
+</div>
 
-    <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें (जैसे: Attention Please, ...):</label>
-    <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें..." style="width:100%; margin-bottom: 10px;">
-    
-    <div class="row" style="gap: 8px;">
-      <button onclick="handleEmergency('bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
-      <button class="primary" onclick="handleEmergency('bell_text')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + टेक्स्ट</button>
-      <button onclick="handleEmergency('text')" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. सिर्फ टेक्स्ट पढ़ें</button>
-    </div>
-  </div>
-</section>
-
-<!-- 🔒 पासवर्ड प्रोटेक्टेड सेक्शन -->
-<section class="card" style="border-left: 5px solid #dc2626;">
-  <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
-  
-  <div id="adminLockDiv" class="locked-box">
-    <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 अनाउंसमेंट लाइब्रेरी और रूटीन में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
-    <div class="row" style="justify-content: center;">
-      <input type="password" id="adminPassInput" placeholder="मास्टर पासवर्ड दर्ज करें (123)" style="max-width: 220px;">
-      <button class="primary" onclick="unlockAdminSettings()">अनलॉक करें</button>
-    </div>
-  </div>
-
-  <div id="adminContentDiv" style="display: none;">
-    <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 सेटिंग्स अनलॉक है (अब आप बदलाव कर सकते हैं)</p>
-    
-    <!-- ☁️ मैन्युअल क्लाउड सिंक कंट्रोल पैनल -->
-    <div style="background:#eef2f7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <div>
-        <div style="font-weight:bold; color:#12213a;">☁️ क्लाउड सिंक स्टेटस</div>
-        <div id="syncStatusText" style="font-size:13px; color:#16a34a; font-weight:600;">लोकल स्टोरेज पर सुरक्षित है</div>
+<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर + लाइव डिवाइस काउंटर ================= -->
+<div id="tabBroadcast" class="tab-pane">
+  <!-- 📶 लाइव कनेक्टेड डिवाइसेस डैशबोर्ड -->
+  <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
+    <h2>📊 लाइव कनेक्टेड डिवाइसेस (डैशबोर्ड)</h2>
+    <div style="display:flex; gap:15px; margin-top:8px; flex-wrap:wrap;">
+      <div style="background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #bbf7d0; flex:1; min-width:140px;">
+        <div style="font-size:12px; color:#166534; font-weight:600;">एक्टिव मास्टर डिवाइस</div>
+        <div id="activeMasterCount" style="font-size:20px; font-weight:bold; color:#15803d;">0</div>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button class="primary" onclick="syncToCloudNow()">☁️ क्लाउड पर सेव/सिंक करें</button>
-        <button onclick="fetchFromCloudNow()">🔄 क्लाउड से डेटा लाएं</button>
+      <div style="background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #bbf7d0; flex:1; min-width:140px;">
+        <div style="font-size:12px; color:#166534; font-weight:600;">एक्टिव एम्प्लीफायर फोन</div>
+        <div id="activeAmpCount" style="font-size:20px; font-weight:bold; color:#15803d;">0</div>
       </div>
     </div>
+  </section>
 
-    <!-- 📢 अनाउंसमेंट लाइब्रेरी -->
-    <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
-      <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी (अपनी घोषणाएँ लिखकर सेव करें)</h3>
-      <div class="row">
-        <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
-        <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट...">
-        <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
-      </div>
-      <div id="annList"></div>
+  <!-- 🔊 ओरिजिनल एम्प्लीफायर मोड -->
+  <section class="card" style="border-left: 5px solid #2563eb;">
+    <h2>🔊 रिमोट लाइव माइक और एम्प्लीफायर मोड (ओरिजिनल)</h2>
+    <div class="row" style="margin-top: 10px;">
+      <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
+      <button class="primary" onclick="startBroadcasting()">बोलें (ब्रॉडकास्ट ऑन)</button>
+      <button class="danger" onclick="stopBroadcasting()">ब्रॉडकास्ट बंद करें</button>
     </div>
-
-    <!-- टाइमटेबल और रूटीन सेटिंग्स -->
-    <div style="background:#f9f9f9; padding:10px; border-radius:8px; border:1px solid var(--line);">
-      <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ टाइमटेबल और रूटीन</h3>
-      <div class="days row" id="daysRow"></div>
-      <div id="items"></div>
-      <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
+    <div class="row" style="margin-top:8px;">
+      <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
+      <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
     </div>
+    <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
+  </section>
 
-    <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 15px;">वापस लॉक करें</button>
-  </div>
-</section>
-
-<!-- ================================================= -->
-<!-- 🌐 नया ग्लोबल मल्टी-एम्प्लीफायर & मास्टर सिस्टम (छुपा हुआ कार्ड) -->
-<!-- ================================================= -->
-<section class="card" style="border-left: 5px solid #2563eb;">
-  <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#globalBroadcastBody" aria-expanded="false">
-    <h2 style="margin:0; color:#2563eb;">🌐 ग्लोबल मल्टी-एम्प्लीफायर & मास्टर सिस्टम (नया)</h2>
-    <span style="font-size:13px; font-weight:600; color:#2563eb;">▼ खोलें/छिपाएं</span>
-  </div>
-  <div id="globalBroadcastBody" class="collapse" style="margin-top: 12px;">
+  <!-- 🌐 ग्लोबल मल्टी-एम्प्लीफायर & मास्टर सिस्टम -->
+  <section class="card" style="border-left: 5px solid #2563eb;">
+    <h2>🌐 ग्लोबल मल्टी-एम्प्लीफायर & मास्टर सिस्टम (नया)</h2>
     <p class="hint">एक ही ग्लोबल रूम कोड (`bps`) का उपयोग करके कई मास्टर डिवाइस से ब्रॉडकास्ट करें और कई एम्प्लीफायर फोनों पर एक साथ आवाज़ भेजें।</p>
     
     <div class="row">
@@ -162,7 +144,6 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-      <!-- Master Controls -->
       <div style="background:#f0f4f8; padding:10px; border-radius:8px; border:1px solid var(--line);">
         <h3 style="font-size:14px; margin-top:0; color:#12213a;">🎙️ मास्टर कंट्रोल</h3>
         <button class="primary" id="btnStartGlobalBroadcast" style="width:100%; margin-bottom:6px;" onclick="startGlobalBroadcast()">ग्लोबल लाइव ब्रॉडकास्ट शुरू</button>
@@ -170,7 +151,6 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
         <div id="globalMasterStatus" class="muted">स्टेटस: तैयार</div>
       </div>
 
-      <!-- Amplifier Controls -->
       <div style="background:#f0f4f8; padding:10px; border-radius:8px; border:1px solid var(--line);">
         <h3 style="font-size:14px; margin-top:0; color:#12213a;">🔊 एम्प्लीफायर मोड (मल्टीपल)</h3>
         <button class="primary" id="btnEnableGlobalAmplifier" style="width:100%; margin-bottom:6px;" onclick="enableGlobalAmplifier()">🔊 एम्प्लीफायर फोन बनाएं</button>
@@ -178,11 +158,85 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
         <div id="globalAmplifierStatus" class="muted">स्टेटस: बंद है</div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
+
+<!-- ================= TAB 3: त्वरित घोषणाएँ और कंट्रोल ================= -->
+<div id="tabEmergency" class="tab-pane">
+  <section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
+    <h2>🚨 त्वरित घोषणाएँ और कंट्रोल</h2>
+    <div style="margin-top: 8px;">
+      
+      <div style="background:#fee2e2; border:1px solid #fecaca; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+        <span style="font-weight:bold; font-size:13px; color:#991b1b;">🎯 आवाज़ कहाँ बजानी है?:</span>
+        <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="local" checked> इसी फोन पर</label>
+        <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="remote"> एम्प्लीफायर फोन पर (रिमोट)</label>
+      </div>
+
+      <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें (जैसे: Attention Please, ...):</label>
+      <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें..." style="width:100%; margin-bottom: 10px;">
+      
+      <div class="row" style="gap: 8px;">
+        <button onclick="handleEmergency('bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
+        <button class="primary" onclick="handleEmergency('bell_text')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + टेक्स्ट</button>
+        <button onclick="handleEmergency('text')" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. सिर्फ टेक्स्ट पढ़ें</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= TAB 4: सेटिंग्स, लाइब्रेरी और टाइमटेबल ================= -->
+<div id="tabAdmin" class="tab-pane">
+  <section class="card" style="border-left: 5px solid #dc2626;">
+    <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
+    
+    <div id="adminLockDiv" class="locked-box">
+      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 अनाउंसमेंट लाइब्रेरी और रूटीन में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
+      <div class="row" style="justify-content: center;">
+        <input type="password" id="adminPassInput" placeholder="मास्टर पासवर्ड दर्ज करें (123)" style="max-width: 220px;">
+        <button class="primary" onclick="unlockAdminSettings()">अनलॉक करें</button>
+      </div>
+    </div>
+
+    <div id="adminContentDiv" style="display: none;">
+      <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 सेटिंग्स अनलॉक है (अब आप बदलाव कर सकते हैं)</p>
+      
+      <div style="background:#eef2f7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <div style="font-weight:bold; color:#12213a;">☁️ क्लाउड सिंक स्टेटस</div>
+          <div id="syncStatusText" style="font-size:13px; color:#16a34a; font-weight:600;">लोकल स्टोरेज पर सुरक्षित है</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="primary" onclick="syncToCloudNow()">☁️ क्लाउड पर सेव/सिंक करें</button>
+          <button onclick="fetchFromCloudNow()">🔄 क्लाउड से डेटा लाएं</button>
+        </div>
+      </div>
+
+      <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
+        <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी (अपनी घोषणाएँ लिखकर सेव करें)</h3>
+        <div class="row">
+          <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
+          <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट...">
+          <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
+        </div>
+        <div id="annList"></div>
+      </div>
+
+      <div style="background:#f9f9f9; padding:10px; border-radius:8px; border:1px solid var(--line);">
+        <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ टाइमटेबल और रूटीन</h3>
+        <div class="days row" id="daysRow"></div>
+        <div id="items"></div>
+        <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
+      </div>
+
+      <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 15px;">वापस लॉक करें</button>
+    </div>
+  </section>
+</div>
 
 </main>
 <div id="toast"></div>
+
 <script>
 "use strict";
 
@@ -222,13 +276,27 @@ let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
 
-// नए ग्लोबल ब्रॉडकास्ट वेरिएबल्स
 let globalPeer = null;
 let globalLocalStream = null;
 let isGlobalAmplifierActive = false;
 
+// यूनिक डिवाइस आईडी जनरेट करें ताकि प्रेजेंस (ऑनलाइन स्टेटस) ट्रैक हो सके
+const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
+
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
+
+// 📑 टैब स्विचिंग फंक्शन
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs-custom button').forEach(el => el.classList.remove('active'));
+  
+  document.getElementById(tabId).classList.add('active');
+  if(tabId === 'tabClock') document.getElementById('btnTabClock').classList.add('active');
+  if(tabId === 'tabBroadcast') document.getElementById('btnTabBroadcast').classList.add('active');
+  if(tabId === 'tabEmergency') document.getElementById('btnTabEmergency').classList.add('active');
+  if(tabId === 'tabAdmin') document.getElementById('btnTabAdmin').classList.add('active');
+}
 
 async function syncInternetTime() {
   try {
@@ -243,7 +311,7 @@ async function syncInternetTime() {
   }
 }
 
-// ☁️ सिर्फ बटन दबाने पर ही क्लाउड पर डेटा जाएगा
+// ☁️ क्लाउड सिंक
 function syncToCloudNow() {
   if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
   db.ref("school_bell_system").set(st).then(() => {
@@ -255,7 +323,6 @@ function syncToCloudNow() {
   });
 }
 
-// 🔄 सिर्फ बटन दबाने पर ही क्लाउड से डेटा आएगा
 function fetchFromCloudNow() {
   if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
   db.ref("school_bell_system").once("value").then((snapshot) => {
@@ -372,7 +439,6 @@ function ringAndSpeak(text, playBell, onlyBell, cb){
   });
 }
 
-// 🎛️ नया स्मार्ट हैंडलर: लोकल या रिमोट (एम्प्लीफायर फोन) पर कमांड भेजने के लिए
 function handleEmergency(actionType) {
   const target = document.querySelector('input[name="targetDevice"]:checked').value;
   const customText = document.getElementById("emergencyText").value.trim();
@@ -383,13 +449,11 @@ function handleEmergency(actionType) {
   }
 
   if(target === 'local') {
-    // इसी फोन पर बजाएं
     if(actionType === 'bell') ringAndSpeak("", true, true, null);
     else if(actionType === 'bell_text') ringAndSpeak(customText, true, false, null);
     else if(actionType === 'text') speakAudio(customText, null);
     toast("इसी फोन पर एक्शन ले लिया गया है!");
   } else {
-    // एम्प्लीफायर फोन (रिमोट) पर भेजें
     if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
     const commandData = {
       type: actionType,
@@ -428,6 +492,7 @@ function setAsAmplifierPhone(){
   save();
   toast("एम्प्लीफायर फोन सेट हो गया है।");
   startAutoListener();
+  updateDevicePresence("amplifier");
 }
 
 function unsetAmplifierPhone(){
@@ -435,6 +500,7 @@ function unsetAmplifierPhone(){
   save();
   if(peer) peer.destroy();
   toast("एम्प्लीफायर मोड हटा दिया गया है।");
+  updateDevicePresence("master");
 }
 
 function startAutoListener(){
@@ -475,10 +541,10 @@ function stopBroadcasting(){
   document.getElementById("streamStatus").textContent = "स्टेटस: बंद है";
 }
 
-// 🌐 नए ग्लोबल मल्टी-एम्प्लीफायर और मास्टर ब्रॉडकास्ट फंक्शन्स
+// 🌐 ग्लोबल एम्प्लीफायर
 function enableGlobalAmplifier() {
   const roomCode = document.getElementById("newRoomCode").value.trim() || "bps";
-  const peerId = roomCode + "_global_amplifier_receiver";
+  const peerId = roomCode + "_global_amplifier_receiver_" + Math.random().toString(36).substr(2,4);
   
   document.getElementById("globalAmplifierStatus").textContent = "स्टेटस: कनेक्ट हो रहा है...";
   
@@ -493,6 +559,7 @@ function enableGlobalAmplifier() {
     isGlobalAmplifierActive = true;
     document.getElementById("globalAmplifierStatus").innerHTML = '<span style="color:var(--green); font-weight:600;">🟢 एम्प्लीफायर एक्टिव (रेडी)</span>';
     toast("यह डिवाइस अब ग्लोबल एम्प्लीफायर बन गया है!");
+    updateDevicePresence("amplifier");
   });
 
   globalPeer.on('call', (call) => {
@@ -520,6 +587,7 @@ function disableGlobalAmplifier() {
   if(globalPeer) { globalPeer.destroy(); globalPeer = null; }
   document.getElementById("globalAmplifierStatus").textContent = "स्टेटस: बंद है";
   toast("ग्लोबल एम्प्लीफायर मोड हटा दिया गया है।");
+  updateDevicePresence("master");
 }
 
 function startGlobalBroadcast() {
@@ -554,6 +622,50 @@ function stopGlobalBroadcast() {
   document.getElementById("btnStopGlobalBroadcast").style.display = 'none';
   document.getElementById("globalMasterStatus").textContent = "स्टेटस: बंद है";
   toast("ब्रॉडकास्ट बंद कर दिया गया है।");
+}
+
+// 🟢 कनेक्टेड डिवाइसेस प्रेजेंस ट्रैकर (Firebase Realtime Presence)
+function updateDevicePresence(role) {
+  if(!db) return;
+  const type = (st.isAmplifierDevice || isGlobalAmplifierActive) ? "amplifier" : "master";
+  const ref = db.ref("school_bell_system/connectedDevices/" + myDeviceId);
+  
+  ref.set({
+    role: type,
+    lastSeen: firebase.database.ServerValue.TIMESTAMP
+  });
+  // डिस्कनेक्ट होने पर अपने आप लिस्ट से हट जाए
+  ref.onDisconnect().remove();
+}
+
+function initPresenceSystem() {
+  if(!db) return;
+  updateDevicePresence("master");
+
+  // हर 15 सेकंड में अपना स्टेटस पिंग करें ताकि ऑनलाइन दिखें
+  setInterval(() => {
+    updateDevicePresence();
+  }, 15000);
+
+  // सभी कनेक्टेड डिवाइसेस को गिनकर स्क्रीन पर दिखाएं
+  db.ref("school_bell_system/connectedDevices").on("value", (snapshot) => {
+    const devices = snapshot.val() || {};
+    let masterCount = 0;
+    let ampCount = 0;
+
+    const now = Date.now();
+    Object.keys(devices).forEach(id => {
+      const dev = devices[id];
+      // अगर पिछले 30 सेकंड के अंदर पिंग आया है तभी एक्टिव मानें
+      if(dev && dev.lastSeen && (now - dev.lastSeen < 30000)) {
+        if(dev.role === "amplifier") ampCount++;
+        else masterCount++;
+      }
+    });
+
+    document.getElementById("activeMasterCount").textContent = masterCount;
+    document.getElementById("activeAmpCount").textContent = ampCount;
+  });
 }
 
 function saveAnnouncement(){
@@ -733,16 +845,15 @@ async function initApp() {
   render();
   initRoomCodeField();
   showNext();
+  initPresenceSystem();
 
   if(st.isAmplifierDevice){
     setTimeout(() => { startAutoListener(); }, 1000);
   }
 
-  // 📡 एम्प्लीफायर फोन के लिए रिमोट कमांड लिसनर (बैकग्राउंड में केवल रिमोट ट्रिगर सुनेगा)
   if(db) {
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
-      // अगर कमांड पिछले 5 सेकंड के अंदर की है और यह डिवाइस एम्प्लीफायर फोन मोड में है
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
         if(st.isAmplifierDevice) {
           if(cmd.type === 'bell') {
