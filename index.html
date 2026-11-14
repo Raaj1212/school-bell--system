@@ -64,6 +64,8 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   display: block;
 }
 </style>
+<!-- PeerJS Library -->
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -100,7 +102,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   </section>
 </div>
 
-<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर (फायरबेस आधारित) ================= -->
+<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर (यूनिक आईडी लूपिंग सिस्टम) ================= -->
 <div id="tabBroadcast" class="tab-pane">
   <!-- 📶 लाइव कनेक्टेड डिवाइसेस डैशबोर्ड -->
   <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
@@ -117,19 +119,20 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
     </div>
   </section>
 
-  <!-- 🔊 फायरबेस आधारित लाइव माइक और एम्प्लीफायर सिस्टम -->
+  <!-- 🔊 मल्टी-एम्प्लीफायर P2P सिस्टम -->
   <section class="card" style="border-left: 5px solid #2563eb;">
-    <h2>🔊 फायरबेस लाइव माइक और मल्टी-एम्प्लीफायर सिस्टम</h2>
-    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड दर्ज होना चाहिए।</div>
+    <h2>🔊 रिमोट लाइव माइक और मल्टी-एम्प्लीफायर मोड</h2>
+    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड (जैसे: `bps-school-123`) दर्ज होना चाहिए।</div>
     <div class="row" style="margin-top: 10px;">
-      <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps)" style="flex:1;" value="bps">
+      <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
     </div>
     <div class="row" style="margin-top: 10px;">
-      <button class="primary" id="btnStartMic" onclick="startMicBroadcast()">🎙️ बोलें (लाइव ब्रॉडकास्ट ऑन)</button>
-      <button class="danger" id="btnStopMic" style="display:none;" onclick="stopMicBroadcast()">⏹ ब्रॉडकास्ट बंद करें</button>
+      <button class="primary" onclick="startBroadcasting()">🎙️ बोलें (ब्रॉडकास्ट ऑन)</button>
+      <button class="danger" onclick="stopBroadcasting()">⏹ ब्रॉडकास्ट बंद करें</button>
     </div>
     <div class="row" style="margin-top:8px;">
-      <button class="small primary" id="btnAmpToggle" onclick="toggleAmplifierMode()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
+      <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
+      <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
     </div>
     <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
   </section>
@@ -240,18 +243,17 @@ let defaultData = {
   ],
   items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
   days:"all",
-  roomCode:"bps",
+  roomCode:"bps-school-123",
   isAmplifierDevice:false
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
 
 let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
-let wakeLock=null;
+let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
-let mediaRecorder = null;
-let audioChunks = [];
 
+// प्रत्येक डिवाइस की यूनीक आईडी
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
@@ -298,7 +300,7 @@ function fetchFromCloudNow() {
     if(serverData) {
       st = serverData;
       st.announcements = st.announcements || [];
-      st.roomCode = st.roomCode || "bps";
+      st.roomCode = st.roomCode || "bps-school-123";
       st.isAmplifierDevice = st.isAmplifierDevice || false;
       saveLocal();
       render();
@@ -452,87 +454,105 @@ function initRoomCodeField(){
   if(rcInput && rcInput.value !== st.roomCode) {
     rcInput.value = st.roomCode;
   }
-  rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); updateDevicePresence(); };
+  rcInput.oninput = () => { 
+    st.roomCode = rcInput.value.trim(); 
+    save(); 
+    updateDevicePresence(); 
+  };
 }
 
-// 🔊 एम्प्लीफायर मोड टॉगल (फायरबेस लिसनर आधारित)
-function toggleAmplifierMode() {
-  st.isAmplifierDevice = !st.isAmplifierDevice;
+// 🔊 मल्टी-एम्प्लीफायर P2P लिसनर (प्रत्येक एम्प्लीफायर की यूनीक ID)
+function setAsAmplifierPhone(){
+  st.isAmplifierDevice = true;
   save();
+  toast("एम्प्लीफायर फोन सेट हो गया है।");
+  startAutoListener();
   updateDevicePresence();
-  
-  const btn = document.getElementById("btnAmpToggle");
-  if(st.isAmplifierDevice) {
-    btn.className = "small danger";
-    btn.textContent = "✕ एम्प्लीफायर मोड बंद करें";
-    document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर एक्टिव (लाइव आवाज़ सुनने के लिए तैयार)";
-    toast("यह डिवाइस अब एम्प्लीफायर फोन बन गया है!");
-  } else {
-    btn.className = "small primary";
-    btn.textContent = "🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)";
-    document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर बंद है";
-    toast("एम्प्लीफायर मोड हटा दिया गया है।");
-  }
 }
 
-// 🎙️ फायरबेस आधारित लाइव माइक ब्रॉडकास्ट (मास्टर से)
-function startMicBroadcast() {
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+function unsetAmplifierPhone(){
+  st.isAmplifierDevice = false;
+  save();
+  if(peer) peer.destroy();
+  toast("एम्प्लीफायर मोड हटा दिया गया है।");
+  updateDevicePresence();
+}
 
-    mediaRecorder.ondataavailable = event => {
-      if(event.data.size > 0) {
-        audioChunks.push(event.data);
-      }
-    };
+function startAutoListener(){
+  const code = st.roomCode;
+  if(!code) return;
+  if(peer) peer.destroy();
+  
+  const ampPeerId = "bps_amp_" + code + "_" + myDeviceId;
+  peer = new Peer(ampPeerId);
 
-    mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = () => {
-        const base64Audio = reader.result;
-        if(db) {
-          db.ref("school_bell_system/liveVoiceBroadcast").set({
-            audio: base64Audio,
-            timestamp: Date.now()
-          });
-        }
-      };
-    };
+  peer.on('open', (id) => {
+    document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर तैयार है (कॉल का इंतज़ार है...)";
+  });
 
-    mediaRecorder.start();
-    document.getElementById("btnStartMic").style.display = 'none';
-    document.getElementById("btnStopMic").style.display = 'block';
-    document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 लाइव बोल रहे हैं (ब्रॉडकास्ट चालू है)...";
-    toast("लाइव ब्रॉडकास्ट शुरू हो गया है!");
+  peer.on('call', call => {
+    call.answer();
+    call.on('stream', remoteStream => {
+      const audio = new Audio();
+      audio.srcObject = remoteStream;
+      audio.play().catch(e => {});
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है...";
+    });
+  });
 
-    // हर 2 सेकंड में छोटे-छोटे ऑडियो चंक बनाकर भेजें ताकि तुरंत एम्प्लीफायर पर बजे
-    window.micInterval = setInterval(() => {
-      if(mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        mediaRecorder.start();
-      }
-    }, 2000);
-
-  }).catch(err => {
-    toast("माइक की अनुमति नहीं मिली: " + err.message);
+  peer.on('error', (err) => {
+    document.getElementById("streamStatus").textContent = "एरर: " + err.type;
   });
 }
 
-function stopMicBroadcast() {
-  if(window.micInterval) clearInterval(window.micInterval);
-  if(mediaRecorder && mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
-  }
-  document.getElementById("btnStartMic").style.display = 'block';
-  document.getElementById("btnStopMic").style.display = 'none';
-  document.getElementById("streamStatus").textContent = "स्टेटस: ब्रॉडकास्ट बंद कर दिया गया है";
+// 🎙️ मल्टी-मास्टर ब्रॉडकास्ट (मास्टर फोन से सभी एक्टिव एम्प्लीफायर को एक साथ कॉल लूप करना)
+function startBroadcasting(){
+  const code = document.getElementById("roomCode").value.trim();
+  if(!code){ toast("रूम कोड दर्ज करें!"); return; }
+  
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+    localStream = stream;
+    if(peer) peer.destroy();
+    peer = new Peer();
+    
+    peer.on('open', id => {
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 एम्प्लीफायर खोजे जा रहे हैं...";
+      
+      if(db) {
+        db.ref("school_bell_system/connectedDevices").once("value").then(snapshot => {
+          const devices = snapshot.val() || {};
+          let connectedCount = 0;
+          const now = Date.now();
+          
+          Object.keys(devices).forEach(devId => {
+            const dev = devices[devId];
+            // अगर यह एम्प्लीफायर फोन है, इसी रूम का है, और एक्टिव है (और खुद मास्टर फोन नहीं है)
+            if(dev && dev.role === "amplifier" && dev.room === code && (now - dev.lastSeen < 30000)) {
+              const targetAmpPeerId = "bps_amp_" + code + "_" + devId;
+              peer.call(targetAmpPeerId, stream);
+              connectedCount++;
+            }
+          });
+          
+          document.getElementById("streamStatus").textContent = `स्टेटस: 🔴 ब्रॉडकास्ट लाइव (${connectedCount} एम्प्लीफायर कनेक्टेड)`;
+          toast(`ब्रॉडकास्ट शुरू! ${connectedCount} एम्प्लीफायर कनेक्ट हुए।`);
+        });
+      } else {
+        document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 ब्रॉडकास्ट लाइव है";
+        toast("ब्रॉडकास्ट शुरू!");
+      }
+    });
+  }).catch(e => toast("माइक अनुमति नहीं मिली"));
+}
+
+function stopBroadcasting(){
+  if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if(peer) peer.destroy();
+  document.getElementById("streamStatus").textContent = "स्टेटस: बंद है";
   toast("ब्रॉडकास्ट बंद!");
 }
 
-// 🟢 कनेक्टेड डिवाइसेस प्रेजेंस ट्रैकर (Firebase Realtime Presence)
+// 🟢 प्रेजेंस ट्रैकर (फायरबेस पर मास्टर और एम्प्लीफायर ट्रैक करने के लिए)
 function updateDevicePresence() {
   if(!db) return;
   const roleType = st.isAmplifierDevice ? "amplifier" : "master";
@@ -540,7 +560,7 @@ function updateDevicePresence() {
   
   ref.set({
     role: roleType,
-    room: st.roomCode || "bps",
+    room: st.roomCode || "bps-school-123",
     lastSeen: firebase.database.ServerValue.TIMESTAMP
   });
   ref.onDisconnect().remove();
@@ -550,16 +570,6 @@ function initPresenceSystem() {
   if(!db) return;
   updateDevicePresence();
 
-  // अगर यह एम्प्लीफायर डिवाइस है तो बटन का टेक्स्ट सिंक करें
-  if(st.isAmplifierDevice) {
-    const btn = document.getElementById("btnAmpToggle");
-    if(btn) {
-      btn.className = "small danger";
-      btn.textContent = "✕ एम्प्लीफायर मोड बंद करें";
-      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर एक्टिव (लाइव आवाज़ सुनने के लिए तैयार)";
-    }
-  }
-
   setInterval(() => {
     updateDevicePresence();
   }, 15000);
@@ -568,8 +578,8 @@ function initPresenceSystem() {
     const devices = snapshot.val() || {};
     let masterCount = 0;
     let ampCount = 0;
-
     const now = Date.now();
+
     Object.keys(devices).forEach(id => {
       const dev = devices[id];
       if(dev && dev.lastSeen && (now - dev.lastSeen < 30000)) {
@@ -580,33 +590,6 @@ function initPresenceSystem() {
 
     document.getElementById("activeMasterCount").textContent = masterCount;
     document.getElementById("activeAmpCount").textContent = ampCount;
-  });
-
-  // 🔊 एम्प्लीफायर फोन पर लाइव वॉइस और कमांड्स सुनने के लिए लिसनर
-  db.ref("school_bell_system/liveVoiceBroadcast").on("value", (snapshot) => {
-    const data = snapshot.val();
-    if(data && data.audio && data.timestamp && (Date.now() - data.timestamp < 4000)) {
-      if(st.isAmplifierDevice) {
-        const audio = new Audio(data.audio);
-        audio.play().catch(e => {});
-      }
-    }
-  });
-
-  db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
-    const cmd = snapshot.val();
-    if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
-      if(st.isAmplifierDevice) {
-        if(cmd.type === 'bell') {
-          ringAndSpeak("", true, true, null);
-        } else if(cmd.type === 'bell_text') {
-          ringAndSpeak(cmd.text, true, false, null);
-        } else if(cmd.type === 'text') {
-          speakAudio(cmd.text, null);
-        }
-        toast("🔔 रिमोट अनाउंसमेंट प्राप्त हुई!");
-      }
-    }
   });
 }
 
@@ -788,6 +771,28 @@ async function initApp() {
   initRoomCodeField();
   showNext();
   initPresenceSystem();
+
+  if(st.isAmplifierDevice){
+    setTimeout(() => { startAutoListener(); }, 1000);
+  }
+
+  if(db) {
+    db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
+      const cmd = snapshot.val();
+      if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
+        if(st.isAmplifierDevice) {
+          if(cmd.type === 'bell') {
+            ringAndSpeak("", true, true, null);
+          } else if(cmd.type === 'bell_text') {
+            ringAndSpeak(cmd.text, true, false, null);
+          } else if(cmd.type === 'text') {
+            speakAudio(cmd.text, null);
+          }
+          toast("🔔 रिमोट अनाउंसमेंट प्राप्त हुई!");
+        }
+      }
+    });
+  }
 
   setInterval(tick, 1000);
   setTimeout(() => { startSys(); }, 1000);
