@@ -100,7 +100,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   </section>
 </div>
 
-<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर (ऑटो-डिफ़ॉल्ट एम्प्लीफायर) ================= -->
+<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर (फायरबेस आधारित) ================= -->
 <div id="tabBroadcast" class="tab-pane">
   <!-- 📶 लाइव कनेक्टेड डिवाइसेस डैशबोर्ड -->
   <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
@@ -120,18 +120,18 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   <!-- 🔊 फायरबेस आधारित लाइव माइक और एम्प्लीफायर सिस्टम -->
   <section class="card" style="border-left: 5px solid #2563eb;">
     <h2>🔊 फायरबेस लाइव माइक और मल्टी-एम्प्लीफायर सिस्टम</h2>
-    <div class="hint">यह फोन बाय डिफॉल्ट **एम्प्लीफायर (स्पीकर)** मोड पर है। जब बोलना हो, तब मास्टर मोड चालू करें।</div>
+    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड दर्ज होना चाहिए।</div>
     <div class="row" style="margin-top: 10px;">
       <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps)" style="flex:1;" value="bps">
     </div>
     <div class="row" style="margin-top: 10px;">
-      <button class="primary" id="btnStartMic" onclick="startMicBroadcast()">🎙️ बोलें (मास्टर बनकर ब्रॉडकास्ट करें)</button>
-      <button class="danger" id="btnStopMic" style="display:none;" onclick="stopMicBroadcast()">⏹ बोलना बंद करें</button>
+      <button class="primary" id="btnStartMic" onclick="startMicBroadcast()">🎙️ बोलें (लाइव ब्रॉडकास्ट ऑन)</button>
+      <button class="danger" id="btnStopMic" style="display:none;" onclick="stopMicBroadcast()">⏹ ब्रॉडकास्ट बंद करें</button>
     </div>
     <div class="row" style="margin-top:8px;">
-      <button class="small primary" id="btnAmpToggle" onclick="toggleAmplifierMode()">🔊 एम्प्लीफायर मोड (ऑन/ऑफ)</button>
+      <button class="small primary" id="btnAmpToggle" onclick="toggleAmplifierMode()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
     </div>
-    <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: 🟢 एम्प्लीफायर मोड चालू है (सुन रहा है)</div>
+    <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
   </section>
 </div>
 
@@ -241,11 +241,10 @@ let defaultData = {
   items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
   days:"all",
   roomCode:"bps",
-  isAmplifierDevice: true // 👈 बाय डिफॉल्ट एम्प्लीफायर मोड ऑन रहेगा
+  isAmplifierDevice:false
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
-if(st.isAmplifierDevice === undefined) st.isAmplifierDevice = true; // नए लोड पर डिफ़ॉल्ट ट्रू
 
 let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let wakeLock=null;
@@ -300,7 +299,7 @@ function fetchFromCloudNow() {
       st = serverData;
       st.announcements = st.announcements || [];
       st.roomCode = st.roomCode || "bps";
-      if(st.isAmplifierDevice === undefined) st.isAmplifierDevice = true;
+      st.isAmplifierDevice = st.isAmplifierDevice || false;
       saveLocal();
       render();
       const statusEl = document.getElementById("syncStatusText");
@@ -456,38 +455,28 @@ function initRoomCodeField(){
   rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); updateDevicePresence(); };
 }
 
-// 🔊 एम्प्लीफायर मोड टॉगल (जब चाहें ऑन/ऑफ करें)
+// 🔊 एम्प्लीफायर मोड टॉगल (फायरबेस लिसनर आधारित)
 function toggleAmplifierMode() {
   st.isAmplifierDevice = !st.isAmplifierDevice;
   save();
   updateDevicePresence();
-  updateAmpButtonUI();
-}
-
-function updateAmpButtonUI() {
+  
   const btn = document.getElementById("btnAmpToggle");
-  if(!btn) return;
   if(st.isAmplifierDevice) {
     btn.className = "small danger";
-    btn.textContent = "✕ एम्प्लीफायर मोड बंद करें (मास्टर बनें)";
+    btn.textContent = "✕ एम्प्लीफायर मोड बंद करें";
     document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर एक्टिव (लाइव आवाज़ सुनने के लिए तैयार)";
+    toast("यह डिवाइस अब एम्प्लीफायर फोन बन गया है!");
   } else {
     btn.className = "small primary";
-    btn.textContent = "🔊 एम्प्लीफायर मोड चालू करें (ऑटो-लिसन)";
-    document.getElementById("streamStatus").textContent = "स्टेटस: 🎙️ मास्टर मोड (बोलने के लिए तैयार)";
+    btn.textContent = "🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)";
+    document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर बंद है";
+    toast("एम्प्लीफायर मोड हटा दिया गया है।");
   }
 }
 
 // 🎙️ फायरबेस आधारित लाइव माइक ब्रॉडकास्ट (मास्टर से)
 function startMicBroadcast() {
-  // जब बोलना हो तो अस्थायी रूप से इस फोन को मास्टर मान लें
-  if(st.isAmplifierDevice) {
-    st.isAmplifierDevice = false;
-    save();
-    updateDevicePresence();
-    updateAmpButtonUI();
-  }
-
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
@@ -519,6 +508,7 @@ function startMicBroadcast() {
     document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 लाइव बोल रहे हैं (ब्रॉडकास्ट चालू है)...";
     toast("लाइव ब्रॉडकास्ट शुरू हो गया है!");
 
+    // हर 2 सेकंड में छोटे-छोटे ऑडियो चंक बनाकर भेजें ताकि तुरंत एम्प्लीफायर पर बजे
     window.micInterval = setInterval(() => {
       if(mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
@@ -539,16 +529,10 @@ function stopMicBroadcast() {
   document.getElementById("btnStartMic").style.display = 'block';
   document.getElementById("btnStopMic").style.display = 'none';
   document.getElementById("streamStatus").textContent = "स्टेटस: ब्रॉडकास्ट बंद कर दिया गया है";
-  
-  // बोलने के बाद वापस एम्प्लीफायर मोड पर लौट जाएं
-  st.isAmplifierDevice = true;
-  save();
-  updateDevicePresence();
-  updateAmpButtonUI();
-  toast("ब्रॉडकास्ट बंद और फोन वापस एम्प्लीफायर मोड में आ गया!");
+  toast("ब्रॉडकास्ट बंद!");
 }
 
-// 🟢 कनेक्टेड डिवाइसेस प्रेजेंस ट्रैकर
+// 🟢 कनेक्टेड डिवाइसेस प्रेजेंस ट्रैकर (Firebase Realtime Presence)
 function updateDevicePresence() {
   if(!db) return;
   const roleType = st.isAmplifierDevice ? "amplifier" : "master";
@@ -565,7 +549,16 @@ function updateDevicePresence() {
 function initPresenceSystem() {
   if(!db) return;
   updateDevicePresence();
-  updateAmpButtonUI();
+
+  // अगर यह एम्प्लीफायर डिवाइस है तो बटन का टेक्स्ट सिंक करें
+  if(st.isAmplifierDevice) {
+    const btn = document.getElementById("btnAmpToggle");
+    if(btn) {
+      btn.className = "small danger";
+      btn.textContent = "✕ एम्प्लीफायर मोड बंद करें";
+      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर एक्टिव (लाइव आवाज़ सुनने के लिए तैयार)";
+    }
+  }
 
   setInterval(() => {
     updateDevicePresence();
@@ -589,7 +582,7 @@ function initPresenceSystem() {
     document.getElementById("activeAmpCount").textContent = ampCount;
   });
 
-  // 🔊 एम्प्लीफायर फोन पर लाइव वॉइस सुनने के लिए लिसनर
+  // 🔊 एम्प्लीफायर फोन पर लाइव वॉइस और कमांड्स सुनने के लिए लिसनर
   db.ref("school_bell_system/liveVoiceBroadcast").on("value", (snapshot) => {
     const data = snapshot.val();
     if(data && data.audio && data.timestamp && (Date.now() - data.timestamp < 4000)) {
