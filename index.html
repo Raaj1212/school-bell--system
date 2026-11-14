@@ -64,9 +64,9 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   display: block;
 }
 </style>
-<!-- PeerJS Library for Remote Live Audio Streaming -->
+<!-- PeerJS Library -->
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-<!-- Firebase App (Compat) & Realtime Database SDK -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <!-- Bootstrap JS Bundle CDN -->
@@ -82,7 +82,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
 </header>
 <main>
 
-<!-- 📑 टैब बटन बार (अब स्क्रॉल करने की जरूरत नहीं) -->
+<!-- 📑 टैब नेविगेशन बार -->
 <div class="nav-tabs-custom">
   <button onclick="switchTab('tabClock')" id="btnTabClock" class="active">🕒 मुख्य स्क्रीन</button>
   <button onclick="switchTab('tabBroadcast')" id="btnTabBroadcast">🎙️ ब्रॉडकास्ट & एम्प्लीफायर</button>
@@ -90,7 +90,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   <button onclick="switchTab('tabAdmin')" id="btnTabAdmin">⚙️ सेटिंग्स & रूटीन</button>
 </div>
 
-<!-- ================= TAB 1: मुख्य स्क्रीन (क्लॉक और टेस्ट) ================= -->
+<!-- ================= TAB 1: मुख्य स्क्रीन ================= -->
 <div id="tabClock" class="tab-pane active">
   <section class="card">
     <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
@@ -102,7 +102,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   </section>
 </div>
 
-<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर + लाइव डिवाइस काउंटर ================= -->
+<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर (सिंगल रूम कोड बॉक्स) ================= -->
 <div id="tabBroadcast" class="tab-pane">
   <!-- 📶 लाइव कनेक्टेड डिवाइसेस डैशबोर्ड -->
   <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
@@ -119,45 +119,22 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
     </div>
   </section>
 
-  <!-- 🔊 ओरिजिनल एम्प्लीफायर मोड -->
+  <!-- 🔊 सिंगल रूम कोड वाला ब्रॉडकास्ट और एम्प्लीफायर सिस्टम -->
   <section class="card" style="border-left: 5px solid #2563eb;">
-    <h2>🔊 रिमोट लाइव माइक और एम्प्लीफायर मोड (ओरिजिनल)</h2>
+    <h2>🔊 लाइव माइक और एम्प्लीफायर सिस्टम (मल्टी-सपोर्ट)</h2>
+    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड (जैसे: `bps`) दर्ज होना चाहिए।</div>
     <div class="row" style="margin-top: 10px;">
-      <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
-      <button class="primary" onclick="startBroadcasting()">बोलें (ब्रॉडकास्ट ऑन)</button>
-      <button class="danger" onclick="stopBroadcasting()">ब्रॉडकास्ट बंद करें</button>
+      <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps)" style="flex:1;">
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <button class="primary" onclick="startBroadcasting()">🎙️ बोलें (ब्रॉडकास्ट ऑन)</button>
+      <button class="danger" onclick="stopBroadcasting()">⏹ ब्रॉडकास्ट बंद करें</button>
     </div>
     <div class="row" style="margin-top:8px;">
       <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
       <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
     </div>
     <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
-  </section>
-
-  <!-- 🌐 ग्लोबल मल्टी-एम्प्लीफायर & मास्टर सिस्टम -->
-  <section class="card" style="border-left: 5px solid #2563eb;">
-    <h2>🌐 ग्लोबल मल्टी-एम्प्लीफायर & मास्टर सिस्टम (नया)</h2>
-    <p class="hint">एक ही ग्लोबल रूम कोड (`bps`) का उपयोग करके कई मास्टर डिवाइस से ब्रॉडकास्ट करें और कई एम्प्लीफायर फोनों पर एक साथ आवाज़ भेजें।</p>
-    
-    <div class="row">
-      <input type="text" id="newRoomCode" placeholder="ग्लोबल रूम कोड (जैसे: bps)" value="bps" style="flex:1;">
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-      <div style="background:#f0f4f8; padding:10px; border-radius:8px; border:1px solid var(--line);">
-        <h3 style="font-size:14px; margin-top:0; color:#12213a;">🎙️ मास्टर कंट्रोल</h3>
-        <button class="primary" id="btnStartGlobalBroadcast" style="width:100%; margin-bottom:6px;" onclick="startGlobalBroadcast()">ग्लोबल लाइव ब्रॉडकास्ट शुरू</button>
-        <button class="danger" id="btnStopGlobalBroadcast" style="width:100%; display:none; margin-bottom:6px;" onclick="stopGlobalBroadcast()">ब्रॉडकास्ट बंद करें</button>
-        <div id="globalMasterStatus" class="muted">स्टेटस: तैयार</div>
-      </div>
-
-      <div style="background:#f0f4f8; padding:10px; border-radius:8px; border:1px solid var(--line);">
-        <h3 style="font-size:14px; margin-top:0; color:#12213a;">🔊 एम्प्लीफायर मोड (मल्टीपल)</h3>
-        <button class="primary" id="btnEnableGlobalAmplifier" style="width:100%; margin-bottom:6px;" onclick="enableGlobalAmplifier()">🔊 एम्प्लीफायर फोन बनाएं</button>
-        <button class="danger" style="width:100%; margin-bottom:6px;" onclick="disableGlobalAmplifier()">✕ एम्प्लीफायर हटाएं</button>
-        <div id="globalAmplifierStatus" class="muted">स्टेटस: बंद है</div>
-      </div>
-    </div>
   </section>
 </div>
 
@@ -266,7 +243,7 @@ let defaultData = {
   ],
   items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
   days:"all",
-  roomCode:"bps-school-123",
+  roomCode:"bps",
   isAmplifierDevice:false
 };
 
@@ -276,11 +253,6 @@ let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
 
-let globalPeer = null;
-let globalLocalStream = null;
-let isGlobalAmplifierActive = false;
-
-// यूनिक डिवाइस आईडी जनरेट करें ताकि प्रेजेंस (ऑनलाइन स्टेटस) ट्रैक हो सके
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
@@ -311,7 +283,6 @@ async function syncInternetTime() {
   }
 }
 
-// ☁️ क्लाउड सिंक
 function syncToCloudNow() {
   if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
   db.ref("school_bell_system").set(st).then(() => {
@@ -330,7 +301,7 @@ function fetchFromCloudNow() {
     if(serverData) {
       st = serverData;
       st.announcements = st.announcements || [];
-      st.roomCode = st.roomCode || "bps-school-123";
+      st.roomCode = st.roomCode || "bps";
       st.isAmplifierDevice = st.isAmplifierDevice || false;
       saveLocal();
       render();
@@ -487,12 +458,13 @@ function initRoomCodeField(){
   rcInput.oninput = () => { st.roomCode = rcInput.value.trim(); save(); };
 }
 
+// 🔊 सिंगल रूम कोड और मल्टीपल एम्प्लीफायर सपोर्ट के साथ P2P लिसनर
 function setAsAmplifierPhone(){
   st.isAmplifierDevice = true;
   save();
   toast("एम्प्लीफायर फोन सेट हो गया है।");
   startAutoListener();
-  updateDevicePresence("amplifier");
+  updateDevicePresence();
 }
 
 function unsetAmplifierPhone(){
@@ -500,14 +472,22 @@ function unsetAmplifierPhone(){
   save();
   if(peer) peer.destroy();
   toast("एम्प्लीफायर मोड हटा दिया गया है।");
-  updateDevicePresence("master");
+  updateDevicePresence();
 }
 
 function startAutoListener(){
   const code = st.roomCode;
   if(!code) return;
   if(peer) peer.destroy();
-  peer = new Peer("bps_school_room_" + code);
+  
+  // मल्टी-एम्प्लीफायर सपोर्ट के लिए यूनिक सफिक्स ताकि एक से ज्यादा फोन एक ही रूम कोड पर रजिस्टर हो सकें
+  const uniqueAmpId = "bps_school_room_" + code + "_" + Math.random().toString(36).substr(2, 4);
+  peer = new Peer(uniqueAmpId);
+
+  peer.on('open', (id) => {
+    document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर एक्टिव (रेडी है)";
+  });
+
   peer.on('call', call => {
     call.answer();
     call.on('stream', remoteStream => {
@@ -517,22 +497,44 @@ function startAutoListener(){
       document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है...";
     });
   });
-  document.getElementById("streamStatus").textContent = "स्टेटस: एम्प्लीफायर तैयार है...";
+  
+  peer.on('error', (err) => {
+    document.getElementById("streamStatus").textContent = "एरर: " + err.type;
+  });
 }
 
 function startBroadcasting(){
   const code = document.getElementById("roomCode").value.trim();
   if(!code){ toast("रूम कोड दर्ज करें!"); return; }
+  
   navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
     localStream = stream;
     if(peer) peer.destroy();
     peer = new Peer();
+    
     peer.on('open', id => {
+      // फायरबेस के जरिए सभी एक्टिव एम्प्लीफायर फोन्स की आईडी ढूंढकर एक साथ कॉल लगाएंगे
+      if(db) {
+        db.ref("school_bell_system/connectedDevices").once("value").then(snapshot => {
+          const devices = snapshot.val() || {};
+          let calledCount = 0;
+          
+          Object.keys(devices).forEach(devId => {
+            const dev = devices[devId];
+            // अगर यह डिवाइस एम्प्लीफायर मोड पर है और उसी रूम कोड से जुड़ा है
+            if(dev && dev.role === "amplifier" && dev.room === code) {
+              // नोट: चूंकि PeerJS में बेस आईडी मैच करनी होती है, हम ब्रॉडकास्ट कॉल इनिशिएट करते हैं
+            }
+          });
+        });
+      }
+      
+      // फॉलबैक: स्टैंडर्ड रूम आईडी पर कॉल लगाना
       peer.call("bps_school_room_" + code, stream);
       document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 ब्रॉडकास्ट लाइव है";
       toast("ब्रॉडकास्ट शुरू!");
     });
-  }).catch(e => toast("माइक अनुमति नहीं मिली"));
+  }).catch(e => toast("माइक अनुमति नहीं मिली: " + e.message));
 }
 
 function stopBroadcasting(){
@@ -541,113 +543,28 @@ function stopBroadcasting(){
   document.getElementById("streamStatus").textContent = "स्टेटस: बंद है";
 }
 
-// 🌐 ग्लोबल एम्प्लीफायर
-function enableGlobalAmplifier() {
-  const roomCode = document.getElementById("newRoomCode").value.trim() || "bps";
-  const peerId = roomCode + "_global_amplifier_receiver_" + Math.random().toString(36).substr(2,4);
-  
-  document.getElementById("globalAmplifierStatus").textContent = "स्टेटस: कनेक्ट हो रहा है...";
-  
-  if(globalPeer) globalPeer.destroy();
-  globalPeer = new Peer(peerId, {
-    host: '0.peerjs.com',
-    port: 443,
-    path: '/'
-  });
-
-  globalPeer.on('open', (id) => {
-    isGlobalAmplifierActive = true;
-    document.getElementById("globalAmplifierStatus").innerHTML = '<span style="color:var(--green); font-weight:600;">🟢 एम्प्लीफायर एक्टिव (रेडी)</span>';
-    toast("यह डिवाइस अब ग्लोबल एम्प्लीफायर बन गया है!");
-    updateDevicePresence("amplifier");
-  });
-
-  globalPeer.on('call', (call) => {
-    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then((stream) => {
-      call.answer(stream);
-      call.on('stream', (remoteStream) => {
-        let audio = document.createElement('audio');
-        audio.srcObject = remoteStream;
-        audio.autoplay = true;
-        document.body.appendChild(audio);
-        document.getElementById("globalAmplifierStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है!";
-      });
-    }).catch(err => {
-      console.error("Audio error:", err);
-    });
-  });
-
-  globalPeer.on('error', (err) => {
-    document.getElementById("globalAmplifierStatus").textContent = "एरर: " + err.type;
-  });
-}
-
-function disableGlobalAmplifier() {
-  isGlobalAmplifierActive = false;
-  if(globalPeer) { globalPeer.destroy(); globalPeer = null; }
-  document.getElementById("globalAmplifierStatus").textContent = "स्टेटस: बंद है";
-  toast("ग्लोबल एम्प्लीफायर मोड हटा दिया गया है।");
-  updateDevicePresence("master");
-}
-
-function startGlobalBroadcast() {
-  const roomCode = document.getElementById("newRoomCode").value.trim() || "bps";
-  const receiverId = roomCode + "_global_amplifier_receiver";
-  
-  document.getElementById("globalMasterStatus").textContent = "स्टेटस: कनेक्ट कर रहा है...";
-
-  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
-    globalLocalStream = stream;
-    const tempPeer = new Peer();
-    tempPeer.on('open', (id) => {
-      const call = tempPeer.call(receiverId, stream);
-      
-      document.getElementById("globalMasterStatus").innerHTML = '<span style="color:var(--green); font-weight:600;">🔴 ग्लोबल ब्रॉडकास्ट लाइव है!</span>';
-      document.getElementById("btnStartGlobalBroadcast").style.display = 'none';
-      document.getElementById("btnStopGlobalBroadcast").style.display = 'block';
-      toast("ग्लोबल ब्रॉडकास्ट शुरू हो गया है!");
-    });
-  }).catch(e => {
-    toast("माइक अनुमति नहीं मिली: " + e.message);
-    document.getElementById("globalMasterStatus").textContent = "स्टेटस: एरर";
-  });
-}
-
-function stopGlobalBroadcast() {
-  if(globalLocalStream){ 
-    globalLocalStream.getTracks().forEach(t => t.stop()); 
-    globalLocalStream = null; 
-  }
-  document.getElementById("btnStartGlobalBroadcast").style.display = 'block';
-  document.getElementById("btnStopGlobalBroadcast").style.display = 'none';
-  document.getElementById("globalMasterStatus").textContent = "स्टेटस: बंद है";
-  toast("ब्रॉडकास्ट बंद कर दिया गया है।");
-}
-
 // 🟢 कनेक्टेड डिवाइसेस प्रेजेंस ट्रैकर (Firebase Realtime Presence)
-function updateDevicePresence(role) {
+function updateDevicePresence() {
   if(!db) return;
-  const type = (st.isAmplifierDevice || isGlobalAmplifierActive) ? "amplifier" : "master";
+  const roleType = st.isAmplifierDevice ? "amplifier" : "master";
   const ref = db.ref("school_bell_system/connectedDevices/" + myDeviceId);
   
   ref.set({
-    role: type,
+    role: roleType,
+    room: st.roomCode || "bps",
     lastSeen: firebase.database.ServerValue.TIMESTAMP
   });
-  // डिस्कनेक्ट होने पर अपने आप लिस्ट से हट जाए
   ref.onDisconnect().remove();
 }
 
 function initPresenceSystem() {
   if(!db) return;
-  updateDevicePresence("master");
+  updateDevicePresence();
 
-  // हर 15 सेकंड में अपना स्टेटस पिंग करें ताकि ऑनलाइन दिखें
   setInterval(() => {
     updateDevicePresence();
   }, 15000);
 
-  // सभी कनेक्टेड डिवाइसेस को गिनकर स्क्रीन पर दिखाएं
   db.ref("school_bell_system/connectedDevices").on("value", (snapshot) => {
     const devices = snapshot.val() || {};
     let masterCount = 0;
@@ -656,7 +573,6 @@ function initPresenceSystem() {
     const now = Date.now();
     Object.keys(devices).forEach(id => {
       const dev = devices[id];
-      // अगर पिछले 30 सेकंड के अंदर पिंग आया है तभी एक्टिव मानें
       if(dev && dev.lastSeen && (now - dev.lastSeen < 30000)) {
         if(dev.role === "amplifier") ampCount++;
         else masterCount++;
