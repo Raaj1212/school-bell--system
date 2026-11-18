@@ -19,11 +19,11 @@ button.primary{background:var(--green);border-color:var(--green);color:#fff;font
 button.danger{color:var(--red);border-color:#f3c1c1}
 button.small{padding:5px 10px;font-size:13px}
 input,select{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px}
-input[type=text],input[type=password]{flex:1;min-width:120px}
+input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 #nextBell{font-size:15px;font-weight:700;color:#00ffcc;background:#1e293b;padding:4px 8px;border-radius:6px;}
 .item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
 .r1{display:flex;gap:8px;align-items:center}
-.r3{display:flex;gap:10px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.r3{display:flex;gap:8px;align-items:center;margin-top:7px;flex-wrap:wrap}
 .announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
 .days label{margin-right:6px;font-size:13px}
 .hint{font-size:13px;color:#6b7280;margin:6px 0}
@@ -102,11 +102,10 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
   </section>
 </div>
 
-<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर (यूनिक आईडी लूपिंग सिस्टम) ================= -->
+<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर ================= -->
 <div id="tabBroadcast" class="tab-pane">
-  <!-- 📶 लाइव कनेक्टेड डिवाइसेस डैशबोर्ड -->
   <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
-    <h2>📊 लाइव कनेक्टेड डिवाइसेस (डैशबोर्ड)</h2>
+    <h2>📊 लाइव कनेक्टेड डिवाइसेस (डैशबोर्ड)[cite: 4, 5]</h2>
     <div style="display:flex; gap:15px; margin-top:8px; flex-wrap:wrap;">
       <div style="background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #bbf7d0; flex:1; min-width:140px;">
         <div style="font-size:12px; color:#166534; font-weight:600;">एक्टिव मास्टर डिवाइस</div>
@@ -119,10 +118,9 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
     </div>
   </section>
 
-  <!-- 🔊 मल्टी-एम्प्लीफायर P2P सिस्टम -->
   <section class="card" style="border-left: 5px solid #2563eb;">
     <h2>🔊 रिमोट लाइव माइक और मल्टी-एम्प्लीफायर मोड</h2>
-    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड (जैसे: `bps-school-123`) दर्ज होना चाहिए।</div>
+    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड (जैसे: `bps-school-123`) दर्ज होना चाहिए[cite: 5]।</div>
     <div class="row" style="margin-top: 10px;">
       <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
     </div>
@@ -150,13 +148,13 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
         <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="remote"> एम्प्लीफायर फोन पर (रिमोट)</label>
       </div>
 
-      <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें (जैसे: Attention Please, ...):</label>
+      <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें:</label>
       <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें..." style="width:100%; margin-bottom: 10px;">
       
       <div class="row" style="gap: 8px;">
-        <button onclick="handleEmergency('bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
-        <button class="primary" onclick="handleEmergency('bell_text')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + टेक्स्ट</button>
-        <button onclick="handleEmergency('text')" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. सिर्फ टेक्स्ट पढ़ें</button>
+        <button onclick="handleEmergency('only_bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
+        <button class="primary" onclick="handleEmergency('bell_voice')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + वॉइस</button>
+        <button onclick="handleEmergency('only_voice')" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. सिर्फ टेक्स्ट पढ़ें</button>
       </div>
     </div>
   </section>
@@ -190,7 +188,7 @@ input[type=text],input[type=password]{flex:1;min-width:120px}
       </div>
 
       <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
-        <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी (अपनी घोषणाएँ लिखकर सेव करें)</h3>
+        <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी</h3>
         <div class="row">
           <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
           <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट...">
@@ -241,7 +239,7 @@ let defaultData = {
     { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
     { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
   ],
-  items:[{time:"08:00", label:"Assembly", bell:true, onlyBell:false, annId:"a1"}],
+  items:[{time:"08:00", label:"Assembly", mode:"bell_voice", bellCount:1, voiceCount:1, annId:"a1"}],
   days:"all",
   roomCode:"bps-school-123",
   isAmplifierDevice:false
@@ -253,7 +251,6 @@ let running=false, audioEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
 
-// प्रत्येक डिवाइस की यूनीक आईडी
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg"; 
 audioEl.src = DEFAULT_BELL_URL;
@@ -373,8 +370,9 @@ function save(){
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
 function arrToDays(a){return a.length===7?"all":a.join(",");}
 
-function speakAudio(text, cb){
-  if(!text){if(cb)cb();return;}
+// सिंगल वॉइस बोलने का फंक्शन
+function speakSingleText(text, cb){
+  if(!text){ if(cb) cb(); return; }
   try{
     ttsAudioEl.pause();
     const encoded = encodeURIComponent(text);
@@ -390,43 +388,131 @@ function speakAudio(text, cb){
   }catch(e){ if(cb) cb(); }
 }
 
-function ringAndSpeak(text, playBell, onlyBell, cb){
-  if(playBell === false){
-    if(!onlyBell) speakAudio(text, cb);
-    else if(cb) cb();
-    return;
-  }
+// सिंगल घंटी बजाने का फंक्शन
+function ringSingleBell(cb){
   audioEl.pause();
   audioEl.currentTime = 0;
   audioEl.onended = () => {
     audioEl.onended = null;
-    if(onlyBell){ if(cb) cb(); return; }
-    setTimeout(() => { speakAudio(text, cb); }, 50);
+    if(cb) cb();
   };
   audioEl.play().catch(() => {
-    if(!onlyBell) speakAudio(text, cb);
-    else if(cb) cb();
+    if(cb) cb();
   });
+}
+
+// 🎛️ फुल एग्जीक्यूटिव रूटीन (लगातार और अल्टरनेटिव दोनों को मैनेज करने के लिए)
+function executeBellRoutine(mode, bellCount, voiceCount, text, cb) {
+  bellCount = parseInt(bellCount) || 1;
+  voiceCount = parseInt(voiceCount) || 1;
+
+  if(mode === 'only_bell') {
+    // सिर्फ घंटी (लगातार bellCount बार)
+    let played = 0;
+    function nextBell() {
+      if(played < bellCount) {
+        played++;
+        ringSingleBell(nextBell);
+      } else if(cb) cb();
+    }
+    nextBell();
+  } 
+  else if(mode === 'only_voice') {
+    // सिर्फ वॉइस (लगातार voiceCount बार)
+    let spoken = 0;
+    function nextVoice() {
+      if(spoken < voiceCount) {
+        spoken++;
+        speakSingleText(text, () => {
+          setTimeout(nextVoice, 400);
+        });
+      } else if(cb) cb();
+    }
+    nextVoice();
+  } 
+  else if(mode === 'bell_voice') {
+    // लगातार: पहले सारी घंटियाँ, फिर सारा वॉइस
+    let played = 0;
+    function nextBell() {
+      if(played < bellCount) {
+        played++;
+        ringSingleBell(nextBell);
+      } else {
+        setTimeout(() => {
+          let spoken = 0;
+          function nextVoice() {
+            if(spoken < voiceCount) {
+              spoken++;
+              speakSingleText(text, () => {
+                setTimeout(nextVoice, 400);
+              });
+            } else if(cb) cb();
+          }
+          nextVoice();
+        }, 500);
+      }
+    }
+    nextBell();
+  }
+  else if(mode === 'alternative') {
+    // 🔄 अल्टरनेटिव मोड: (घंटी ➔ वॉइस ➔ घंटी ➔ वॉइस ...) जितने सेट किए हैं
+    let maxSteps = Math.max(bellCount, voiceCount);
+    let currentStep = 0;
+
+    function stepLoop() {
+      if(currentStep < maxSteps) {
+        let doBell = currentStep < bellCount;
+        let doVoice = currentStep < voiceCount;
+
+        if(doBell && doVoice) {
+          // पहले घंटी, फिर तुरंत वॉइस
+          ringSingleBell(() => {
+            setTimeout(() => {
+              speakSingleText(text, () => {
+                currentStep++;
+                setTimeout(stepLoop, 600);
+              });
+            }, 300);
+          });
+        } else if(doBell) {
+          ringSingleBell(() => {
+            currentStep++;
+            setTimeout(stepLoop, 500);
+          });
+        } else if(doVoice) {
+          speakSingleText(text, () => {
+            currentStep++;
+            setTimeout(stepLoop, 600);
+          });
+        } else {
+          if(cb) cb();
+        }
+      } else {
+        if(cb) cb();
+      }
+    }
+    stepLoop();
+  }
 }
 
 function handleEmergency(actionType) {
   const target = document.querySelector('input[name="targetDevice"]:checked').value;
   const customText = document.getElementById("emergencyText").value.trim();
 
-  if((actionType === 'bell_text' || actionType === 'text') && !customText) {
+  if((actionType === 'bell_voice' || actionType === 'only_voice') && !customText) {
     toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!");
     return;
   }
 
   if(target === 'local') {
-    if(actionType === 'bell') ringAndSpeak("", true, true, null);
-    else if(actionType === 'bell_text') ringAndSpeak(customText, true, false, null);
-    else if(actionType === 'text') speakAudio(customText, null);
+    executeBellRoutine(actionType, 1, 1, customText, null);
     toast("इसी फोन पर एक्शन ले लिया गया है!");
   } else {
     if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
     const commandData = {
-      type: actionType,
+      mode: actionType,
+      bellCount: 1,
+      voiceCount: 1,
       text: customText,
       timestamp: Date.now()
     };
@@ -439,7 +525,7 @@ function handleEmergency(actionType) {
 }
 
 function testBellOnlyLocal() {
-  ringAndSpeak("", true, true, null);
+  executeBellRoutine('only_bell', 1, 1, "", null);
   toast("सिर्फ घंटी बज रही है");
 }
 
@@ -461,7 +547,6 @@ function initRoomCodeField(){
   };
 }
 
-// 🔊 मल्टी-एम्प्लीफायर P2P लिसनर (प्रत्येक एम्प्लीफायर की यूनीक ID)
 function setAsAmplifierPhone(){
   st.isAmplifierDevice = true;
   save();
@@ -487,7 +572,7 @@ function startAutoListener(){
   peer = new Peer(ampPeerId);
 
   peer.on('open', (id) => {
-    document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर तैयार है (कॉल का इंतज़ार है...)";
+    document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर तैयार है...";
   });
 
   peer.on('call', call => {
@@ -505,7 +590,6 @@ function startAutoListener(){
   });
 }
 
-// 🎙️ मल्टी-मास्टर ब्रॉडकास्ट (मास्टर फोन से सभी एक्टिव एम्प्लीफायर को एक साथ कॉल लूप करना)
 function startBroadcasting(){
   const code = document.getElementById("roomCode").value.trim();
   if(!code){ toast("रूम कोड दर्ज करें!"); return; }
@@ -526,7 +610,6 @@ function startBroadcasting(){
           
           Object.keys(devices).forEach(devId => {
             const dev = devices[devId];
-            // अगर यह एम्प्लीफायर फोन है, इसी रूम का है, और एक्टिव है (और खुद मास्टर फोन नहीं है)
             if(dev && dev.role === "amplifier" && dev.room === code && (now - dev.lastSeen < 30000)) {
               const targetAmpPeerId = "bps_amp_" + code + "_" + devId;
               peer.call(targetAmpPeerId, stream);
@@ -534,7 +617,7 @@ function startBroadcasting(){
             }
           });
           
-          document.getElementById("streamStatus").textContent = `स्टेटस: 🔴 ब्रॉडकास्ट लाइव (${connectedCount} एम्प्लीफायर कनेक्टेड)`;
+          document.getElementById("streamStatus").textContent = `स्टेटस: 🔴 ब्रॉडकास्ट लाइव (${connectedCount} एम्प्लीफायर से कनेक्टेड)`;
           toast(`ब्रॉडकास्ट शुरू! ${connectedCount} एम्प्लीफायर कनेक्ट हुए।`);
         });
       } else {
@@ -542,7 +625,7 @@ function startBroadcasting(){
         toast("ब्रॉडकास्ट शुरू!");
       }
     });
-  }).catch(e => toast("माइक अनुमति नहीं मिली"));
+  }).catch(e => toast("माइक अनुमति नहीं मिली: " + e.message));
 }
 
 function stopBroadcasting(){
@@ -552,7 +635,6 @@ function stopBroadcasting(){
   toast("ब्रॉडकास्ट बंद!");
 }
 
-// 🟢 प्रेजेंस ट्रैकर (फायरबेस पर मास्टर और एम्प्लीफायर ट्रैक करने के लिए)
 function updateDevicePresence() {
   if(!db) return;
   const roleType = st.isAmplifierDevice ? "amplifier" : "master";
@@ -634,11 +716,11 @@ function tick(){
       log.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(log));
       hits.forEach(i=>{
         let textToSay = "";
-        if(!i.onlyBell && i.annId){
+        if(i.mode !== 'only_bell' && i.annId){
           const found = st.announcements.find(a => a.id === i.annId);
           if(found) textToSay = found.text;
         }
-        ringAndSpeak(textToSay, i.bell!==false, i.onlyBell===true, null);
+        executeBellRoutine(i.mode || 'bell_voice', i.bellCount || 1, i.voiceCount || 1, textToSay, null);
       });
       showNext();
     }
@@ -677,7 +759,7 @@ function render(){
       st.announcements.forEach(a => {
         const box = document.createElement("div");
         box.className = "announcement-box";
-        box.innerHTML = `<span><strong>📌 ${a.title}</strong>: "${a.text}"</span><div><button class="small primary" onclick="speakAudio('${a.text.replace(/'/g, "")}', null)">▶ सुनें</button><button class="small danger" style="margin-left:5px;" onclick="deleteAnnouncement('${a.id}')">✕</button></div>`;
+        box.innerHTML = `<span><strong>📌 ${a.title}</strong>: "${a.text}"</span><div><button class="small primary" onclick="speakSingleText('${a.text.replace(/'/g, "")}', null)">▶ सुनें</button><button class="small danger" style="margin-left:5px;" onclick="deleteAnnouncement('${a.id}')">✕</button></div>`;
         annDiv.appendChild(box);
       });
     }
@@ -693,7 +775,7 @@ function render(){
   const box=document.getElementById("items");
   if(box){
     box.innerHTML="";
-    st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);});
+    st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);if(!it.mode)it.mode="bell_voice";if(!it.bellCount)it.bellCount=1;if(!it.voiceCount)it.voiceCount=1;});
     
     [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
       const r=document.createElement("div");r.className="item";
@@ -721,46 +803,75 @@ function render(){
         selectAnn.appendChild(opt);
       });
       selectAnn.onchange = () => { it.annId = selectAnn.value; save(); };
-      if(it.onlyBell) selectAnn.disabled = true;
+      if(it.mode === 'only_bell') selectAnn.disabled = true;
       r2.append(selectAnn);
 
+      // मोड सिलेक्शन और काउंट्स इनपुट
       const r3=document.createElement("div");r3.className="r3";
-      const bc=document.createElement("input");bc.type="checkbox";bc.checked=it.bell!==false;bc.onchange=()=>{it.bell=bc.checked;save();};
-      const bl=document.createElement("label");bl.append(bc,document.createTextNode("घंटी बजे"));
-
-      const onlyBellChk = document.createElement("input");
-      onlyBellChk.type = "checkbox";
-      onlyBellChk.checked = it.onlyBell === true;
-      onlyBellChk.onchange = () => {
-        it.onlyBell = onlyBellChk.checked;
-        selectAnn.disabled = this.checked;
+      
+      const modeSelect = document.createElement("select");
+      modeSelect.innerHTML = `
+        <option value="bell_voice" ${it.mode==='bell_voice'?'selected':''}>🔔+🗣️ लगातार (घंटी फिर वॉइस)</option>
+        <option value="alternative" ${it.mode==='alternative'?'selected':''}>🔄 अल्टरनेटिव (बारी-बारी घंटी ⇄ वॉइस)</option>
+        <option value="only_bell" ${it.mode==='only_bell'?'selected':''}>🔔 सिर्फ घंटी</option>
+        <option value="only_voice" ${it.mode==='only_voice'?'selected':''}>🗣️ सिर्फ वॉइस</option>
+      `;
+      modeSelect.style.flex = "1";
+      modeSelect.onchange = () => {
+        it.mode = modeSelect.value;
+        selectAnn.disabled = (it.mode === 'only_bell');
         save();
+        render();
       };
-      const onlyBellLbl = document.createElement("label");
-      onlyBellLbl.style.color = "#d97706";
-      onlyBellLbl.style.fontWeight = "600";
-      onlyBellLbl.append(onlyBellChk, document.createTextNode(" 🔔 सिर्फ घंटी"));
+
+      // घंटी काउंट
+      const bellCountLbl = document.createElement("span");
+      bellCountLbl.style.fontSize = "12px";
+      bellCountLbl.style.fontWeight = "600";
+      bellCountLbl.textContent = "घंटी:";
+      const bellCountInp = document.createElement("input");
+      bellCountInp.type = "number";
+      bellCountInp.min = "1";
+      bellCountInp.max = "5";
+      bellCountInp.value = it.bellCount || 1;
+      bellCountInp.style.width = "50px";
+      bellCountInp.oninput = () => { it.bellCount = parseInt(bellCountInp.value)||1; save(); };
+      if(it.mode === 'only_voice') { bellCountInp.disabled = true; bellCountLbl.style.opacity = "0.4"; }
+
+      // वॉइस काउंट
+      const voiceCountLbl = document.createElement("span");
+      voiceCountLbl.style.fontSize = "12px";
+      voiceCountLbl.style.fontWeight = "600";
+      voiceCountLbl.textContent = "वॉइस:";
+      const voiceCountInp = document.createElement("input");
+      voiceCountInp.type = "number";
+      voiceCountInp.min = "1";
+      voiceCountInp.max = "5";
+      voiceCountInp.value = it.voiceCount || 1;
+      voiceCountInp.style.width = "50px";
+      voiceCountInp.oninput = () => { it.voiceCount = parseInt(voiceCountInp.value)||1; save(); };
+      if(it.mode === 'only_bell') { voiceCountInp.disabled = true; voiceCountLbl.style.opacity = "0.4"; }
 
       const playBtn = document.createElement("button");
       playBtn.className = "small primary";
       playBtn.textContent = "▶ टेस्ट";
       playBtn.onclick = () => {
         let tText = "";
-        if(!it.onlyBell && it.annId){
+        if(it.mode !== 'only_bell' && it.annId){
           const f = st.announcements.find(a => a.id === it.annId);
           if(f) tText = f.text;
         }
-        ringAndSpeak(tText, it.bell!==false, it.onlyBell===true, null);
+        executeBellRoutine(it.mode || 'bell_voice', it.bellCount || 1, it.voiceCount || 1, tText, null);
       };
 
-      r3.append(bl, onlyBellLbl, playBtn);
+      r3.append(modeSelect, bellCountLbl, bellCountInp, voiceCountLbl, voiceCountInp, playBtn);
       r.append(r1, r2, r3); box.appendChild(r);
     });
   }
 }
 
 function addItem(){
-  st.items.push({time:"09:00",label:"",bell:true,onlyBell:false,annId:""});
+  st.items.push({time:"09:00",label:"",mode:"bell_voice",bellCount:1,voiceCount:1,annId:""});
   save();
   render();
 }
@@ -781,13 +892,7 @@ async function initApp() {
       const cmd = snapshot.val();
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
         if(st.isAmplifierDevice) {
-          if(cmd.type === 'bell') {
-            ringAndSpeak("", true, true, null);
-          } else if(cmd.type === 'bell_text') {
-            ringAndSpeak(cmd.text, true, false, null);
-          } else if(cmd.type === 'text') {
-            speakAudio(cmd.text, null);
-          }
+          executeBellRoutine(cmd.mode || 'bell_voice', cmd.bellCount || 1, cmd.voiceCount || 1, cmd.text || "", null);
           toast("🔔 रिमोट अनाउंसमेंट प्राप्त हुई!");
         }
       }
