@@ -170,20 +170,21 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
     <div style="display:flex; gap:15px; margin-top:8px; flex-wrap:wrap;">
       <div style="background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #bbf7d0; flex:1; min-width:140px;">
         <div style="font-size:12px; color:#166534; font-weight:600;">एक्टिव मास्टर डिवाइस</div>
-        <div id="activeMasterCount" style="font-size:20px; font-weight:bold; color:#15803d;">0</div>
+        <div id="activeMasterCount" style="font-size:20px; font-weight:bold; color:#2563eb;">0</div>
       </div>
       <div style="background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #bbf7d0; flex:1; min-width:140px;">
         <div style="font-size:12px; color:#166534; font-weight:600;">एक्टिव एम्प्लीफायर फोन</div>
         <div id="activeAmpCount" style="font-size:20px; font-weight:bold; color:#15803d;">0</div>
       </div>
     </div>
+    <div id="currentDeviceRoleBadge" class="hint" style="font-weight:700; color:#14532d; margin-top:8px;">वर्तमान डिवाइस मोड: 🔊 एम्प्लीफायर (सुनने वाला)</div>
   </section>
 
   <section class="card" style="border-left: 5px solid #2563eb;">
     <h2>🔊 रिमोट लाइव माइक और मल्टी-एम्प्लीफायर मोड</h2>
-    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड (जैसे: `bps-school-123`) दर्ज होना चाहिए।</div>
+    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड (जैसे: `bps`) दर्ज होना चाहिए। डिफ़ॉल्ट रूप से `bps` सेव रहता है, और आप बदलकर कोई दूसरा कोड भी सेव कर सकते हैं।</div>
     <div class="row" style="margin-top: 10px;">
-      <input type="text" id="roomCode" placeholder="रूम कोड (जैसे: bps-school-123)" style="flex:1;">
+      <input type="text" id="roomCode" value="bps" placeholder="रूम कोड (डिफ़ॉल्ट: bps)" style="flex:1;">
     </div>
     <div class="row" style="margin-top: 10px;">
       <button class="primary" onclick="startBroadcasting()">🎙️ बोलें (ब्रॉडकास्ट ऑन)</button>
@@ -207,9 +208,9 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
     <h2>⏱️ ट्रिगर्स और एम्प्लीफायर ट्रिगर (पासवर्ड प्रोटेक्टेड)</h2>
 
     <div id="triggerLockDiv" class="locked-box">
-      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 ट्रिगर्स सेटअप खोलने के लिए पासवर्ड दर्ज करें!</p>
+      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 ट्रिगर्स सेटअप खोलने के लिए पासवर्ड (123) दर्ज करें!</p>
       <div class="row" style="justify-content: center;">
-        <input type="password" id="triggerPassInput" placeholder="पासवर्ड" style="max-width: 220px;">
+        <input type="password" id="triggerPassInput" placeholder="पासवर्ड (123)" style="max-width: 220px;">
         <button class="primary" onclick="unlockTriggerTab()">अनलॉक करें</button>
       </div>
     </div>
@@ -350,11 +351,19 @@ let defaultData = {
   ],
   items:[{time:"08:00", label:"Assembly", mode:"bell_voice", bellCount:1, voiceCount:1, annId:"a1"}],
   days:"all",
-  roomCode:"bps-school-123",
-  isAmplifierDevice:false
+  roomCode:"bps",
+  isAmplifierDevice:true,
+  amplifierOptOut:false
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
+// यदि पहले कभी पुराना डिफ़ॉल्ट "bps-school-123" सेव था या खाली है, तो "bps" पर सेट करें; यदि यूज़र ने कोई कस्टम कोड सेव किया है तो वही रखें
+if(!st.roomCode || st.roomCode === "bps-school-123") {
+  st.roomCode = "bps";
+  localStorage.setItem("bellphone", JSON.stringify(st));
+}
+if(typeof st.amplifierOptOut !== "boolean") st.amplifierOptOut = false;
+if(!st.amplifierOptOut) st.isAmplifierDevice = true;
 
 // ट्रिगर टाइमर प्रीसेट (बाय डिफ़ॉल्ट एम्प्लीफायर रिमोट पर)
 const TRIGGER_STORAGE_KEY = "schoolBellTriggerPreset_v1";
@@ -369,6 +378,13 @@ let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "nul
 let running=false, audioEl=new Audio(), softToneEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
+
+// Broadcast state & echo prevention
+let isBroadcastingActive = false;
+let wasAmplifierBeforeBroadcast = false;
+let activeRemoteAudioEls = [];
+let activePeerCalls = [];
+let latestConnectedDevices = {};
 
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg";
@@ -556,10 +572,13 @@ function fetchFromCloudNow() {
     if(serverData) {
       st = serverData;
       st.announcements = st.announcements || [];
-      st.roomCode = st.roomCode || "bps-school-123";
-      st.isAmplifierDevice = st.isAmplifierDevice || false;
+      st.roomCode = (!st.roomCode || st.roomCode === "bps-school-123") ? "bps" : st.roomCode;
+      if(typeof st.amplifierOptOut !== "boolean") st.amplifierOptOut = false;
+      st.isAmplifierDevice = st.amplifierOptOut ? false : (typeof st.isAmplifierDevice === "boolean" ? st.isAmplifierDevice : true);
       saveLocal();
       render();
+      initRoomCodeField();
+      updateDevicePresence();
       const statusEl = document.getElementById("syncStatusText");
       if(statusEl) statusEl.innerText = "🟢 क्लाउड से डेटा आ गया है";
       toast("क्लाउड से लेटेस्ट डेटा लोड हो गया!");
@@ -842,141 +861,288 @@ function stopSound(){
 
 function initRoomCodeField(){
   const rcInput = document.getElementById("roomCode");
-  if(rcInput && rcInput.value !== st.roomCode) {
-    rcInput.value = st.roomCode;
-  }
+  if(!rcInput) return;
+  if(!st.roomCode) st.roomCode = "bps";
+  rcInput.value = st.roomCode;
+
   rcInput.oninput = () => { 
-    st.roomCode = rcInput.value.trim(); 
+    const typed = rcInput.value.trim();
+    st.roomCode = typed || "bps"; 
     save(); 
-    updateDevicePresence(); 
+    updateDevicePresence();
+    if(st.isAmplifierDevice && !isBroadcastingActive) {
+      startAutoListener();
+    }
+  };
+
+  rcInput.onblur = () => {
+    if(!rcInput.value.trim()) {
+      rcInput.value = "bps";
+      st.roomCode = "bps";
+      save();
+      updateDevicePresence();
+      if(st.isAmplifierDevice && !isBroadcastingActive) {
+        startAutoListener();
+      }
+    }
   };
 }
 
+function cleanupPeerConnection(destroyPeerInstance = true) {
+  activePeerCalls.forEach(c => {
+    try { c.close(); } catch(e) {}
+  });
+  activePeerCalls = [];
+
+  activeRemoteAudioEls.forEach(el => {
+    try {
+      el.pause();
+      el.srcObject = null;
+    } catch(e) {}
+  });
+  activeRemoteAudioEls = [];
+
+  if(destroyPeerInstance && peer) {
+    try { peer.destroy(); } catch(e) {}
+    peer = null;
+  }
+}
+
+function updateRoleBadgeUI() {
+  const badge = document.getElementById("currentDeviceRoleBadge");
+  if(!badge) return;
+  if(isBroadcastingActive) {
+    badge.textContent = "वर्तमान डिवाइस मोड: 🎙️ मास्टर (लाइव बोल रहा है — इको से बचने के लिए खुद का रिसीवर म्यूट/बंद है)";
+  } else if(st.isAmplifierDevice) {
+    badge.textContent = "वर्तमान डिवाइस मोड: 🔊 एम्प्लीफायर (सुनने वाला)";
+  } else {
+    badge.textContent = "वर्तमान डिवाइस मोड: ⚪ निष्क्रिय / ऑफ़";
+  }
+}
+
 function setAsAmplifierPhone(){
+  isBroadcastingActive = false;
+  if(localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
   st.isAmplifierDevice = true;
+  st.amplifierOptOut = false;
   save();
+  updateRoleBadgeUI();
   toast("एम्प्लीफायर फोन सेट हो गया है।");
   startAutoListener();
   updateDevicePresence();
 }
 
 function unsetAmplifierPhone(){
+  isBroadcastingActive = false;
+  if(localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
   st.isAmplifierDevice = false;
+  st.amplifierOptOut = true;
   save();
-  if(peer) peer.destroy();
+  cleanupPeerConnection(true);
+  updateRoleBadgeUI();
   toast("एम्प्लीफायर मोड हटा दिया गया है।");
   updateDevicePresence();
 }
 
 function startAutoListener(){
-  const code = st.roomCode;
+  if(isBroadcastingActive || !st.isAmplifierDevice) return;
+  const code = (st.roomCode || "bps").trim();
   if(!code) return;
-  if(peer) peer.destroy();
+  cleanupPeerConnection(true);
   
   const ampPeerId = "bps_amp_" + code + "_" + myDeviceId;
   peer = new Peer(ampPeerId);
 
   peer.on('open', (id) => {
-    document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 एम्प्लीफायर तैयार है...";
+    const stEl = document.getElementById("streamStatus");
+    if(stEl && !isBroadcastingActive) {
+      stEl.textContent = "स्टेटस: 🟢 एम्प्लीफायर तैयार है (" + code + ")...";
+    }
   });
 
   peer.on('call', call => {
+    if(isBroadcastingActive || !st.isAmplifierDevice) return;
+    activePeerCalls.push(call);
     call.answer();
     call.on('stream', remoteStream => {
+      if(isBroadcastingActive || !st.isAmplifierDevice) return;
       const audio = new Audio();
+      audio.muted = false;
+      audio.volume = 1.0;
       audio.srcObject = remoteStream;
+      activeRemoteAudioEls.push(audio);
       audio.play().catch(e => {});
-      document.getElementById("streamStatus").textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है...";
+      const stEl = document.getElementById("streamStatus");
+      if(stEl) stEl.textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है...";
     });
   });
 
   peer.on('error', (err) => {
-    document.getElementById("streamStatus").textContent = "एरर: " + err.type;
+    const stEl = document.getElementById("streamStatus");
+    if(stEl && !isBroadcastingActive) stEl.textContent = "एरर: " + err.type;
   });
 }
 
 function startBroadcasting(){
-  const code = document.getElementById("roomCode").value.trim();
+  const code = (document.getElementById("roomCode").value.trim() || st.roomCode || "bps");
   if(!code){ toast("रूम कोड दर्ज करें!"); return; }
-  
-  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+
+  wasAmplifierBeforeBroadcast = !!st.isAmplifierDevice;
+  isBroadcastingActive = true;
+  st.isAmplifierDevice = false;
+  saveLocal();
+  cleanupPeerConnection(true);
+  updateRoleBadgeUI();
+  updateDevicePresence();
+
+  const audioConstraints = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true
+  };
+
+  navigator.mediaDevices.getUserMedia({ audio: audioConstraints, video: false }).then(stream => {
+    if(!isBroadcastingActive) {
+      stream.getTracks().forEach(t => t.stop());
+      return;
+    }
     localStream = stream;
-    if(peer) peer.destroy();
     peer = new Peer();
     
     peer.on('open', id => {
-      document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 एम्प्लीफायर खोजे जा रहे हैं...";
-      
+      if(!isBroadcastingActive) return;
+      const stEl = document.getElementById("streamStatus");
+      if(stEl) stEl.textContent = "स्टेटस: 🔴 एम्प्लीफायर खोजे जा रहे हैं...";
+
+      const callAvailableAmplifiers = (devicesObj) => {
+        const devices = devicesObj || latestConnectedDevices || {};
+        let connectedCount = 0;
+        const now = Date.now();
+
+        Object.keys(devices).forEach(devId => {
+          if(devId === myDeviceId) return;
+          const dev = devices[devId];
+          if(dev && dev.role === "amplifier" && dev.room === code && (!dev.lastSeen || (now - dev.lastSeen < 35000))) {
+            const targetAmpPeerId = "bps_amp_" + code + "_" + devId;
+            const call = peer.call(targetAmpPeerId, stream);
+            if(call) activePeerCalls.push(call);
+            connectedCount++;
+          }
+        });
+
+        if(stEl) {
+          stEl.textContent = `स्टेटस: 🔴 ब्रॉडकास्ट लाइव (${connectedCount} एम्प्लीफायर से कनेक्टेड — रूम: ${code})`;
+        }
+        toast(`ब्रॉडकास्ट शुरू! ${connectedCount} एम्प्लीफायर कनेक्ट हुए।`);
+      };
+
       if(db) {
         db.ref("school_bell_system/connectedDevices").once("value").then(snapshot => {
-          const devices = snapshot.val() || {};
-          let connectedCount = 0;
-          const now = Date.now();
-          
-          Object.keys(devices).forEach(devId => {
-            const dev = devices[devId];
-            if(dev && dev.role === "amplifier" && dev.room === code && (now - dev.lastSeen < 30000)) {
-              const targetAmpPeerId = "bps_amp_" + code + "_" + devId;
-              peer.call(targetAmpPeerId, stream);
-              connectedCount++;
-            }
-          });
-          
-          document.getElementById("streamStatus").textContent = `स्टेटस: 🔴 ब्रॉडकास्ट लाइव (${connectedCount} एम्प्लीफायर से कनेक्टेड)`;
-          toast(`ब्रॉडकास्ट शुरू! ${connectedCount} एम्प्लीफायर कनेक्ट हुए।`);
+          callAvailableAmplifiers(snapshot.val() || {});
+        }).catch(() => {
+          callAvailableAmplifiers(latestConnectedDevices);
         });
       } else {
-        document.getElementById("streamStatus").textContent = "स्टेटस: 🔴 ब्रॉडकास्ट लाइव है";
-        toast("ब्रॉडकास्ट शुरू!");
+        callAvailableAmplifiers(latestConnectedDevices);
       }
     });
-  }).catch(e => toast("माइक अनुमति नहीं मिली: " + e.message));
+  }).catch(e => {
+    isBroadcastingActive = false;
+    st.isAmplifierDevice = wasAmplifierBeforeBroadcast && !st.amplifierOptOut;
+    saveLocal();
+    updateRoleBadgeUI();
+    updateDevicePresence();
+    if(st.isAmplifierDevice) startAutoListener();
+    toast("माइक अनुमति नहीं मिली: " + e.message);
+  });
 }
 
 function stopBroadcasting(){
+  isBroadcastingActive = false;
   if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  if(peer) peer.destroy();
-  document.getElementById("streamStatus").textContent = "स्टेटस: बंद है";
-  toast("ब्रॉडकास्ट बंद!");
+  cleanupPeerConnection(true);
+
+  st.isAmplifierDevice = !st.amplifierOptOut;
+  saveLocal();
+  updateRoleBadgeUI();
+  updateDevicePresence();
+
+  if(st.isAmplifierDevice) {
+    setTimeout(() => { startAutoListener(); }, 400);
+  }
+
+  const stEl = document.getElementById("streamStatus");
+  if(stEl) stEl.textContent = st.isAmplifierDevice ? "स्टेटस: 🟢 एम्प्लीफायर तैयार है (" + (st.roomCode || "bps") + ")..." : "स्टेटस: बंद है";
+  toast("ब्रॉडकास्ट बंद! डिवाइस वापस एम्प्लीफायर मोड में आ गया।");
+}
+
+function computeDeviceCounts(devicesObj) {
+  latestConnectedDevices = devicesObj || {};
+  let masterCount = 0;
+  let ampCount = 0;
+  const now = Date.now();
+
+  Object.keys(latestConnectedDevices).forEach(id => {
+    const dev = latestConnectedDevices[id];
+    if(!dev) return;
+    const seen = typeof dev.lastSeen === "number" ? dev.lastSeen : now;
+    if(now - seen < 35000) {
+      if(dev.role === "master") masterCount++;
+      else if(dev.role === "amplifier") ampCount++;
+    }
+  });
+
+  const localRole = isBroadcastingActive ? "master" : (st.isAmplifierDevice ? "amplifier" : null);
+  if(localRole === "master" && masterCount === 0) masterCount = 1;
+  if(localRole === "amplifier" && ampCount === 0) ampCount = 1;
+
+  const mEl = document.getElementById("activeMasterCount");
+  const aEl = document.getElementById("activeAmpCount");
+  if(mEl) mEl.textContent = String(masterCount);
+  if(aEl) aEl.textContent = String(ampCount);
 }
 
 function updateDevicePresence() {
+  const roleType = isBroadcastingActive ? "master" : (st.isAmplifierDevice ? "amplifier" : "idle");
+  const activeRoom = st.roomCode || "bps";
+  latestConnectedDevices[myDeviceId] = {
+    role: roleType,
+    room: activeRoom,
+    lastSeen: Date.now()
+  };
+  computeDeviceCounts(latestConnectedDevices);
+
   if(!db) return;
-  const roleType = st.isAmplifierDevice ? "amplifier" : "master";
   const ref = db.ref("school_bell_system/connectedDevices/" + myDeviceId);
   
   ref.set({
     role: roleType,
-    room: st.roomCode || "bps-school-123",
+    room: activeRoom,
     lastSeen: firebase.database.ServerValue.TIMESTAMP
-  });
-  ref.onDisconnect().remove();
+  }).catch(() => {});
+  try { ref.onDisconnect().remove(); } catch(e) {}
 }
 
 function initPresenceSystem() {
-  if(!db) return;
   updateDevicePresence();
+  if(!db) return;
 
   setInterval(() => {
     updateDevicePresence();
-  }, 15000);
+  }, 10000);
+
+  setInterval(() => {
+    computeDeviceCounts(latestConnectedDevices);
+  }, 5000);
 
   db.ref("school_bell_system/connectedDevices").on("value", (snapshot) => {
-    const devices = snapshot.val() || {};
-    let masterCount = 0;
-    let ampCount = 0;
-    const now = Date.now();
-
-    Object.keys(devices).forEach(id => {
-      const dev = devices[id];
-      if(dev && dev.lastSeen && (now - dev.lastSeen < 30000)) {
-        if(dev.role === "amplifier") ampCount++;
-        else masterCount++;
-      }
-    });
-
-    document.getElementById("activeMasterCount").textContent = masterCount;
-    document.getElementById("activeAmpCount").textContent = ampCount;
+    computeDeviceCounts(snapshot.val() || {});
   });
 }
 
@@ -1196,6 +1362,11 @@ function addItem(){
 }
 
 async function initApp() {
+  if(!st.amplifierOptOut) {
+    st.isAmplifierDevice = true;
+    saveLocal();
+  }
+  updateRoleBadgeUI();
   syncInternetTime();
   render();
   renderTriggerPresetUI();
@@ -1211,7 +1382,7 @@ async function initApp() {
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
-        if(st.isAmplifierDevice) {
+        if(st.isAmplifierDevice && !isBroadcastingActive) {
           executeBellRoutine(cmd.mode || 'bell_voice', cmd.bellCount || 1, cmd.voiceCount || 1, cmd.text || "", null);
           toast("🔔 रिमोट अनाउंसमेंट प्राप्त हुई!");
         }
