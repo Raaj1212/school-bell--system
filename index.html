@@ -107,21 +107,38 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 </header>
 <main>
 
-<!-- 📑 टैब नेविगेशन बार (ट्रिगर पेज पर त्वरित घोषणाएँ डिफ़ॉल्ट सक्रिय) -->
+<!-- 📑 टैब नेविगेशन बार (त्वरित घोषणाओं के बगल में ब्रॉडकास्ट) -->
 <div class="nav-tabs-custom">
-  <button onclick="switchTab('tabEmergency')" id="btnTabEmergency" class="active">🚨 त्वरित घोषणाएँ (Trigger)</button>
-  <button onclick="switchTab('tabClock')" id="btnTabClock">🕒 मुख्य स्क्रीन</button>
+  <button onclick="switchTab('tabClock')" id="btnTabClock" class="active">🕒 मुख्य स्क्रीन</button>
+  <button onclick="switchTab('tabEmergency')" id="btnTabEmergency">🚨 त्वरित घोषणाएँ</button>
   <button onclick="switchTab('tabBroadcast')" id="btnTabBroadcast">🎙️ ब्रॉडकास्ट & एम्प्लीफायर</button>
+  <button onclick="switchTab('tabTriggers')" id="btnTabTriggers">⏱️ ट्रिगर्स</button>
   <button onclick="switchTab('tabAdmin')" id="btnTabAdmin">⚙️ सेटिंग्स & रूटीन</button>
 </div>
 
-<!-- ================= TAB 3 (DEFAULT ACTIVE): त्वरित घोषणाएँ और ट्रिगर टाइमर ================= -->
-<div id="tabEmergency" class="tab-pane active">
+<!-- ================= TAB 1 (DEFAULT ACTIVE): मुख्य स्क्रीन ================= -->
+<div id="tabClock" class="tab-pane active">
+  <section class="card">
+    <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
+    <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #000000; color: #ffffff; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
+    <div class="row">
+      <button onclick="testBellOnlyLocal()">🔔 सिर्फ घंटी टेस्ट करें</button>
+      <button onclick="testTeacherToneLocal()">🎵 सॉफ्ट टोन टेस्ट करें</button>
+      <button onclick="stopSound()">रोकें</button>
+    </div>
+  </section>
+</div>
+
+<!-- ================= TAB 2: त्वरित घोषणाएँ ================= -->
+<div id="tabEmergency" class="tab-pane">
+  <section class="card" style="padding:10px 14px; margin-bottom:12px;">
+    <div id="emergencyLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 समय सिंक हो रहा है...</div>
+  </section>
+
   <section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
-    <h2>🚨 त्वरित घोषणाएँ और ट्रिगर कंट्रोल</h2>
+    <h2>🚨 त्वरित घोषणाएँ और कंट्रोल</h2>
     <div style="margin-top: 8px;">
       
-      <!-- 1. बाय डिफॉल्ट "एम्प्लीफायर फोन पर (रिमोट)" सिलेक्टेड -->
       <div style="background:#fee2e2; border:1px solid #fecaca; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
         <span style="font-weight:bold; font-size:13px; color:#991b1b;">🎯 आवाज़ कहाँ बजानी है?:</span>
         <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="local"> इसी फोन पर</label>
@@ -129,9 +146,8 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
       </div>
 
       <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें:</label>
-      <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें (यदि वॉइस वाला विकल्प चुनें)..." style="width:100%; margin-bottom: 10px;">
+      <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें..." style="width:100%; margin-bottom: 10px;">
       
-      <!-- तुरंत बजाने के 3 मुख्य बटन + सॉफ्ट टोन बटन -->
       <div class="row" style="gap: 8px;">
         <button onclick="handleEmergency('only_bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
         <button class="primary" onclick="handleEmergency('bell_voice')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + वॉइस</button>
@@ -143,67 +159,11 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
         <button onclick="handleEmergency('teacher_exit_voice')" style="flex:1; background:#ecfdf5; border:1px solid #059669; color:#065f46; font-weight:bold; font-size:14px;">🎵+🔊 सॉफ्ट टोन + टेक्स्ट</button>
       </div>
 
-      <!-- 2. नीचे विकल्प चुनकर सेव करने और टाइमर सेट करने का सेक्शन -->
-      <div style="background:#eff6ff; border:2px solid #93c5fd; padding:12px; border-radius:10px; margin-top:14px;">
-        <h3 style="font-size:15px; margin:0 0 8px; color:#1e3a8a;">⏱️ ऑटो ट्रिगर टाइमर सेटअप (चुनें, सेव करें और समय पर अपने आप भेजें)</h3>
-        <div class="hint" style="margin-top:0;">ऊपर दिए गए तीन बटनों में से चुनें कि तय समय पर क्या बजना चाहिए, टेक्स्ट लिखें (यदि ज़रूरी हो) और समय सेव कर दें:</div>
-
-        <div class="mode-choice-grid" id="triggerModeGrid">
-          <label class="mode-choice-card selected" id="card_only_bell">
-            <input type="radio" name="triggerPresetMode" value="only_bell" checked onchange="onTriggerModeChange()">
-            <span>🔔 1. सिर्फ घंटी</span>
-          </label>
-          <label class="mode-choice-card" id="card_bell_voice">
-            <input type="radio" name="triggerPresetMode" value="bell_voice" onchange="onTriggerModeChange()">
-            <span>🔔+🔊 2. घंटी + वॉइस</span>
-          </label>
-          <label class="mode-choice-card" id="card_only_voice">
-            <input type="radio" name="triggerPresetMode" value="only_voice" onchange="onTriggerModeChange()">
-            <span>🔊 3. सिर्फ टेक्स्ट पढ़ें</span>
-          </label>
-          <label class="mode-choice-card" id="card_teacher_exit">
-            <input type="radio" name="triggerPresetMode" value="teacher_exit" onchange="onTriggerModeChange()">
-            <span>🎵 सॉफ्ट टोन</span>
-          </label>
-          <label class="mode-choice-card" id="card_teacher_exit_voice">
-            <input type="radio" name="triggerPresetMode" value="teacher_exit_voice" onchange="onTriggerModeChange()">
-            <span>🎵+🔊 सॉफ्ट टोन + टेक्स्ट</span>
-          </label>
-        </div>
-
-        <div class="row" style="margin-top:10px;">
-          <label style="font-weight:600; font-size:14px;"><input type="checkbox" id="triggerTimerEnabled" checked> टाइमर चालू रखें</label>
-        </div>
-
-        <div class="row">
-          <label for="triggerTimerTime" style="font-weight:600; font-size:14px;">कब बजना है (समय):</label>
-          <input type="time" id="triggerTimerTime" value="07:45" style="min-width:130px; font-weight:bold;">
-          <button class="primary" onclick="saveTriggerPreset()">💾 चुनें और टाइमर सेव करें</button>
-          <button onclick="fireTriggerNow()" style="background:#1e293b; color:#fff; font-weight:600;">⚡ अभी टेस्ट ट्रिगर भेजें</button>
-        </div>
-
-        <div id="triggerLiveClockBar" style="font-size:13px; font-weight:700; color:#0f172a; margin-top:6px;">🕒 वर्तमान समय: लोड हो रहा है...</div>
-        <div id="triggerTimerStatus" class="hint" style="font-weight:700; color:#1d4ed8; margin-bottom:0;">स्टेटस: कोई टाइमर सेव नहीं है</div>
-      </div>
-
     </div>
   </section>
 </div>
 
-<!-- ================= TAB 1: मुख्य स्क्रीन ================= -->
-<div id="tabClock" class="tab-pane">
-  <section class="card">
-    <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
-    <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #0f172a; color: #00ffcc; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
-    <div class="row">
-      <button onclick="testBellOnlyLocal()">🔔 सिर्फ घंटी टेस्ट करें</button>
-      <button onclick="testTeacherToneLocal()">🎵 सॉफ्ट टोन टेस्ट करें</button>
-      <button onclick="stopSound()">रोकें</button>
-    </div>
-  </section>
-</div>
-
-<!-- ================= TAB 2: ब्रॉडकास्ट & एम्प्लीफायर ================= -->
+<!-- ================= TAB 3: ब्रॉडकास्ट & एम्प्लीफायर ================= -->
 <div id="tabBroadcast" class="tab-pane">
   <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
     <h2>📊 लाइव कनेक्टेड डिवाइसेस (डैशबोर्ड)</h2>
@@ -237,7 +197,79 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   </section>
 </div>
 
-<!-- ================= TAB 4: सेटिंग्स, लाइब्रेरी और टाइमटेबल ================= -->
+<!-- ================= TAB 4: ट्रिगर्स (पासवर्ड 123 प्रोटेक्टेड) ================= -->
+<div id="tabTriggers" class="tab-pane">
+  <section class="card" style="padding:10px 14px; margin-bottom:12px;">
+    <div id="triggersLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 समय सिंक हो रहा है...</div>
+  </section>
+
+  <section class="card" style="border-left: 5px solid #2563eb;">
+    <h2>⏱️ ट्रिगर्स और एम्प्लीफायर ट्रिगर (पासवर्ड प्रोटेक्टेड)</h2>
+
+    <div id="triggerLockDiv" class="locked-box">
+      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 ट्रिगर्स सेटअप खोलने के लिए पासवर्ड दर्ज करें!</p>
+      <div class="row" style="justify-content: center;">
+        <input type="password" id="triggerPassInput" placeholder="पासवर्ड" style="max-width: 220px;">
+        <button class="primary" onclick="unlockTriggerTab()">अनलॉक करें</button>
+      </div>
+    </div>
+
+    <div id="triggerContentDiv" style="display: none;">
+      <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 ट्रिगर्स अनलॉक है</p>
+
+      <div style="background:#eff6ff; border:2px solid #93c5fd; padding:12px; border-radius:10px;">
+        <h3 style="font-size:15px; margin:0 0 8px; color:#1e3a8a;">⚡ एम्प्लीफायर ट्रिगर टाइमर सेटअप</h3>
+        <div class="hint" style="margin-top:0;">तय समय पर क्या बजना चाहिए चुनें, टेक्स्ट लिखें (यदि ज़रूरी हो) और समय सेव करें:</div>
+
+        <div class="mode-choice-grid" id="triggerModeGrid">
+          <label class="mode-choice-card selected" id="card_only_bell">
+            <input type="radio" name="triggerPresetMode" value="only_bell" checked onchange="onTriggerModeChange()">
+            <span>🔔 1. सिर्फ घंटी</span>
+          </label>
+          <label class="mode-choice-card" id="card_bell_voice">
+            <input type="radio" name="triggerPresetMode" value="bell_voice" onchange="onTriggerModeChange()">
+            <span>🔔+🔊 2. घंटी + वॉइस</span>
+          </label>
+          <label class="mode-choice-card" id="card_only_voice">
+            <input type="radio" name="triggerPresetMode" value="only_voice" onchange="onTriggerModeChange()">
+            <span>🔊 3. सिर्फ टेक्स्ट पढ़ें</span>
+          </label>
+          <label class="mode-choice-card" id="card_teacher_exit">
+            <input type="radio" name="triggerPresetMode" value="teacher_exit" onchange="onTriggerModeChange()">
+            <span>🎵 सॉफ्ट टोन</span>
+          </label>
+          <label class="mode-choice-card" id="card_teacher_exit_voice">
+            <input type="radio" name="triggerPresetMode" value="teacher_exit_voice" onchange="onTriggerModeChange()">
+            <span>🎵+🔊 सॉफ्ट टोन + टेक्स्ट</span>
+          </label>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <label style="font-size:13px; font-weight:600; color:#1e3a8a;">घोषणा या कस्टम टेक्स्ट (ट्रिगर के लिए):</label>
+          <input type="text" id="triggerCustomText" placeholder="यहाँ ट्रिगर का टेक्स्ट लिखें..." style="width:100%;">
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <label style="font-weight:600; font-size:14px;"><input type="checkbox" id="triggerTimerEnabled" checked> टाइमर चालू रखें</label>
+        </div>
+
+        <div class="row">
+          <label for="triggerTimerTime" style="font-weight:600; font-size:14px;">कब बजना है (समय):</label>
+          <input type="time" id="triggerTimerTime" value="07:45" style="min-width:130px; font-weight:bold;">
+          <button class="primary" onclick="saveTriggerPreset()">💾 चुनें और टाइमर सेव करें</button>
+          <button onclick="fireTriggerNow()" style="background:#1e293b; color:#fff; font-weight:600;">⚡ एम्प्लीफायर ट्रिगर</button>
+        </div>
+
+        <div id="triggerLiveClockBar" style="font-size:13px; font-weight:700; color:#0f172a; margin-top:6px;">🕒 वर्तमान समय: लोड हो रहा है...</div>
+        <div id="triggerTimerStatus" class="hint" style="font-weight:700; color:#1d4ed8; margin-bottom:0;">स्टेटस: कोई टाइमर सेव नहीं है</div>
+      </div>
+
+      <button class="danger small" onclick="lockTriggerTab()" style="margin-top: 12px;">वापस लॉक करें</button>
+    </div>
+  </section>
+</div>
+
+<!-- ================= TAB 5: सेटिंग्स, लाइब्रेरी और टाइमटेबल ================= -->
 <div id="tabAdmin" class="tab-pane">
   <section class="card" style="border-left: 5px solid #dc2626;">
     <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
@@ -262,23 +294,6 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
           <button class="primary" onclick="syncToCloudNow()">☁️ क्लाउड पर सेव/सिंक करें</button>
           <button onclick="fetchFromCloudNow()">🔄 क्लाउड से डेटा लाएं</button>
         </div>
-      </div>
-
-      <div style="background:#eff6ff; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #bfdbfe;">
-        <h3 style="font-size:15px; margin-top:0; color:#1e40af;">⏰ ऑटो एम्प्लीफायर एक्टिवेशन</h3>
-        <p class="hint">मोबाइल से समय एक बार सेव करें। एम्प्लीफायर मोड में चल रहा कंप्यूटर Firebase से सेटिंग अपने आप प्राप्त करेगा और रोज तय समय पर मौजूदा सॉफ्ट टोन बजाएगा।</p>
-        <div class="row">
-          <label style="font-weight:600;"><input type="checkbox" id="autoAmpEnabled"> रोज ऑटो एक्टिवेशन चालू करें</label>
-        </div>
-        <div class="row">
-          <label for="autoAmpTime" style="font-weight:600;">सॉफ्ट टोन बजने का समय:</label>
-          <input type="time" id="autoAmpTime" value="07:45" style="min-width:130px;">
-        </div>
-        <div class="row">
-          <button class="primary" onclick="saveAutoAmpSettings()">☁️ ऑटो टाइम सेव करें</button>
-        </div>
-        <div id="autoAmpStatus" class="hint" style="font-weight:600;color:#1d4ed8;">Firebase से सेटिंग लोड हो रही है...</div>
-        <div class="muted">नोट: कंप्यूटर पर यह पेज खुला, इंटरनेट चालू और डिवाइस Amplifier Mode में होना चाहिए।</div>
       </div>
 
       <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
@@ -341,7 +356,7 @@ let defaultData = {
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
 
-// ट्रिगर टाइमर प्रीसेट (अलग localStorage key ताकि मुख्य डेटा से टकराव न हो)
+// ट्रिगर टाइमर प्रीसेट (बाय डिफ़ॉल्ट एम्प्लीफायर रिमोट पर)
 const TRIGGER_STORAGE_KEY = "schoolBellTriggerPreset_v1";
 let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "null") || {
   enabled: true,
@@ -354,10 +369,6 @@ let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "nul
 let running=false, audioEl=new Audio(), softToneEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
-
-const AUTO_AMP_SCHEDULE_PATH = "school_bell_auto_amplifier_schedule";
-let autoAmpSettings = { enabled: false, time: "07:45", mode: "teacher_exit" };
-let autoAmpScheduleLoaded = false;
 
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg";
@@ -380,9 +391,28 @@ function switchTab(tabId) {
   
   document.getElementById(tabId).classList.add('active');
   if(tabId === 'tabClock') document.getElementById('btnTabClock').classList.add('active');
-  if(tabId === 'tabBroadcast') document.getElementById('btnTabBroadcast').classList.add('active');
   if(tabId === 'tabEmergency') document.getElementById('btnTabEmergency').classList.add('active');
+  if(tabId === 'tabBroadcast') document.getElementById('btnTabBroadcast').classList.add('active');
+  if(tabId === 'tabTriggers') document.getElementById('btnTabTriggers').classList.add('active');
   if(tabId === 'tabAdmin') document.getElementById('btnTabAdmin').classList.add('active');
+}
+
+function unlockTriggerTab() {
+  const pass = document.getElementById('triggerPassInput').value;
+  if (pass === '123') {
+    document.getElementById('triggerLockDiv').style.display = 'none';
+    document.getElementById('triggerContentDiv').style.display = 'block';
+    toast('ट्रिगर्स टैब अनलॉक हो गया है!');
+  } else {
+    toast('रॉन्ग पासवर्ड! (सही पासवर्ड: 123)');
+  }
+}
+
+function lockTriggerTab() {
+  document.getElementById('triggerLockDiv').style.display = 'block';
+  document.getElementById('triggerContentDiv').style.display = 'none';
+  document.getElementById('triggerPassInput').value = '';
+  toast('ट्रिगर्स टैब लॉक कर दिया गया है।');
 }
 
 function onTriggerModeChange() {
@@ -398,18 +428,14 @@ function renderTriggerPresetUI() {
   if(radio) radio.checked = true;
   onTriggerModeChange();
 
-  const textInp = document.getElementById("emergencyText");
-  if(textInp && triggerPreset.text) textInp.value = triggerPreset.text;
+  const trigTextInp = document.getElementById("triggerCustomText");
+  if(trigTextInp && triggerPreset.text) trigTextInp.value = triggerPreset.text;
 
   const enabledChk = document.getElementById("triggerTimerEnabled");
   if(enabledChk) enabledChk.checked = !!triggerPreset.enabled;
 
   const timeInp = document.getElementById("triggerTimerTime");
   if(timeInp) timeInp.value = triggerPreset.time || "07:45";
-
-  const targetVal = triggerPreset.target || "remote";
-  const targetRadio = document.querySelector(`input[name="targetDevice"][value="${targetVal}"]`);
-  if(targetRadio) targetRadio.checked = true;
 
   updateTriggerStatusText();
 }
@@ -418,10 +444,9 @@ function updateTriggerStatusText() {
   const statusEl = document.getElementById("triggerTimerStatus");
   if(!statusEl) return;
   const modeName = MODE_LABELS[triggerPreset.mode] || triggerPreset.mode;
-  const targetText = (triggerPreset.target === "local") ? "इसी फोन पर" : "एम्प्लीफायर फोन पर (रिमोट)";
   if(triggerPreset.enabled) {
     statusEl.style.color = "#15803d";
-    statusEl.textContent = `🟢 सेव है: रोज ${triggerPreset.time} बजे | मोड: ${modeName} | लक्ष्य: ${targetText}`;
+    statusEl.textContent = `🟢 सेव है: रोज ${triggerPreset.time} बजे | मोड: ${modeName} | लक्ष्य: एम्प्लीफायर ट्रिगर (रिमोट)`;
   } else {
     statusEl.style.color = "#6b7280";
     statusEl.textContent = `⚪ टाइमर बंद है (सेव मोड: ${modeName}, समय: ${triggerPreset.time})`;
@@ -431,11 +456,9 @@ function updateTriggerStatusText() {
 function saveTriggerPreset() {
   const selectedModeEl = document.querySelector('input[name="triggerPresetMode"]:checked');
   const mode = selectedModeEl ? selectedModeEl.value : "only_bell";
-  const text = document.getElementById("emergencyText").value.trim();
+  const text = document.getElementById("triggerCustomText").value.trim();
   const enabled = !!document.getElementById("triggerTimerEnabled").checked;
   const time = document.getElementById("triggerTimerTime").value;
-  const targetEl = document.querySelector('input[name="targetDevice"]:checked');
-  const target = targetEl ? targetEl.value : "remote";
 
   if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
     toast("कृपया सही समय चुनें!");
@@ -443,26 +466,19 @@ function saveTriggerPreset() {
   }
 
   if((mode === "bell_voice" || mode === "only_voice" || mode === "teacher_exit_voice") && !text) {
-    toast("इस मोड के लिए कृपया ऊपर टेक्स्ट बॉक्स में घोषणा लिखें!");
+    toast("इस मोड के लिए कृपया ट्रिगर टेक्स्ट बॉक्स में घोषणा लिखें!");
     return;
   }
 
-  triggerPreset = { enabled, mode, text, time, target };
+  triggerPreset = { enabled, mode, text, time, target: "remote" };
   localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
   updateTriggerStatusText();
-  toast("✅ ट्रिगर मोड और टाइमर सेव हो गया है!");
+  toast("✅ एम्प्लीफायर ट्रिगर मोड और टाइमर सेव हो गया है!");
 }
 
 function executeTriggerCommand(presetObj, isManualTest = false) {
   const mode = presetObj.mode || "only_bell";
   const text = (presetObj.text || "").trim();
-  const target = presetObj.target || "remote";
-
-  if(target === "local") {
-    executeBellRoutine(mode, 1, 1, text, null);
-    toast(isManualTest ? "⚡ लोकल पर टेस्ट ट्रिगर चलाया गया!" : "⏰ टाइमर ट्रिगर लोकल पर चला!");
-    return;
-  }
 
   if(!db) {
     toast("फायरबेस कनेक्टेड नहीं है!");
@@ -478,7 +494,7 @@ function executeTriggerCommand(presetObj, isManualTest = false) {
   };
 
   db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
-    toast(isManualTest ? "🚀 एम्प्लीफायर पर टेस्ट ट्रिगर भेज दिया गया!" : "⏰ टाइमर पूरा! एम्प्लीफायर पर ऑटो ट्रिगर भेज दिया गया!");
+    toast(isManualTest ? "⚡ एम्प्लीफायर ट्रिगर भेज दिया गया!" : "⏰ टाइमर पूरा! एम्प्लीफायर ट्रिगर भेज दिया गया!");
   }).catch(err => {
     toast("ट्रिगर भेजने में त्रुटि: " + err.message);
   });
@@ -487,16 +503,14 @@ function executeTriggerCommand(presetObj, isManualTest = false) {
 function fireTriggerNow() {
   const selectedModeEl = document.querySelector('input[name="triggerPresetMode"]:checked');
   const mode = selectedModeEl ? selectedModeEl.value : triggerPreset.mode;
-  const text = document.getElementById("emergencyText").value.trim();
-  const targetEl = document.querySelector('input[name="targetDevice"]:checked');
-  const target = targetEl ? targetEl.value : "remote";
+  const text = document.getElementById("triggerCustomText").value.trim();
 
   if((mode === "bell_voice" || mode === "only_voice" || mode === "teacher_exit_voice") && !text) {
-    toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!");
+    toast("कृपया पहले ट्रिगर टेक्स्ट बॉक्स में कुछ लिखें!");
     return;
   }
 
-  executeTriggerCommand({ mode, text, target }, true);
+  executeTriggerCommand({ mode, text, target: "remote" }, true);
 }
 
 function checkTriggerTimer(now) {
@@ -555,75 +569,6 @@ function fetchFromCloudNow() {
   }).catch(err => {
     toast("डेटा लाने में त्रुटि हुई।");
   });
-}
-
-function renderAutoAmpSettings() {
-  const enabledEl = document.getElementById("autoAmpEnabled");
-  const timeEl = document.getElementById("autoAmpTime");
-  const statusEl = document.getElementById("autoAmpStatus");
-  if (enabledEl) enabledEl.checked = !!autoAmpSettings.enabled;
-  if (timeEl) timeEl.value = autoAmpSettings.time || "07:45";
-  if (statusEl) {
-    if (!db) statusEl.textContent = "🔴 Firebase कनेक्ट नहीं है।";
-    else if (!autoAmpScheduleLoaded) statusEl.textContent = "Firebase से सेटिंग लोड हो रही है...";
-    else statusEl.textContent = autoAmpSettings.enabled
-      ? `🟢 चालू है — रोज ${autoAmpSettings.time} बजे मौजूदा सॉफ्ट टोन बजेगी।`
-      : "⚪ ऑटो एक्टिवेशन बंद है।";
-  }
-}
-
-function startAutoAmpScheduleListener() {
-  if (!db) { renderAutoAmpSettings(); return; }
-  db.ref(AUTO_AMP_SCHEDULE_PATH).on("value", snapshot => {
-    const saved = snapshot.val();
-    if (saved && typeof saved === "object") {
-      autoAmpSettings = {
-        enabled: saved.enabled === true,
-        time: /^([01]\d|2[0-3]):[0-5]\d$/.test(saved.time || "") ? saved.time : "07:45",
-        mode: "teacher_exit"
-      };
-    } else {
-      autoAmpSettings = { enabled: false, time: "07:45", mode: "teacher_exit" };
-    }
-    autoAmpScheduleLoaded = true;
-    renderAutoAmpSettings();
-  }, error => {
-    const statusEl = document.getElementById("autoAmpStatus");
-    if (statusEl) statusEl.textContent = "🔴 Firebase से ऑटो सेटिंग नहीं मिली: " + error.message;
-  });
-}
-
-function saveAutoAmpSettings() {
-  if (!db) { toast("Firebase कनेक्टेड नहीं है!"); return; }
-  const enabled = !!document.getElementById("autoAmpEnabled").checked;
-  const time = document.getElementById("autoAmpTime").value;
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
-    toast("कृपया सही समय चुनें!");
-    return;
-  }
-  const nextSettings = { enabled, time, mode: "teacher_exit", updatedAt: Date.now() };
-  db.ref(AUTO_AMP_SCHEDULE_PATH).set(nextSettings).then(() => {
-    autoAmpSettings = { enabled, time, mode: "teacher_exit" };
-    autoAmpScheduleLoaded = true;
-    renderAutoAmpSettings();
-    toast(enabled ? "ऑटो एम्प्लीफायर टाइम Firebase में सेव हो गया!" : "ऑटो एम्प्लीफायर एक्टिवेशन बंद कर दिया गया!");
-  }).catch(err => {
-    toast("ऑटो टाइम सेव नहीं हुआ: " + err.message);
-  });
-}
-
-function checkAutoAmplifierSchedule(now) {
-  if (!running || !autoAmpScheduleLoaded || !autoAmpSettings.enabled) return;
-  if (!st.isAmplifierDevice) return;
-  if (hhmm(now) !== autoAmpSettings.time) return;
-
-  const dateKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
-  const storageKey = "autoAmpToneLastFiredDate";
-  if (localStorage.getItem(storageKey) === dateKey) return;
-
-  localStorage.setItem(storageKey, dateKey);
-  executeBellRoutine("teacher_exit", 1, 1, "", null);
-  toast("🔊 ऑटो एम्प्लीफायर एक्टिवेशन: सॉफ्ट टोन भेजी गई।");
 }
 
 function unlockAdminSettings() {
@@ -1065,7 +1010,6 @@ function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMin
 function tick(){
   const d = new Date(new Date().getTime() + timeOffset);
   checkTriggerTimer(d);
-  checkAutoAmplifierSchedule(d);
   if(running&&d.getSeconds()<3){
     const t=hhmm(d),today=d.toDateString();
     let log=JSON.parse(localStorage.getItem("bellfired")||"{}");
@@ -1109,6 +1053,14 @@ function showNext(){
   const clockEl = document.getElementById("liveDigitalClock");
   if(clockEl) {
     clockEl.innerHTML = `🕒 ${formattedClock} (Live)`;
+  }
+  const emergClockEl = document.getElementById("emergencyLiveClock");
+  if(emergClockEl) {
+    emergClockEl.innerHTML = `🕒 ${formattedClock} (Live)`;
+  }
+  const trigTabClockEl = document.getElementById("triggersLiveClock");
+  if(trigTabClockEl) {
+    trigTabClockEl.innerHTML = `🕒 ${formattedClock} (Live)`;
   }
   const trigClockEl = document.getElementById("triggerLiveClockBar");
   if(trigClockEl) {
@@ -1256,7 +1208,6 @@ async function initApp() {
   }
 
   if(db) {
-    startAutoAmpScheduleListener();
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
@@ -1268,7 +1219,6 @@ async function initApp() {
     });
   }
 
-  if(!db) renderAutoAmpSettings();
   setInterval(tick, 1000);
   setTimeout(() => { startSys(); }, 1000);
 }
