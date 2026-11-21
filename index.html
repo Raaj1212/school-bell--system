@@ -193,6 +193,23 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
         </div>
       </div>
 
+      <div style="background:#eff6ff; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #bfdbfe;">
+        <h3 style="font-size:15px; margin-top:0; color:#1e40af;">⏰ ऑटो एम्प्लीफायर एक्टिवेशन</h3>
+        <p class="hint">मोबाइल से समय एक बार सेव करें। एम्प्लीफायर मोड में चल रहा कंप्यूटर Firebase से सेटिंग अपने आप प्राप्त करेगा और रोज तय समय पर मौजूदा सॉफ्ट टोन बजाएगा।</p>
+        <div class="row">
+          <label style="font-weight:600;"><input type="checkbox" id="autoAmpEnabled"> रोज ऑटो एक्टिवेशन चालू करें</label>
+        </div>
+        <div class="row">
+          <label for="autoAmpTime" style="font-weight:600;">सॉफ्ट टोन बजने का समय:</label>
+          <input type="time" id="autoAmpTime" value="07:45" style="min-width:130px;">
+        </div>
+        <div class="row">
+          <button class="primary" onclick="saveAutoAmpSettings()">☁️ ऑटो टाइम सेव करें</button>
+        </div>
+        <div id="autoAmpStatus" class="hint" style="font-weight:600;color:#1d4ed8;">Firebase से सेटिंग लोड हो रही है...</div>
+        <div class="muted">नोट: कंप्यूटर पर यह पेज खुला, इंटरनेट चालू और डिवाइस Amplifier Mode में होना चाहिए।</div>
+      </div>
+
       <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
         <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी</h3>
         <div class="row">
@@ -248,14 +265,27 @@ let defaultData = {
   items:[{time:"08:00", label:"Assembly", mode:"bell_voice", bellCount:1, voiceCount:1, annId:"a1"}],
   days:"all",
   roomCode:"bps-school-123",
-  isAmplifierDevice:false
+  isAmplifierDevice:true,
+  amplifierOptOut:false
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
+if(typeof st.amplifierOptOut !== "boolean") {
+  st.amplifierOptOut = false;
+}
+if(!st.amplifierOptOut) {
+  st.isAmplifierDevice = true;
+}
 
 let running=false, audioEl=new Audio(), softToneEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
 let timeOffset = 0;
+
+// Auto amplifier schedule is stored separately so the existing full-cloud sync
+// (school_bell_system) cannot overwrite or delete this setting.
+const AUTO_AMP_SCHEDULE_PATH = "school_bell_auto_amplifier_schedule";
+let autoAmpSettings = { enabled: false, time: "07:45", mode: "teacher_exit" };
+let autoAmpScheduleLoaded = false;
 
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg";
@@ -307,7 +337,8 @@ function fetchFromCloudNow() {
       st = serverData;
       st.announcements = st.announcements || [];
       st.roomCode = st.roomCode || "bps-school-123";
-      st.isAmplifierDevice = st.isAmplifierDevice || false;
+      if(typeof st.amplifierOptOut !== "boolean") st.amplifierOptOut = false;
+      st.isAmplifierDevice = st.amplifierOptOut ? false : (typeof st.isAmplifierDevice === "boolean" ? st.isAmplifierDevice : true);
       saveLocal();
       render();
       const statusEl = document.getElementById("syncStatusText");
@@ -319,6 +350,77 @@ function fetchFromCloudNow() {
   }).catch(err => {
     toast("डेटा लाने में त्रुटि हुई।");
   });
+}
+
+function renderAutoAmpSettings() {
+  const enabledEl = document.getElementById("autoAmpEnabled");
+  const timeEl = document.getElementById("autoAmpTime");
+  const statusEl = document.getElementById("autoAmpStatus");
+  if (enabledEl) enabledEl.checked = !!autoAmpSettings.enabled;
+  if (timeEl) timeEl.value = autoAmpSettings.time || "07:45";
+  if (statusEl) {
+    if (!db) statusEl.textContent = "🔴 Firebase कनेक्ट नहीं है।";
+    else if (!autoAmpScheduleLoaded) statusEl.textContent = "Firebase से सेटिंग लोड हो रही है...";
+    else statusEl.textContent = autoAmpSettings.enabled
+      ? `🟢 चालू है — रोज ${autoAmpSettings.time} बजे मौजूदा सॉफ्ट टोन बजेगी।`
+      : "⚪ ऑटो एक्टिवेशन बंद है।";
+  }
+}
+
+function startAutoAmpScheduleListener() {
+  if (!db) { renderAutoAmpSettings(); return; }
+  db.ref(AUTO_AMP_SCHEDULE_PATH).on("value", snapshot => {
+    const saved = snapshot.val();
+    if (saved && typeof saved === "object") {
+      autoAmpSettings = {
+        enabled: saved.enabled === true,
+        time: /^([01]\d|2[0-3]):[0-5]\d$/.test(saved.time || "") ? saved.time : "07:45",
+        mode: "teacher_exit"
+      };
+    } else {
+      autoAmpSettings = { enabled: false, time: "07:45", mode: "teacher_exit" };
+    }
+    autoAmpScheduleLoaded = true;
+    renderAutoAmpSettings();
+  }, error => {
+    const statusEl = document.getElementById("autoAmpStatus");
+    if (statusEl) statusEl.textContent = "🔴 Firebase से ऑटो सेटिंग नहीं मिली: " + error.message;
+  });
+}
+
+function saveAutoAmpSettings() {
+  if (!db) { toast("Firebase कनेक्टेड नहीं है!"); return; }
+  const enabled = !!document.getElementById("autoAmpEnabled").checked;
+  const time = document.getElementById("autoAmpTime").value;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+    toast("कृपया सही समय चुनें!");
+    return;
+  }
+  const nextSettings = { enabled, time, mode: "teacher_exit", updatedAt: Date.now() };
+  db.ref(AUTO_AMP_SCHEDULE_PATH).set(nextSettings).then(() => {
+    autoAmpSettings = { enabled, time, mode: "teacher_exit" };
+    autoAmpScheduleLoaded = true;
+    renderAutoAmpSettings();
+    toast(enabled ? "ऑटो एम्प्लीफायर टाइम Firebase में सेव हो गया!" : "ऑटो एम्प्लीफायर एक्टिवेशन बंद कर दिया गया!");
+  }).catch(err => {
+    toast("ऑटो टाइम सेव नहीं हुआ: " + err.message);
+  });
+}
+
+function checkAutoAmplifierSchedule(now) {
+  if (!running || !autoAmpScheduleLoaded || !autoAmpSettings.enabled) return;
+  // Only devices already configured as amplifier receivers execute the tone.
+  if (!st.isAmplifierDevice) return;
+  if (hhmm(now) !== autoAmpSettings.time) return;
+
+  const dateKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
+  const storageKey = "autoAmpToneLastFiredDate";
+  if (localStorage.getItem(storageKey) === dateKey) return;
+
+  // Save first to prevent duplicate playback from multiple ticks/tabs.
+  localStorage.setItem(storageKey, dateKey);
+  executeBellRoutine("teacher_exit", 1, 1, "", null);
+  toast("🔊 ऑटो एम्प्लीफायर एक्टिवेशन: सॉफ्ट टोन भेजी गई।");
 }
 
 function unlockAdminSettings() {
@@ -604,6 +706,7 @@ function initRoomCodeField(){
 
 function setAsAmplifierPhone(){
   st.isAmplifierDevice = true;
+  st.amplifierOptOut = false;
   save();
   toast("एम्प्लीफायर फोन सेट हो गया है।");
   startAutoListener();
@@ -612,6 +715,7 @@ function setAsAmplifierPhone(){
 
 function unsetAmplifierPhone(){
   st.isAmplifierDevice = false;
+  st.amplifierOptOut = true;
   save();
   if(peer) peer.destroy();
   toast("एम्प्लीफायर मोड हटा दिया गया है।");
@@ -759,6 +863,7 @@ function startSys(){
 function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
 function tick(){
   const d = new Date(new Date().getTime() + timeOffset);
+  checkAutoAmplifierSchedule(d);
   if(running&&d.getSeconds()<3){
     const t=hhmm(d),today=d.toDateString();
     let log=JSON.parse(localStorage.getItem("bellfired")||"{}");
@@ -932,6 +1037,11 @@ function addItem(){
 }
 
 async function initApp() {
+  if(!st.amplifierOptOut) {
+    st.isAmplifierDevice = true;
+    saveLocal();
+  }
+
   syncInternetTime();
   render();
   initRoomCodeField();
@@ -943,6 +1053,7 @@ async function initApp() {
   }
 
   if(db) {
+    startAutoAmpScheduleListener();
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
@@ -954,6 +1065,7 @@ async function initApp() {
     });
   }
 
+  if(!db) renderAutoAmpSettings();
   setInterval(tick, 1000);
   setTimeout(() => { startSys(); }, 1000);
 }
