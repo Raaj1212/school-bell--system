@@ -290,6 +290,10 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
         <div>
           <div style="font-weight:bold; color:#12213a;">☁️ क्लाउड सिंक स्टेटस</div>
           <div id="syncStatusText" style="font-size:13px; color:#16a34a; font-weight:600;">लोकल स्टोरेज पर सुरक्षित है</div>
+          <label style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:13px; font-weight:600; color:#1e3a8a; cursor:pointer;">
+            <input type="checkbox" id="autoSyncRoutineCheckbox" onchange="toggleAutoSyncRoutine()">
+            <span>रूटीन ऑटो सिंक (पेज खुलने पर क्लाउड से लास्ट डेटा ऑटो-फ़ेच)</span>
+          </label>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="primary" onclick="syncToCloudNow()">☁️ क्लाउड पर सेव/सिंक करें</button>
@@ -357,7 +361,6 @@ let defaultData = {
 };
 
 let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
-// यदि पहले कभी पुराना डिफ़ॉल्ट "bps-school-123" सेव था या खाली है, तो "bps" पर सेट करें; यदि यूज़र ने कोई कस्टम कोड सेव किया है तो वही रखें
 if(!st.roomCode || st.roomCode === "bps-school-123") {
   st.roomCode = "bps";
   localStorage.setItem("bellphone", JSON.stringify(st));
@@ -376,6 +379,11 @@ let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "nul
   target: "remote",
   updatedAt: 0
 };
+
+// रूटीन ऑटो-फ़ेच चेकबॉक्स स्टेट (टिक होने पर पेज खुलने पर क्लाउड से लास्ट डेटा फ़ेच होगा; अनटिक होने पर बटन दबाने पर ही चलेगा)
+const AUTO_SYNC_ROUTINE_KEY = "schoolBellAutoSyncRoutine_v1";
+let autoSyncRoutineEnabled = JSON.parse(localStorage.getItem(AUTO_SYNC_ROUTINE_KEY) || "false") === true;
+let isApplyingRemoteRoutine = false;
 
 let running=false, audioEl=new Audio(), softToneEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
 let peer=null, localStream=null, wakeLock=null;
@@ -567,7 +575,14 @@ async function syncInternetTime() {
 
 function syncToCloudNow() {
   if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
-  db.ref("school_bell_system").set(st).then(() => {
+  const payload = Object.assign({}, st, {
+    announcements: st.announcements || [],
+    items: st.items || [],
+    days: st.days || "all",
+    roomCode: st.roomCode || "bps",
+    updatedAt: Date.now()
+  });
+  db.ref("school_bell_system").set(payload).then(() => {
     const statusEl = document.getElementById("syncStatusText");
     if(statusEl) statusEl.innerText = "🟢 क्लाउड पर सफलतापूर्वक सिंक हो गया है";
     toast("डेटा क्लाउड पर सफलतापूर्वक सेव हो गया!");
@@ -576,28 +591,25 @@ function syncToCloudNow() {
   });
 }
 
-function fetchFromCloudNow() {
-  if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
+function fetchFromCloudNow(isAutoFetch = false) {
+  if(!db) {
+    if(!isAutoFetch) toast("फायरबेस कनेक्टेड नहीं है!");
+    return;
+  }
   db.ref("school_bell_system").once("value").then((snapshot) => {
     const serverData = snapshot.val();
     if(serverData) {
-      st = serverData;
-      st.announcements = st.announcements || [];
-      st.roomCode = (!st.roomCode || st.roomCode === "bps-school-123") ? "bps" : st.roomCode;
-      if(typeof st.amplifierOptOut !== "boolean") st.amplifierOptOut = false;
-      st.isAmplifierDevice = st.amplifierOptOut ? false : (typeof st.isAmplifierDevice === "boolean" ? st.isAmplifierDevice : true);
-      saveLocal();
-      render();
-      initRoomCodeField();
-      updateDevicePresence();
-      const statusEl = document.getElementById("syncStatusText");
-      if(statusEl) statusEl.innerText = "🟢 क्लाउड से डेटा आ गया है";
-      toast("क्लाउड से लेटेस्ट डेटा लोड हो गया!");
-    } else {
+      applyCloudRoutineSnapshot(serverData, isAutoFetch);
+      if(!isAutoFetch) {
+        const statusEl = document.getElementById("syncStatusText");
+        if(statusEl) statusEl.innerText = "🟢 क्लाउड से डेटा आ गया है";
+        toast("क्लाउड से लेटेस्ट डेटा लोड हो गया!");
+      }
+    } else if(!isAutoFetch) {
       toast("क्लाउड पर कोई डेटा नहीं मिला।");
     }
-  }).catch(err => {
-    toast("डेटा लाने में त्रुटि हुई।");
+  }).catch(() => {
+    if(!isAutoFetch) toast("डेटा लाने में त्रुटि हुई।");
   });
 }
 
@@ -652,8 +664,58 @@ function saveLocal(){
   localStorage.setItem("bellphone",JSON.stringify(st));
 }
 
+function applyCloudRoutineSnapshot(serverData, showToastMsg = false) {
+  if(!serverData || typeof serverData !== "object") return;
+  isApplyingRemoteRoutine = true;
+  if(Array.isArray(serverData.announcements)) {
+    st.announcements = serverData.announcements;
+  }
+  if(Array.isArray(serverData.items)) {
+    st.items = serverData.items;
+  }
+  if(serverData.days) {
+    st.days = serverData.days;
+  }
+  if(serverData.roomCode && serverData.roomCode !== "bps-school-123") {
+    st.roomCode = serverData.roomCode;
+  }
+  saveLocal();
+  render();
+  initRoomCodeField();
+  showNext();
+  const statusEl = document.getElementById("syncStatusText");
+  if(statusEl) statusEl.innerText = "🟢 रूटीन ऑटो-सिंक चालू: क्लाउड से लास्ट डेटा फ़ेच हुआ";
+  if(showToastMsg) toast("🔄 क्लाउड से लास्ट अपलोडेड रूटीन ऑटो-लोड हो गया!");
+  setTimeout(() => { isApplyingRemoteRoutine = false; }, 100);
+}
+
+function renderAutoSyncRoutineUI() {
+  const chk = document.getElementById("autoSyncRoutineCheckbox");
+  if(chk) chk.checked = !!autoSyncRoutineEnabled;
+  const statusEl = document.getElementById("syncStatusText");
+  if(statusEl) {
+    statusEl.innerText = autoSyncRoutineEnabled
+      ? "🟢 रूटीन ऑटो-सिंक चालू है (पेज खुलने पर क्लाउड से लास्ट डेटा फ़ेच होगा)"
+      : "लोकल स्टोरेज पर सुरक्षित है (ऑटो-सिंक बंद — बटन दबाने पर ही सिंक/फ़ेच होगा)";
+  }
+}
+
+function toggleAutoSyncRoutine() {
+  const chk = document.getElementById("autoSyncRoutineCheckbox");
+  autoSyncRoutineEnabled = !!(chk && chk.checked);
+  localStorage.setItem(AUTO_SYNC_ROUTINE_KEY, JSON.stringify(autoSyncRoutineEnabled));
+  renderAutoSyncRoutineUI();
+
+  if(autoSyncRoutineEnabled) {
+    toast("✅ रूटीन ऑटो-सिंक चालू! क्लाउड से लास्ट डेटा फ़ेच किया जा रहा है...");
+    fetchFromCloudNow(true);
+  } else {
+    toast("⚪ रूटीन ऑटो-सिंक बंद। अब केवल बटन दबाने पर सिंक/फ़ेच होगा।");
+  }
+}
+
 function save(){
-  saveLocal(); 
+  saveLocal();
 }
 
 function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
@@ -1380,6 +1442,7 @@ async function initApp() {
   updateRoleBadgeUI();
   syncInternetTime();
   render();
+  renderAutoSyncRoutineUI();
   renderTriggerPresetUI();
   initRoomCodeField();
   showNext();
@@ -1406,6 +1469,10 @@ async function initApp() {
         toast("🔄 ऑनलाइन ट्रिगर टाइमर अपडेट/लोड हो गया (" + triggerPreset.time + ")!");
       }
     });
+
+    if(autoSyncRoutineEnabled) {
+      fetchFromCloudNow(true);
+    }
 
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
