@@ -365,14 +365,16 @@ if(!st.roomCode || st.roomCode === "bps-school-123") {
 if(typeof st.amplifierOptOut !== "boolean") st.amplifierOptOut = false;
 if(!st.amplifierOptOut) st.isAmplifierDevice = true;
 
-// ट्रिगर टाइमर प्रीसेट (बाय डिफ़ॉल्ट एम्प्लीफायर रिमोट पर)
+// ट्रिगर टाइमर प्रीसेट (ऑनलाइन Firebase + लोकल स्टोरेज सिंक)
 const TRIGGER_STORAGE_KEY = "schoolBellTriggerPreset_v1";
+const TRIGGER_FIREBASE_PATH = "school_bell_system/triggerPreset";
 let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "null") || {
   enabled: true,
   mode: "only_bell",
   text: "",
   time: "07:45",
-  target: "remote"
+  target: "remote",
+  updatedAt: 0
 };
 
 let running=false, audioEl=new Audio(), softToneEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
@@ -486,10 +488,19 @@ function saveTriggerPreset() {
     return;
   }
 
-  triggerPreset = { enabled, mode, text, time, target: "remote" };
+  triggerPreset = { enabled, mode, text, time, target: "remote", updatedAt: Date.now() };
   localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
   updateTriggerStatusText();
-  toast("✅ एम्प्लीफायर ट्रिगर मोड और टाइमर सेव हो गया है!");
+
+  if(db) {
+    db.ref(TRIGGER_FIREBASE_PATH).set(triggerPreset).then(() => {
+      toast("✅ ट्रिगर टाइमर लोकल और ऑनलाइन (Firebase) दोनों पर सेव हो गया!");
+    }).catch(err => {
+      toast("✅ लोकल सेव हुआ, ऑनलाइन सिंक में त्रुटि: " + err.message);
+    });
+  } else {
+    toast("✅ एम्प्लीफायर ट्रिगर मोड और टाइमर सेव हो गया है!");
+  }
 }
 
 function executeTriggerCommand(presetObj, isManualTest = false) {
@@ -1379,6 +1390,23 @@ async function initApp() {
   }
 
   if(db) {
+    db.ref(TRIGGER_FIREBASE_PATH).on("value", (snapshot) => {
+      const remotePreset = snapshot.val();
+      if(remotePreset && typeof remotePreset === "object") {
+        triggerPreset = {
+          enabled: remotePreset.enabled !== false,
+          mode: remotePreset.mode || "only_bell",
+          text: remotePreset.text || "",
+          time: /^([01]\d|2[0-3]):[0-5]\d$/.test(remotePreset.time || "") ? remotePreset.time : "07:45",
+          target: "remote",
+          updatedAt: remotePreset.updatedAt || Date.now()
+        };
+        localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
+        renderTriggerPresetUI();
+        toast("🔄 ऑनलाइन ट्रिगर टाइमर अपडेट/लोड हो गया (" + triggerPreset.time + ")!");
+      }
+    });
+
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
