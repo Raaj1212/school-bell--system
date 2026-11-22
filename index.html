@@ -1,92 +1,208 @@
 <!doctype html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Trigger - School Bell & Announcement</title>
+<title>Brahmadev Public School Auto Belling and Announcement System</title>
 <style>
-:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2430;--line:#e3e7ec;--blue:#2563eb;--green:#16a34a;--red:#dc2626}
+:root{
+  --bg:linear-gradient(155deg,#eff6ff 0%,#f8fafc 55%,#eef2ff 100%);
+  --card:#ffffff;
+  --ink:#0f172a;
+  --line:#dbeafe;
+  --indigo:#4f46e5;
+  --sky:#0284c7;
+  --green:#16a34a;
+  --red:#dc2626;
+  --shadow:0 8px 20px rgba(15,23,42,0.06)
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
-header{background:#12213a;color:#fff;padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;}
-header h1{font-size:18px;margin:0;font-weight:600}
-main{max-width:720px;margin:14px auto;padding:0 10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
-.card h2{font-size:16px;margin:0 0 10px;color:#12213a;font-weight:700}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
-button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:15px}
-button.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
-button.danger{color:var(--red);border-color:#f3c1c1}
-button.small{padding:5px 10px;font-size:13px}
-input,select{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px}
+body{
+  margin:0;
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-size:15px;
+  min-height:100vh
+}
+header{
+  background:linear-gradient(135deg,#1e1b4b 0%,#1d4ed8 100%);
+  color:#fff;
+  padding:13px 18px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 4px 14px rgba(15,23,42,0.16);
+  border-bottom:2px solid #93c5fd
+}
+header h1{font-size:18.5px;margin:0;font-weight:700}
+main{max-width:750px;margin:16px auto;padding:0 12px 26px}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:15px 17px;
+  margin-bottom:14px;
+  box-shadow:var(--shadow)
+}
+.card h2{font-size:16px;margin:0 0 10px;color:#0f172a;font-weight:700}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:9px 0}
+button{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  color:#0f172a;
+  border-radius:9px;
+  padding:8px 14px;
+  cursor:pointer;
+  font-size:14.5px;
+  font-weight:600;
+  transition:background 0.14s ease,border-color 0.14s ease
+}
+button:hover{background:#eff6ff;border-color:#93c5fd}
+button.primary{
+  background:#4f46e5;
+  border-color:#4f46e5;
+  color:#fff;
+  font-weight:700
+}
+button.primary:hover{background:#4338ca}
+button.danger{
+  background:#fff;
+  color:var(--red);
+  border-color:#fecdd3
+}
+button.danger:hover{background:#fff1f2}
+button.small{padding:5px 10px;font-size:13px;border-radius:8px}
+input,select{
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  padding:8px 10px;
+  font-size:15px;
+  background:#fff;
+  color:#0f172a
+}
+input:focus,select:focus{outline:none;border-color:#4f46e5}
 input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
-#nextBell{font-size:15px;font-weight:700;color:#00ffcc;background:#1e293b;padding:4px 8px;border-radius:6px;}
-.item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafbfc}
+#nextBell{
+  font-size:16px;
+  font-weight:800;
+  color:#dc2626;
+  background:#ffffff;
+  border:1.5px solid #fca5a5;
+  padding:5px 12px;
+  border-radius:8px
+}
+#headerTriggerTime{
+  font-size:16px;
+  font-weight:700;
+  color:#fef08a;
+  background:#3730a3;
+  border:1px solid #a5b4fc;
+  padding:5px 12px;
+  border-radius:8px
+}
+.item{
+  border:1px solid #e2e8f0;
+  border-radius:11px;
+  padding:11px;
+  margin:9px 0;
+  background:#f8fafc
+}
 .r1{display:flex;gap:8px;align-items:center}
-.r3{display:flex;gap:8px;align-items:center;margin-top:7px;flex-wrap:wrap}
-.announcement-box{background:#f0f4f8;padding:8px;border-radius:8px;margin:6px 0;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
-.days label{margin-right:6px;font-size:13px}
-.hint{font-size:13px;color:#6b7280;margin:6px 0}
-.muted{color:#6b7280;font-size:12px}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12213a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:9999}
-.locked-box {background:#fff5f5;border:1px solid #feb2b2;padding:15px;border-radius:8px;text-align:center;margin-bottom:10px;}
+.r3{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.announcement-box{
+  background:#eef2ff;
+  padding:9px 12px;
+  border-radius:9px;
+  margin:7px 0;
+  border:1px dashed #a5b4fc;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:6px
+}
+.days label{margin-right:8px;font-size:13.5px;font-weight:600;cursor:pointer}
+.hint{font-size:13px;color:#475569;margin:6px 0}
+.muted{color:#64748b;font-size:12.5px}
+#toast{
+  position:fixed;
+  bottom:18px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#1e1b4b;
+  color:#fff;
+  padding:10px 16px;
+  border-radius:10px;
+  display:none;
+  max-width:90vw;
+  font-weight:600;
+  z-index:9999
+}
+.locked-box{
+  background:#fff5f5;
+  border:1px solid #feb2b2;
+  padding:16px;
+  border-radius:10px;
+  text-align:center;
+  margin-bottom:10px
+}
 
 /* 📑 टैब नेविगेशन स्टाइल */
-.nav-tabs-custom {
-  display: flex;
-  gap: 6px;
-  background: #e2e8f0;
-  padding: 6px;
-  border-radius: 10px;
-  margin-bottom: 16px;
-  overflow-x: auto;
+.nav-tabs-custom{
+  display:flex;
+  gap:6px;
+  background:#e0e7ff;
+  padding:6px;
+  border-radius:12px;
+  margin-bottom:16px;
+  overflow-x:auto
 }
-.nav-tabs-custom button {
-  flex: 1;
-  background: transparent;
-  border: none;
-  padding: 8px 12px;
-  font-weight: 600;
-  color: #475569;
-  border-radius: 6px;
-  white-space: nowrap;
-  cursor: pointer;
+.nav-tabs-custom button{
+  flex:1;
+  background:transparent;
+  border:none;
+  padding:8px 12px;
+  font-weight:700;
+  color:#334155;
+  border-radius:8px;
+  white-space:nowrap;
+  cursor:pointer
 }
-.nav-tabs-custom button.active {
-  background: #2563eb;
-  color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.nav-tabs-custom button.active{
+  background:#4f46e5;
+  color:#fff;
+  box-shadow:0 2px 6px rgba(79,70,229,0.25)
 }
-.tab-pane {
-  display: none;
-}
-.tab-pane.active {
-  display: block;
-}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
 
 /* 🎯 ट्रिगर मोड सिलेक्शन कार्ड स्टाइल */
-.mode-choice-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 8px;
-  margin-top: 6px;
+.mode-choice-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:8px;
+  margin-top:6px
 }
-.mode-choice-card {
-  border: 2px solid #cbd5e1;
-  background: #fff;
-  border-radius: 8px;
-  padding: 9px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 600;
-  font-size: 13px;
+.mode-choice-card{
+  border:2px solid #cbd5e1;
+  background:#fff;
+  border-radius:9px;
+  padding:9px 11px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-weight:600;
+  font-size:13.5px
 }
-.mode-choice-card.selected {
-  border-color: #2563eb;
-  background: #eff6ff;
-  color: #1e3a8a;
+.mode-choice-card.selected{
+  border-color:#4f46e5;
+  background:#eef2ff;
+  color:#312e81
 }
 </style>
 <!-- PeerJS Library -->
@@ -98,33 +214,36 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
-<header>
-  <h1>Trigger — School Bell & Announcement</h1>
-  <div style="display:flex; gap:10px; align-items:center;">
-    <span id="runState" style="color:#4ade80; font-size:13px;">● चालू है</span>
-    <span id="nextBell">अगली: लोड हो रहा है...</span>
+<header style="justify-content:center; text-align:center; flex-direction:column;">
+  <h1 style="width:100%; text-align:center;">Brahmadev Public School Auto Belling and Announcement System</h1>
+  <div style="display:flex; width:100%; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <span id="headerTriggerTime" title="Trigger Timer (Separate from Routine Bell)">⚡ Trigger Time: --:--</span>
+      <span id="runState" style="color:#4ade80; font-size:14px; font-weight:600;">● Running</span>
+    </div>
+    <span id="nextBell">Next Bell: Loading...</span>
   </div>
 </header>
 <main>
 
 <!-- 📑 टैब नेविगेशन बार (त्वरित घोषणाओं के बगल में ब्रॉडकास्ट) -->
 <div class="nav-tabs-custom">
-  <button onclick="switchTab('tabClock')" id="btnTabClock" class="active">🕒 मुख्य स्क्रीन</button>
-  <button onclick="switchTab('tabEmergency')" id="btnTabEmergency">🚨 त्वरित घोषणाएँ</button>
-  <button onclick="switchTab('tabBroadcast')" id="btnTabBroadcast">🎙️ ब्रॉडकास्ट & एम्प्लीफायर</button>
-  <button onclick="switchTab('tabTriggers')" id="btnTabTriggers">⏱️ ट्रिगर्स</button>
-  <button onclick="switchTab('tabAdmin')" id="btnTabAdmin">⚙️ सेटिंग्स & रूटीन</button>
+  <button onclick="switchTab('tabClock')" id="btnTabClock" class="active">🕒 Main Screen</button>
+  <button onclick="switchTab('tabEmergency')" id="btnTabEmergency">🚨 Quick Announcements</button>
+  <button onclick="switchTab('tabBroadcast')" id="btnTabBroadcast">🎙️ Broadcast & Amplifier</button>
+  <button onclick="switchTab('tabTriggers')" id="btnTabTriggers">⏱️ Triggers</button>
+  <button onclick="switchTab('tabAdmin')" id="btnTabAdmin">⚙️ Settings & Routine</button>
 </div>
 
 <!-- ================= TAB 1 (DEFAULT ACTIVE): मुख्य स्क्रीन ================= -->
 <div id="tabClock" class="tab-pane active">
   <section class="card">
-    <h2>🌐 इंटरनेट लाइव डिजिटल क्लॉक और ऑटो घंटी सिस्टम</h2>
-    <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #000000; color: #ffffff; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 समय सिंक हो रहा है...</div>
+    <h2>🌐 Internet Live Digital Clock & Auto Bell System</h2>
+    <div id="liveDigitalClock" style="font-size: 18px; font-weight: bold; background: #000000; color: #ffffff; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">🕒 Syncing time...</div>
     <div class="row">
-      <button onclick="testBellOnlyLocal()">🔔 सिर्फ घंटी टेस्ट करें</button>
-      <button onclick="testTeacherToneLocal()">🎵 सॉफ्ट टोन टेस्ट करें</button>
-      <button onclick="stopSound()">रोकें</button>
+      <button onclick="testBellOnlyLocal()">🔔 Test Bell Only</button>
+      <button onclick="testTeacherToneLocal()">🎵 Test Soft Tone</button>
+      <button onclick="stopSound()">Stop</button>
     </div>
   </section>
 </div>
@@ -132,31 +251,31 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 <!-- ================= TAB 2: त्वरित घोषणाएँ ================= -->
 <div id="tabEmergency" class="tab-pane">
   <section class="card" style="padding:10px 14px; margin-bottom:12px;">
-    <div id="emergencyLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 समय सिंक हो रहा है...</div>
+    <div id="emergencyLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 Syncing time...</div>
   </section>
 
   <section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
-    <h2>🚨 त्वरित घोषणाएँ और कंट्रोल</h2>
+    <h2>🚨 Quick Announcements और कंट्रोल</h2>
     <div style="margin-top: 8px;">
       
       <div style="background:#fee2e2; border:1px solid #fecaca; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
-        <span style="font-weight:bold; font-size:13px; color:#991b1b;">🎯 आवाज़ कहाँ बजानी है?:</span>
-        <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="local"> इसी फोन पर</label>
-        <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="remote" checked> एम्प्लीफायर फोन पर (रिमोट)</label>
+        <span style="font-weight:bold; font-size:13px; color:#991b1b;">🎯 Where to play sound?:</span>
+        <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="local"> This Device</label>
+        <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="remote" checked> Amplifier Device (Remote)</label>
       </div>
 
-      <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">घोषणा या कस्टम टेक्स्ट यहाँ लिखें:</label>
-      <input type="text" id="emergencyText" placeholder="यहाँ टेक्स्ट लिखें..." style="width:100%; margin-bottom: 10px;">
+      <label style="font-size: 13px; font-weight: 600; color: #2563eb; display: block; margin-bottom: 5px;">Write announcement or custom text here:</label>
+      <input type="text" id="emergencyText" placeholder="Write text here..." style="width:100%; margin-bottom: 10px;">
       
       <div class="row" style="gap: 8px;">
-        <button onclick="handleEmergency('only_bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. सिर्फ घंटी</button>
-        <button class="primary" onclick="handleEmergency('bell_voice')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. घंटी + वॉइस</button>
-        <button onclick="handleEmergency('only_voice')" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. सिर्फ टेक्स्ट पढ़ें</button>
+        <button onclick="handleEmergency('only_bell')" style="flex:1; background:#fff; border:1px solid #2563eb; color:#2563eb; font-weight:bold; font-size:14px;">🔔 1. Bell Only</button>
+        <button class="primary" onclick="handleEmergency('bell_voice')" style="flex:1; font-weight:bold; font-size:14px;">🔔+🔊 2. Bell + Voice</button>
+        <button onclick="handleEmergency('only_voice')" style="flex:1; background:#f0ad4e; border-color:#f0ad4e; color:#fff; font-weight:bold; font-size:14px;">🔊 3. Speak Text Only</button>
       </div>
 
       <div class="row" style="gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #fecaca;">
-        <button onclick="handleEmergency('teacher_exit')" style="flex:1; background:#eef2ff; border:1px solid #4f46e5; color:#3730a3; font-weight:bold; font-size:14px;">🎵 सॉफ्ट टोन</button>
-        <button onclick="handleEmergency('teacher_exit_voice')" style="flex:1; background:#ecfdf5; border:1px solid #059669; color:#065f46; font-weight:bold; font-size:14px;">🎵+🔊 सॉफ्ट टोन + टेक्स्ट</button>
+        <button onclick="handleEmergency('teacher_exit')" style="flex:1; background:#eef2ff; border:1px solid #4f46e5; color:#3730a3; font-weight:bold; font-size:14px;">🎵 Soft Tone</button>
+        <button onclick="handleEmergency('teacher_exit_voice')" style="flex:1; background:#ecfdf5; border:1px solid #059669; color:#065f46; font-weight:bold; font-size:14px;">🎵+🔊 Soft Tone + Text</button>
       </div>
 
     </div>
@@ -166,106 +285,106 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 <!-- ================= TAB 3: ब्रॉडकास्ट & एम्प्लीफायर ================= -->
 <div id="tabBroadcast" class="tab-pane">
   <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
-    <h2>📊 लाइव कनेक्टेड डिवाइसेस (डैशबोर्ड)</h2>
+    <h2>📊 Live Connected Devices (Dashboard)</h2>
     <div style="display:flex; gap:15px; margin-top:8px; flex-wrap:wrap;">
       <div style="background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #bbf7d0; flex:1; min-width:140px;">
-        <div style="font-size:12px; color:#166534; font-weight:600;">एक्टिव मास्टर डिवाइस</div>
+        <div style="font-size:12px; color:#166534; font-weight:600;">Active Master Devices</div>
         <div id="activeMasterCount" style="font-size:20px; font-weight:bold; color:#2563eb;">0</div>
       </div>
       <div style="background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #bbf7d0; flex:1; min-width:140px;">
-        <div style="font-size:12px; color:#166534; font-weight:600;">एक्टिव एम्प्लीफायर फोन</div>
+        <div style="font-size:12px; color:#166534; font-weight:600;">Active Amplifier Devices</div>
         <div id="activeAmpCount" style="font-size:20px; font-weight:bold; color:#15803d;">0</div>
       </div>
     </div>
-    <div id="currentDeviceRoleBadge" class="hint" style="font-weight:700; color:#14532d; margin-top:8px;">वर्तमान डिवाइस मोड: 🔊 एम्प्लीफायर (सुनने वाला)</div>
+    <div id="currentDeviceRoleBadge" class="hint" style="font-weight:700; color:#14532d; margin-top:8px;">Current Device Mode: 🔊 Amplifier (Listener)</div>
   </section>
 
   <section class="card" style="border-left: 5px solid #2563eb;">
-    <h2>🔊 रिमोट लाइव माइक और मल्टी-एम्प्लीफायर मोड</h2>
-    <div class="hint">सभी मास्टर और एम्प्लीफायर डिवाइस में एक ही रूम कोड (जैसे: `bps`) दर्ज होना चाहिए। डिफ़ॉल्ट रूप से `bps` सेव रहता है, और आप बदलकर कोई दूसरा कोड भी सेव कर सकते हैं।</div>
+    <h2>🔊 Remote Live Mic & Multi-Amplifier Mode</h2>
+    <div class="hint">All master and amplifier devices should use the same room code (e.g., `bps`). `bps` is saved by default, and you can change and save another code as well.</div>
     <div class="row" style="margin-top: 10px;">
-      <input type="text" id="roomCode" value="bps" placeholder="रूम कोड (डिफ़ॉल्ट: bps)" style="flex:1;">
+      <input type="text" id="roomCode" value="bps" placeholder="Room Code (Default: bps)" style="flex:1;">
     </div>
     <div class="row" style="margin-top: 10px;">
-      <button class="primary" onclick="startBroadcasting()">🎙️ बोलें (ब्रॉडकास्ट ऑन)</button>
-      <button class="danger" onclick="stopBroadcasting()">⏹ ब्रॉडकास्ट बंद करें</button>
+      <button class="primary" onclick="startBroadcasting()">🎙️ Speak (Broadcast On)</button>
+      <button class="danger" onclick="stopBroadcasting()">⏹ Stop Broadcast</button>
     </div>
     <div class="row" style="margin-top:8px;">
-      <button class="small primary" onclick="setAsAmplifierPhone()">🔊 इस डिवाइस को एम्प्लीफायर फोन बनाएं (ऑटो-लिसन)</button>
-      <button class="small danger" onclick="unsetAmplifierPhone()">✕ ऑटो-लिसन हटाएं</button>
+      <button class="small primary" onclick="setAsAmplifierPhone()">🔊 Set This Device as Amplifier (Auto-Listen)</button>
+      <button class="small danger" onclick="unsetAmplifierPhone()">✕ Remove Auto-Listen</button>
     </div>
-    <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">स्टेटस: तैयार है</div>
+    <div class="hint" id="streamStatus" style="font-weight:600;color:#2563eb; margin-top: 8px;">Status: Ready</div>
   </section>
 </div>
 
 <!-- ================= TAB 4: ट्रिगर्स (पासवर्ड 123 प्रोटेक्टेड) ================= -->
 <div id="tabTriggers" class="tab-pane">
   <section class="card" style="padding:10px 14px; margin-bottom:12px;">
-    <div id="triggersLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 समय सिंक हो रहा है...</div>
+    <div id="triggersLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 Syncing time...</div>
   </section>
 
   <section class="card" style="border-left: 5px solid #2563eb;">
-    <h2>⏱️ ट्रिगर्स और एम्प्लीफायर ट्रिगर (पासवर्ड प्रोटेक्टेड)</h2>
+    <h2>⏱️ Triggers और एम्प्लीफायर ट्रिगर (पासवर्ड प्रोटेक्टेड)</h2>
 
     <div id="triggerLockDiv" class="locked-box">
-      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 ट्रिगर्स सेटअप खोलने के लिए पासवर्ड (123) दर्ज करें!</p>
+      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 Enter password to unlock Triggers setup!</p>
       <div class="row" style="justify-content: center;">
-        <input type="password" id="triggerPassInput" placeholder="पासवर्ड (123)" style="max-width: 220px;">
-        <button class="primary" onclick="unlockTriggerTab()">अनलॉक करें</button>
+        <input type="password" id="triggerPassInput" placeholder="Password" style="max-width: 220px;">
+        <button class="primary" onclick="unlockTriggerTab()">Unlock</button>
       </div>
     </div>
 
     <div id="triggerContentDiv" style="display: none;">
-      <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 ट्रिगर्स अनलॉक है</p>
+      <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 Triggers Unlocked</p>
 
       <div style="background:#eff6ff; border:2px solid #93c5fd; padding:12px; border-radius:10px;">
-        <h3 style="font-size:15px; margin:0 0 8px; color:#1e3a8a;">⚡ एम्प्लीफायर ट्रिगर टाइमर सेटअप</h3>
-        <div class="hint" style="margin-top:0;">तय समय पर क्या बजना चाहिए चुनें, टेक्स्ट लिखें (यदि ज़रूरी हो) और समय सेव करें:</div>
+        <h3 style="font-size:15px; margin:0 0 8px; color:#1e3a8a;">⚡ Amplifier Trigger Timer Setup</h3>
+        <div class="hint" style="margin-top:0;">Select what should play at the scheduled time, enter text (if needed), and save time:</div>
 
         <div class="mode-choice-grid" id="triggerModeGrid">
           <label class="mode-choice-card selected" id="card_only_bell">
             <input type="radio" name="triggerPresetMode" value="only_bell" checked onchange="onTriggerModeChange()">
-            <span>🔔 1. सिर्फ घंटी</span>
+            <span>🔔 1. Bell Only</span>
           </label>
           <label class="mode-choice-card" id="card_bell_voice">
             <input type="radio" name="triggerPresetMode" value="bell_voice" onchange="onTriggerModeChange()">
-            <span>🔔+🔊 2. घंटी + वॉइस</span>
+            <span>🔔+🔊 2. Bell + Voice</span>
           </label>
           <label class="mode-choice-card" id="card_only_voice">
             <input type="radio" name="triggerPresetMode" value="only_voice" onchange="onTriggerModeChange()">
-            <span>🔊 3. सिर्फ टेक्स्ट पढ़ें</span>
+            <span>🔊 3. Speak Text Only</span>
           </label>
           <label class="mode-choice-card" id="card_teacher_exit">
             <input type="radio" name="triggerPresetMode" value="teacher_exit" onchange="onTriggerModeChange()">
-            <span>🎵 सॉफ्ट टोन</span>
+            <span>🎵 Soft Tone</span>
           </label>
           <label class="mode-choice-card" id="card_teacher_exit_voice">
             <input type="radio" name="triggerPresetMode" value="teacher_exit_voice" onchange="onTriggerModeChange()">
-            <span>🎵+🔊 सॉफ्ट टोन + टेक्स्ट</span>
+            <span>🎵+🔊 Soft Tone + Text</span>
           </label>
         </div>
 
         <div class="row" style="margin-top:10px;">
-          <label style="font-size:13px; font-weight:600; color:#1e3a8a;">घोषणा या कस्टम टेक्स्ट (ट्रिगर के लिए):</label>
-          <input type="text" id="triggerCustomText" placeholder="यहाँ ट्रिगर का टेक्स्ट लिखें..." style="width:100%;">
+          <label style="font-size:13px; font-weight:600; color:#1e3a8a;">Announcement or custom text (for trigger):</label>
+          <input type="text" id="triggerCustomText" placeholder="Write trigger text here..." style="width:100%;">
         </div>
 
         <div class="row" style="margin-top:10px;">
-          <label style="font-weight:600; font-size:14px;"><input type="checkbox" id="triggerTimerEnabled" checked> टाइमर चालू रखें</label>
+          <label style="font-weight:600; font-size:14px;"><input type="checkbox" id="triggerTimerEnabled" checked> Keep timer enabled</label>
         </div>
 
         <div class="row">
-          <label for="triggerTimerTime" style="font-weight:600; font-size:14px;">कब बजना है (समय):</label>
+          <label for="triggerTimerTime" style="font-weight:600; font-size:14px;">Schedule time:</label>
           <input type="time" id="triggerTimerTime" value="07:45" style="min-width:130px; font-weight:bold;">
-          <button class="primary" onclick="saveTriggerPreset()">💾 चुनें और टाइमर सेव करें</button>
-          <button onclick="fireTriggerNow()" style="background:#1e293b; color:#fff; font-weight:600;">⚡ एम्प्लीफायर ट्रिगर</button>
+          <button class="primary" onclick="saveTriggerPreset()">💾 Select & Save Timer</button>
+          <button onclick="fireTriggerNow()" style="background:#1e293b; color:#fff; font-weight:600;">⚡ Amplifier Trigger</button>
         </div>
 
-        <div id="triggerLiveClockBar" style="font-size:13px; font-weight:700; color:#0f172a; margin-top:6px;">🕒 वर्तमान समय: लोड हो रहा है...</div>
-        <div id="triggerTimerStatus" class="hint" style="font-weight:700; color:#1d4ed8; margin-bottom:0;">स्टेटस: कोई टाइमर सेव नहीं है</div>
+        <div id="triggerLiveClockBar" style="font-size:13px; font-weight:700; color:#0f172a; margin-top:6px;">🕒 Current time: Loading...</div>
+        <div id="triggerTimerStatus" class="hint" style="font-weight:700; color:#1d4ed8; margin-bottom:0;">Status: No timer saved</div>
       </div>
 
-      <button class="danger small" onclick="lockTriggerTab()" style="margin-top: 12px;">वापस लॉक करें</button>
+      <button class="danger small" onclick="lockTriggerTab()" style="margin-top: 12px;">Lock Again</button>
     </div>
   </section>
 </div>
@@ -273,52 +392,52 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 <!-- ================= TAB 5: सेटिंग्स, लाइब्रेरी और टाइमटेबल ================= -->
 <div id="tabAdmin" class="tab-pane">
   <section class="card" style="border-left: 5px solid #dc2626;">
-    <h2>⏰ सेटिंग्स, लाइब्रेरी और टाइमटेबल (पासवर्ड प्रोटेक्टेड)</h2>
+    <h2>⏰ Settings, Library & Timetable (Password Protected)</h2>
     
     <div id="adminLockDiv" class="locked-box">
-      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 अनाउंसमेंट लाइब्रेरी और रूटीन में बदलाव करने के लिए लॉक खुला होना चाहिए!</p>
+      <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 Unlock to edit Announcement Library and Routine!</p>
       <div class="row" style="justify-content: center;">
-        <input type="password" id="adminPassInput" placeholder="पासवर्ड" style="max-width: 220px;">
-        <button class="primary" onclick="unlockAdminSettings()">अनलॉक करें</button>
+        <input type="password" id="adminPassInput" placeholder="Password" style="max-width: 220px;">
+        <button class="primary" onclick="unlockAdminSettings()">Unlock</button>
       </div>
     </div>
 
     <div id="adminContentDiv" style="display: none;">
-      <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 सेटिंग्स अनलॉक है (अब आप बदलाव कर सकते हैं)</p>
+      <p style="color: #16a34a; font-weight: bold; margin-bottom: 10px;">🔓 Settings Unlocked (You can make changes now)</p>
       
       <div style="background:#eef2f7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div>
-          <div style="font-weight:bold; color:#12213a;">☁️ क्लाउड सिंक स्टेटस</div>
-          <div id="syncStatusText" style="font-size:13px; color:#16a34a; font-weight:600;">लोकल स्टोरेज पर सुरक्षित है</div>
+          <div style="font-weight:bold; color:#12213a;">☁️ Cloud Sync Status</div>
+          <div id="syncStatusText" style="font-size:13px; color:#16a34a; font-weight:600;">Saved in Local Storage</div>
           <label style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:13px; font-weight:600; color:#1e3a8a; cursor:pointer;">
             <input type="checkbox" id="autoSyncRoutineCheckbox" onchange="toggleAutoSyncRoutine()">
-            <span>रूटीन ऑटो सिंक (पेज खुलने पर क्लाउड से लास्ट डेटा ऑटो-फ़ेच)</span>
+            <span>Routine Auto Sync (Auto-fetch last cloud data on page load)</span>
           </label>
         </div>
         <div style="display:flex; gap:8px;">
-          <button class="primary" onclick="syncToCloudNow()">☁️ क्लाउड पर सेव/सिंक करें</button>
-          <button onclick="fetchFromCloudNow()">🔄 क्लाउड से डेटा लाएं</button>
+          <button class="primary" onclick="syncToCloudNow()">☁️ Save/Sync to Cloud</button>
+          <button onclick="fetchFromCloudNow()">🔄 Fetch from Cloud</button>
         </div>
       </div>
 
       <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid var(--line);">
-        <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 अनाउंसमेंट लाइब्रेरी</h3>
+        <h3 style="font-size:15px; margin-top:0; color:#12213a;">📢 Announcement Library</h3>
         <div class="row">
-          <input type="text" id="annTitle" placeholder="नाम जैसे: First Period">
-          <input type="text" id="annText" placeholder="बोले जाने वाला टेक्स्ट...">
-          <button class="primary" onclick="saveAnnouncement()">+ सेव करें</button>
+          <input type="text" id="annTitle" placeholder="Name e.g. First Period">
+          <input type="text" id="annText" placeholder="Text to speak...">
+          <button class="primary" onclick="saveAnnouncement()">+ Save</button>
         </div>
         <div id="annList"></div>
       </div>
 
       <div style="background:#f9f9f9; padding:10px; border-radius:8px; border:1px solid var(--line);">
-        <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ टाइमटेबल और रूटीन</h3>
+        <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ Timetable & Routine</h3>
         <div class="days row" id="daysRow"></div>
         <div id="items"></div>
-        <div class="row"><button onclick="addItem()">+ नया समय/घंटी जोड़ें</button></div>
+        <div class="row"><button onclick="addItem()">+ Add New Time / Bell</button></div>
       </div>
 
-      <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 15px;">वापस लॉक करें</button>
+      <button class="danger small" onclick="lockAdminSettings()" style="margin-top: 15px;">Lock Again</button>
     </div>
   </section>
 </div>
@@ -346,12 +465,12 @@ try {
 } catch(e) {}
 
 const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const DNAMES={"Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"गुरु","Fri":"शुक्र","Sat":"शनि","Sun":"रवि"};
+const DNAMES={"Mon":"Mon","Tue":"Tue","Wed":"Wed","Thu":"Thu","Fri":"Fri","Sat":"Sat","Sun":"Sun"};
 
 let defaultData = {
   announcements: [
-    { id: "a1", title: "प्रार्थना", text: "प्रार्थना का समय हो गया है, सभी छात्र मैदान में आएं" },
-    { id: "a2", title: "फर्स्ट पीरियड", text: "प्रथम घंटी बज चुकी है, कक्षा में जाएं" }
+    { id: "a1", title: "Prayer", text: "Prayer का समय हो गया है, सभी छात्र मैदान में आएं" },
+    { id: "a2", title: "First Period", text: "The first bell has rung, please go to your classrooms" }
   ],
   items:[{time:"08:00", label:"Assembly", mode:"bell_voice", bellCount:1, voiceCount:1, annId:"a1"}],
   days:"all",
@@ -404,11 +523,11 @@ audioEl.src = DEFAULT_BELL_URL;
 softToneEl.src = SOFT_TONE_URL;
 
 const MODE_LABELS = {
-  only_bell: "🔔 1. सिर्फ घंटी",
-  bell_voice: "🔔+🔊 2. घंटी + वॉइस",
-  only_voice: "🔊 3. सिर्फ टेक्स्ट पढ़ें",
-  teacher_exit: "🎵 सॉफ्ट टोन",
-  teacher_exit_voice: "🎵+🔊 सॉफ्ट टोन + टेक्स्ट"
+  only_bell: "🔔 1. Bell Only",
+  bell_voice: "🔔+🔊 2. Bell + Voice",
+  only_voice: "🔊 3. Speak Text Only",
+  teacher_exit: "🎵 Soft Tone",
+  teacher_exit_voice: "🎵+🔊 Soft Tone + Text"
 };
 
 function switchTab(tabId) {
@@ -428,9 +547,9 @@ function unlockTriggerTab() {
   if (pass === '123') {
     document.getElementById('triggerLockDiv').style.display = 'none';
     document.getElementById('triggerContentDiv').style.display = 'block';
-    toast('ट्रिगर्स टैब अनलॉक हो गया है!');
+    toast('Triggers tab unlocked!');
   } else {
-    toast('रॉन्ग पासवर्ड! (सही पासवर्ड: 123)');
+    toast('Wrong password!');
   }
 }
 
@@ -438,7 +557,7 @@ function lockTriggerTab() {
   document.getElementById('triggerLockDiv').style.display = 'block';
   document.getElementById('triggerContentDiv').style.display = 'none';
   document.getElementById('triggerPassInput').value = '';
-  toast('ट्रिगर्स टैब लॉक कर दिया गया है।');
+  toast('Triggers tab locked.');
 }
 
 function onTriggerModeChange() {
@@ -466,17 +585,34 @@ function renderTriggerPresetUI() {
   updateTriggerStatusText();
 }
 
+function updateHeaderTriggerBadge() {
+  const el = document.getElementById("headerTriggerTime");
+  if(!el) return;
+  if(!triggerPreset || !triggerPreset.time) {
+    el.textContent = "⚡ Trigger Time: --:--";
+    return;
+  }
+  if(triggerPreset.enabled) {
+    el.style.opacity = "1";
+    el.textContent = `⚡ Trigger Time: ${triggerPreset.time}`;
+  } else {
+    el.style.opacity = "0.75";
+    el.textContent = `⚡ Trigger Time: ${triggerPreset.time} (बंद)`;
+  }
+}
+
 function updateTriggerStatusText() {
   const statusEl = document.getElementById("triggerTimerStatus");
   if(!statusEl) return;
   const modeName = MODE_LABELS[triggerPreset.mode] || triggerPreset.mode;
   if(triggerPreset.enabled) {
     statusEl.style.color = "#15803d";
-    statusEl.textContent = `🟢 सेव है: रोज ${triggerPreset.time} बजे | मोड: ${modeName} | लक्ष्य: एम्प्लीफायर ट्रिगर (रिमोट)`;
+    statusEl.textContent = `🟢 Saved: Daily at ${triggerPreset.time} | Mode: ${modeName} | Target: Amplifier Trigger (Remote)`;
   } else {
     statusEl.style.color = "#6b7280";
-    statusEl.textContent = `⚪ टाइमर बंद है (सेव मोड: ${modeName}, समय: ${triggerPreset.time})`;
+    statusEl.textContent = `⚪ Timer off (Saved mode: ${modeName}, Time: ${triggerPreset.time})`;
   }
+  updateHeaderTriggerBadge();
 }
 
 function saveTriggerPreset() {
@@ -487,12 +623,12 @@ function saveTriggerPreset() {
   const time = document.getElementById("triggerTimerTime").value;
 
   if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
-    toast("कृपया सही समय चुनें!");
+    toast("Please select a valid time!");
     return;
   }
 
   if((mode === "bell_voice" || mode === "only_voice" || mode === "teacher_exit_voice") && !text) {
-    toast("इस मोड के लिए कृपया ट्रिगर टेक्स्ट बॉक्स में घोषणा लिखें!");
+    toast("Please enter announcement text in the trigger text box for this mode!");
     return;
   }
 
@@ -502,12 +638,12 @@ function saveTriggerPreset() {
 
   if(db) {
     db.ref(TRIGGER_FIREBASE_PATH).set(triggerPreset).then(() => {
-      toast("✅ ट्रिगर टाइमर लोकल और ऑनलाइन (Firebase) दोनों पर सेव हो गया!");
+      toast("✅ Trigger timer saved locally and online (Firebase)!");
     }).catch(err => {
-      toast("✅ लोकल सेव हुआ, ऑनलाइन सिंक में त्रुटि: " + err.message);
+      toast("✅ Saved locally, online sync error: " + err.message);
     });
   } else {
-    toast("✅ एम्प्लीफायर ट्रिगर मोड और टाइमर सेव हो गया है!");
+    toast("✅ Amplifier trigger mode and timer saved!");
   }
 }
 
@@ -516,7 +652,7 @@ function executeTriggerCommand(presetObj, isManualTest = false) {
   const text = (presetObj.text || "").trim();
 
   if(!db) {
-    toast("फायरबेस कनेक्टेड नहीं है!");
+    toast("Firebase is not connected!");
     return;
   }
 
@@ -529,9 +665,9 @@ function executeTriggerCommand(presetObj, isManualTest = false) {
   };
 
   db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
-    toast(isManualTest ? "⚡ एम्प्लीफायर ट्रिगर भेज दिया गया!" : "⏰ टाइमर पूरा! एम्प्लीफायर ट्रिगर भेज दिया गया!");
+    toast(isManualTest ? "⚡ Amplifier Trigger भेज दिया गया!" : "⏰ टाइमर पूरा! एम्प्लीफायर ट्रिगर भेज दिया गया!");
   }).catch(err => {
-    toast("ट्रिगर भेजने में त्रुटि: " + err.message);
+    toast("Error sending trigger: " + err.message);
   });
 }
 
@@ -541,7 +677,7 @@ function fireTriggerNow() {
   const text = document.getElementById("triggerCustomText").value.trim();
 
   if((mode === "bell_voice" || mode === "only_voice" || mode === "teacher_exit_voice") && !text) {
-    toast("कृपया पहले ट्रिगर टेक्स्ट बॉक्स में कुछ लिखें!");
+    toast("Please enter some text in the trigger text box first!");
     return;
   }
 
@@ -574,7 +710,7 @@ async function syncInternetTime() {
 }
 
 function syncToCloudNow() {
-  if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
+  if(!db) { toast("Firebase is not connected!"); return; }
   const payload = Object.assign({}, st, {
     announcements: st.announcements || [],
     items: st.items || [],
@@ -584,16 +720,16 @@ function syncToCloudNow() {
   });
   db.ref("school_bell_system").set(payload).then(() => {
     const statusEl = document.getElementById("syncStatusText");
-    if(statusEl) statusEl.innerText = "🟢 क्लाउड पर सफलतापूर्वक सिंक हो गया है";
-    toast("डेटा क्लाउड पर सफलतापूर्वक सेव हो गया!");
+    if(statusEl) statusEl.innerText = "🟢 Successfully synced to cloud";
+    toast("Data saved to cloud successfully!");
   }).catch(err => {
-    toast("सिंक फेल हो गया: " + err.message);
+    toast("Sync failed: " + err.message);
   });
 }
 
 function fetchFromCloudNow(isAutoFetch = false) {
   if(!db) {
-    if(!isAutoFetch) toast("फायरबेस कनेक्टेड नहीं है!");
+    if(!isAutoFetch) toast("Firebase is not connected!");
     return;
   }
   db.ref("school_bell_system").once("value").then((snapshot) => {
@@ -602,14 +738,14 @@ function fetchFromCloudNow(isAutoFetch = false) {
       applyCloudRoutineSnapshot(serverData, isAutoFetch);
       if(!isAutoFetch) {
         const statusEl = document.getElementById("syncStatusText");
-        if(statusEl) statusEl.innerText = "🟢 क्लाउड से डेटा आ गया है";
-        toast("क्लाउड से लेटेस्ट डेटा लोड हो गया!");
+        if(statusEl) statusEl.innerText = "🟢 Data fetched from cloud";
+        toast("Latest data loaded from cloud!");
       }
     } else if(!isAutoFetch) {
-      toast("क्लाउड पर कोई डेटा नहीं मिला।");
+      toast("No data found on cloud.");
     }
   }).catch(() => {
-    if(!isAutoFetch) toast("डेटा लाने में त्रुटि हुई।");
+    if(!isAutoFetch) toast("Error fetching data.");
   });
 }
 
@@ -618,9 +754,9 @@ function unlockAdminSettings() {
   if (pass === '123') {
     document.getElementById('adminLockDiv').style.display = 'none';
     document.getElementById('adminContentDiv').style.display = 'block';
-    toast('सेटिंग्स और लाइब्रेरी अनलॉक हो गई हैं!');
+    toast('Settings and library unlocked!');
   } else {
-    toast('रॉन्ग पासवर्ड!');
+    toast('Wrong password!');
   }
 }
 
@@ -628,7 +764,7 @@ function lockAdminSettings() {
   document.getElementById('adminLockDiv').style.display = 'block';
   document.getElementById('adminContentDiv').style.display = 'none';
   document.getElementById('adminPassInput').value = '';
-  toast('सेटिंग्स लॉक कर दी गई हैं।');
+  toast('Settings locked.');
 }
 
 async function requestWakeLock() {
@@ -684,8 +820,8 @@ function applyCloudRoutineSnapshot(serverData, showToastMsg = false) {
   initRoomCodeField();
   showNext();
   const statusEl = document.getElementById("syncStatusText");
-  if(statusEl) statusEl.innerText = "🟢 रूटीन ऑटो-सिंक चालू: क्लाउड से लास्ट डेटा फ़ेच हुआ";
-  if(showToastMsg) toast("🔄 क्लाउड से लास्ट अपलोडेड रूटीन ऑटो-लोड हो गया!");
+  if(statusEl) statusEl.innerText = "🟢 Routine Auto-Sync On: Last cloud data fetched";
+  if(showToastMsg) toast("🔄 Last uploaded routine auto-loaded from cloud!");
   setTimeout(() => { isApplyingRemoteRoutine = false; }, 100);
 }
 
@@ -695,8 +831,8 @@ function renderAutoSyncRoutineUI() {
   const statusEl = document.getElementById("syncStatusText");
   if(statusEl) {
     statusEl.innerText = autoSyncRoutineEnabled
-      ? "🟢 रूटीन ऑटो-सिंक चालू है (पेज खुलने पर क्लाउड से लास्ट डेटा फ़ेच होगा)"
-      : "लोकल स्टोरेज पर सुरक्षित है (ऑटो-सिंक बंद — बटन दबाने पर ही सिंक/फ़ेच होगा)";
+      ? "🟢 Routine Auto-Sync On (Auto-fetches last cloud data on page load)"
+      : "Saved in Local Storage (ऑटो-सिंक बंद — बटन दबाने पर ही सिंक/फ़ेच होगा)";
   }
 }
 
@@ -707,10 +843,10 @@ function toggleAutoSyncRoutine() {
   renderAutoSyncRoutineUI();
 
   if(autoSyncRoutineEnabled) {
-    toast("✅ रूटीन ऑटो-सिंक चालू! क्लाउड से लास्ट डेटा फ़ेच किया जा रहा है...");
+    toast("✅ Routine Auto-Sync On! Fetching last cloud data...");
     fetchFromCloudNow(true);
   } else {
-    toast("⚪ रूटीन ऑटो-सिंक बंद। अब केवल बटन दबाने पर सिंक/फ़ेच होगा।");
+    toast("⚪ Routine Auto-Sync Off. Manual buttons will be used.");
   }
 }
 
@@ -890,15 +1026,15 @@ function handleEmergency(actionType) {
   const customText = document.getElementById("emergencyText").value.trim();
 
   if((actionType === 'bell_voice' || actionType === 'only_voice' || actionType === 'teacher_exit_voice') && !customText) {
-    toast("कृपया पहले टेक्स्ट बॉक्स में कुछ लिखें!");
+    toast("Please enter some text in the text box first!");
     return;
   }
 
   if(target === 'local') {
     executeBellRoutine(actionType, 1, 1, customText, null);
-    toast("इसी फोन पर एक्शन ले लिया गया है!");
+    toast("This Device एक्शन ले लिया गया है!");
   } else {
-    if(!db) { toast("फायरबेस कनेक्टेड नहीं है!"); return; }
+    if(!db) { toast("Firebase is not connected!"); return; }
     const commandData = {
       mode: actionType,
       bellCount: 1,
@@ -907,21 +1043,21 @@ function handleEmergency(actionType) {
       timestamp: Date.now()
     };
     db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
-      toast("🚀 एम्प्लीफायर फोन पर कमांड भेज दी गई है!");
+      toast("🚀 Command sent to amplifier device!");
     }).catch(err => {
-      toast("कमांड भेजने में असफल: " + err.message);
+      toast("Failed to send command: " + err.message);
     });
   }
 }
 
 function testBellOnlyLocal() {
   executeBellRoutine('only_bell', 1, 1, "", null);
-  toast("सिर्फ घंटी बज रही है");
+  toast("Playing bell only");
 }
 
 function testTeacherToneLocal() {
   executeBellRoutine('teacher_exit', 1, 1, "", null);
-  toast("सॉफ्ट टोन बज रही है");
+  toast("Playing soft tone");
 }
 
 function stopSound(){
@@ -985,11 +1121,11 @@ function updateRoleBadgeUI() {
   const badge = document.getElementById("currentDeviceRoleBadge");
   if(!badge) return;
   if(isBroadcastingActive) {
-    badge.textContent = "वर्तमान डिवाइस मोड: 🎙️ मास्टर (लाइव बोल रहा है — इको से बचने के लिए खुद का रिसीवर म्यूट/बंद है)";
+    badge.textContent = "Current Device Mode: 🎙️ Master (Live speaking — self-receiver disabled to prevent echo)";
   } else if(st.isAmplifierDevice) {
-    badge.textContent = "वर्तमान डिवाइस मोड: 🔊 एम्प्लीफायर (सुनने वाला)";
+    badge.textContent = "Current Device Mode: 🔊 Amplifier (Listener)";
   } else {
-    badge.textContent = "वर्तमान डिवाइस मोड: ⚪ निष्क्रिय / ऑफ़";
+    badge.textContent = "Current Device Mode: ⚪ Idle / Off";
   }
 }
 
@@ -1003,7 +1139,7 @@ function setAsAmplifierPhone(){
   st.amplifierOptOut = false;
   save();
   updateRoleBadgeUI();
-  toast("एम्प्लीफायर फोन सेट हो गया है।");
+  toast("Device set as amplifier.");
   startAutoListener();
   updateDevicePresence();
 }
@@ -1019,7 +1155,7 @@ function unsetAmplifierPhone(){
   save();
   cleanupPeerConnection(true);
   updateRoleBadgeUI();
-  toast("एम्प्लीफायर मोड हटा दिया गया है।");
+  toast("Amplifier mode removed.");
   updateDevicePresence();
 }
 
@@ -1035,7 +1171,7 @@ function startAutoListener(){
   peer.on('open', (id) => {
     const stEl = document.getElementById("streamStatus");
     if(stEl && !isBroadcastingActive) {
-      stEl.textContent = "स्टेटस: 🟢 एम्प्लीफायर तैयार है (" + code + ")...";
+      stEl.textContent = "Status: 🟢 Amplifier ready (" + code + ")...";
     }
   });
 
@@ -1052,19 +1188,19 @@ function startAutoListener(){
       activeRemoteAudioEls.push(audio);
       audio.play().catch(e => {});
       const stEl = document.getElementById("streamStatus");
-      if(stEl) stEl.textContent = "स्टेटस: 🟢 लाइव आवाज़ आ रही है...";
+      if(stEl) stEl.textContent = "Status: 🟢 Receiving live audio...";
     });
   });
 
   peer.on('error', (err) => {
     const stEl = document.getElementById("streamStatus");
-    if(stEl && !isBroadcastingActive) stEl.textContent = "एरर: " + err.type;
+    if(stEl && !isBroadcastingActive) stEl.textContent = "Error: " + err.type;
   });
 }
 
 function startBroadcasting(){
   const code = (document.getElementById("roomCode").value.trim() || st.roomCode || "bps");
-  if(!code){ toast("रूम कोड दर्ज करें!"); return; }
+  if(!code){ toast("Please enter a room code!"); return; }
 
   wasAmplifierBeforeBroadcast = !!st.isAmplifierDevice;
   isBroadcastingActive = true;
@@ -1091,7 +1227,7 @@ function startBroadcasting(){
     peer.on('open', id => {
       if(!isBroadcastingActive) return;
       const stEl = document.getElementById("streamStatus");
-      if(stEl) stEl.textContent = "स्टेटस: 🔴 एम्प्लीफायर खोजे जा रहे हैं...";
+      if(stEl) stEl.textContent = "Status: 🔴 Searching for amplifiers...";
 
       const callAvailableAmplifiers = (devicesObj) => {
         const devices = devicesObj || latestConnectedDevices || {};
@@ -1110,9 +1246,9 @@ function startBroadcasting(){
         });
 
         if(stEl) {
-          stEl.textContent = `स्टेटस: 🔴 ब्रॉडकास्ट लाइव (${connectedCount} एम्प्लीफायर से कनेक्टेड — रूम: ${code})`;
+          stEl.textContent = `Status: 🔴 Broadcast Live (${connectedCount} amplifiers connected — Room: ${code})`;
         }
-        toast(`ब्रॉडकास्ट शुरू! ${connectedCount} एम्प्लीफायर कनेक्ट हुए।`);
+        toast(`Broadcast started! ${connectedCount} amplifiers connected.`);
       };
 
       if(db) {
@@ -1132,7 +1268,7 @@ function startBroadcasting(){
     updateRoleBadgeUI();
     updateDevicePresence();
     if(st.isAmplifierDevice) startAutoListener();
-    toast("माइक अनुमति नहीं मिली: " + e.message);
+    toast("Microphone permission denied: " + e.message);
   });
 }
 
@@ -1151,8 +1287,8 @@ function stopBroadcasting(){
   }
 
   const stEl = document.getElementById("streamStatus");
-  if(stEl) stEl.textContent = st.isAmplifierDevice ? "स्टेटस: 🟢 एम्प्लीफायर तैयार है (" + (st.roomCode || "bps") + ")..." : "स्टेटस: बंद है";
-  toast("ब्रॉडकास्ट बंद! डिवाइस वापस एम्प्लीफायर मोड में आ गया।");
+  if(stEl) stEl.textContent = st.isAmplifierDevice ? "Status: 🟢 Amplifier ready (" + (st.roomCode || "bps") + ")..." : "Status: Stopped";
+  toast("Broadcast stopped! Device returned to amplifier mode.");
 }
 
 function computeDeviceCounts(devicesObj) {
@@ -1222,25 +1358,25 @@ function initPresenceSystem() {
 function saveAnnouncement(){
   const title = document.getElementById("annTitle").value.trim();
   const text = document.getElementById("annText").value.trim();
-  if(!title || !text){ toast("कृपया नाम और टेक्स्ट भरें!"); return; }
+  if(!title || !text){ toast("Please enter both name and text!"); return; }
   st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
   save();
   document.getElementById("annTitle").value = "";
   document.getElementById("annText").value = "";
-  toast("अनाउंसमेंट सेव हो गई!");
+  toast("Announcement saved!");
   render();
 }
 
 function deleteAnnouncement(id){
   st.announcements = st.announcements.filter(a => a.id !== id);
   save();
-  toast("डिलीट हो गई");
+  toast("Deleted");
   render();
 }
 
 function startSys(){
   if(running)return;running=true;
-  document.getElementById("runState").textContent="● चालू है";
+  document.getElementById("runState").textContent="● Running";
   try{if(!quietEl)makeQuietLoop();quietEl.currentTime=0;quietEl.play();}catch(e){}
   requestWakeLock();
 }
@@ -1281,7 +1417,8 @@ function showNext(){
   const items=[...st.items].sort((a,b)=>a.time.localeCompare(b.time));
   let nxt=null;
   if(ok){for(const i of items){if(i.time>now){nxt=i;break;}}}
-  document.getElementById("nextBell").textContent = nxt ? ("अगली: " + nxt.time + (nxt.label ? " (" + nxt.label + ")" : "")) : "अगली: आज की समाप्त";
+  document.getElementById("nextBell").textContent = nxt ? ("Next Bell: " + nxt.time + (nxt.label ? " (" + nxt.label + ")" : "")) : "Next Bell: Done for Today";
+  updateHeaderTriggerBadge();
 
   let hours = d.getHours();
   const minutes = String(d.getMinutes()).padStart(2,'0');
@@ -1303,7 +1440,7 @@ function showNext(){
   }
   const trigClockEl = document.getElementById("triggerLiveClockBar");
   if(trigClockEl) {
-    trigClockEl.textContent = `🕒 वर्तमान समय: ${formattedClock}`;
+    trigClockEl.textContent = `🕒 Current Time: ${formattedClock}`;
   }
 }
 
@@ -1312,12 +1449,12 @@ function render(){
   if(annDiv){
     annDiv.innerHTML = "";
     if(st.announcements.length === 0){
-      annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">कोई अनाउंसमेंट नहीं है।</div>';
+      annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">No announcements available.</div>';
     } else {
       st.announcements.forEach(a => {
         const box = document.createElement("div");
         box.className = "announcement-box";
-        box.innerHTML = `<span><strong>📌 ${a.title}</strong>: "${a.text}"</span><div><button class="small primary" onclick="speakSingleText('${a.text.replace(/'/g, "")}', null)">▶ सुनें</button><button class="small danger" style="margin-left:5px;" onclick="deleteAnnouncement('${a.id}')">✕</button></div>`;
+        box.innerHTML = `<span><strong>📌 ${a.title}</strong>: "${a.text}"</span><div><button class="small primary" onclick="speakSingleText('${a.text.replace(/'/g, "")}', null)">▶ Play</button><button class="small danger" style="margin-left:5px;" onclick="deleteAnnouncement('${a.id}')">✕</button></div>`;
         annDiv.appendChild(box);
       });
     }
@@ -1342,7 +1479,7 @@ function render(){
       const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";
       t.oninput = () => { it.time=t.value; save(); };
 
-      const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="पीरियड का नाम";lblInput.style.flex="1";
+      const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="Period Name";lblInput.style.flex="1";
       lblInput.oninput = () => { it.label=lblInput.value; save(); };
 
       const del=document.createElement("button");del.className="danger small";del.textContent="✕";
@@ -1352,7 +1489,7 @@ function render(){
       const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
       const selectAnn = document.createElement("select");
       selectAnn.style.flex = "1";
-      selectAnn.innerHTML = '<option value="">-- अनाउंसमेंट चुनें --</option>';
+      selectAnn.innerHTML = '<option value="">-- Select Announcement --</option>';
       st.announcements.forEach(a => {
         const opt = document.createElement("option");
         opt.value = a.id;
@@ -1368,12 +1505,12 @@ function render(){
       
       const modeSelect = document.createElement("select");
       modeSelect.innerHTML = `
-        <option value="bell_voice" ${it.mode==='bell_voice'?'selected':''}>🔔+🗣️ लगातार (घंटी फिर वॉइस)</option>
-        <option value="alternative" ${it.mode==='alternative'?'selected':''}>🔄 अल्टरनेटिव (बारी-बारी घंटी ⇄ वॉइस)</option>
-        <option value="only_bell" ${it.mode==='only_bell'?'selected':''}>🔔 सिर्फ घंटी</option>
-        <option value="only_voice" ${it.mode==='only_voice'?'selected':''}>🗣️ सिर्फ वॉइस</option>
-        <option value="teacher_exit" ${it.mode==='teacher_exit'?'selected':''}>🎵 सॉफ्ट टोन</option>
-        <option value="teacher_exit_voice" ${it.mode==='teacher_exit_voice'?'selected':''}>🎵+🔊 सॉफ्ट टोन + वॉइस</option>
+        <option value="bell_voice" ${it.mode==='bell_voice'?'selected':''}>🔔+🗣️ Continuous (Bell then Voice)</option>
+        <option value="alternative" ${it.mode==='alternative'?'selected':''}>🔄 Alternative (Alternate Bell ⇄ Voice)</option>
+        <option value="only_bell" ${it.mode==='only_bell'?'selected':''}>🔔 Bell Only</option>
+        <option value="only_voice" ${it.mode==='only_voice'?'selected':''}>🗣️ Voice Only</option>
+        <option value="teacher_exit" ${it.mode==='teacher_exit'?'selected':''}>🎵 Soft Tone</option>
+        <option value="teacher_exit_voice" ${it.mode==='teacher_exit_voice'?'selected':''}>🎵+🔊 Soft Tone + Voice</option>
       `;
       modeSelect.style.flex = "1";
       modeSelect.onchange = () => {
@@ -1387,7 +1524,7 @@ function render(){
       const bellCountLbl = document.createElement("span");
       bellCountLbl.style.fontSize = "12px";
       bellCountLbl.style.fontWeight = "600";
-      bellCountLbl.textContent = isSoftToneMode ? "सॉफ्ट टोन:" : "घंटी:";
+      bellCountLbl.textContent = isSoftToneMode ? "Soft Tone:" : "Bell:";
       const bellCountInp = document.createElement("input");
       bellCountInp.type = "number";
       bellCountInp.min = "1";
@@ -1400,7 +1537,7 @@ function render(){
       const voiceCountLbl = document.createElement("span");
       voiceCountLbl.style.fontSize = "12px";
       voiceCountLbl.style.fontWeight = "600";
-      voiceCountLbl.textContent = "वॉइस:";
+      voiceCountLbl.textContent = "Voice:";
       const voiceCountInp = document.createElement("input");
       voiceCountInp.type = "number";
       voiceCountInp.min = "1";
@@ -1466,7 +1603,7 @@ async function initApp() {
         };
         localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
         renderTriggerPresetUI();
-        toast("🔄 ऑनलाइन ट्रिगर टाइमर अपडेट/लोड हो गया (" + triggerPreset.time + ")!");
+        toast("🔄 Online trigger time updated/loaded (" + triggerPreset.time + ")!");
       }
     });
 
@@ -1479,7 +1616,7 @@ async function initApp() {
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
         if(st.isAmplifierDevice && !isBroadcastingActive) {
           executeBellRoutine(cmd.mode || 'bell_voice', cmd.bellCount || 1, cmd.voiceCount || 1, cmd.text || "", null);
-          toast("🔔 रिमोट अनाउंसमेंट प्राप्त हुई!");
+          toast("🔔 Remote announcement received!");
         }
       }
     });
