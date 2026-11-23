@@ -204,6 +204,19 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   background:#eef2ff;
   color:#312e81
 }
+.workflow-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#ecfdf5;
+  border:1px solid #86efac;
+  color:#166534;
+  font-size:12.5px;
+  font-weight:700;
+  padding:5px 10px;
+  border-radius:8px;
+  margin-bottom:10px
+}
 </style>
 <!-- PeerJS Library -->
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
@@ -226,7 +239,7 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 </header>
 <main>
 
-<!-- 📑 टैब नेविगेशन बार (त्वरित घोषणाओं के बगल में ब्रॉडकास्ट) -->
+<!-- 📑 टैब नेविगेशन बार -->
 <div class="nav-tabs-custom">
   <button onclick="switchTab('tabClock')" id="btnTabClock" class="active">🕒 Main Screen</button>
   <button onclick="switchTab('tabEmergency')" id="btnTabEmergency">🚨 Quick Announcements</button>
@@ -255,7 +268,7 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   </section>
 
   <section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
-    <h2>🚨 Quick Announcements और कंट्रोल</h2>
+    <h2>🚨 Quick Announcements & Controls</h2>
     <div style="margin-top: 8px;">
       
       <div style="background:#fee2e2; border:1px solid #fecaca; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
@@ -317,14 +330,14 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   </section>
 </div>
 
-<!-- ================= TAB 4: ट्रिगर्स (पासवर्ड 123 प्रोटेक्टेड) ================= -->
+<!-- ================= TAB 4: ट्रिगर्स (पासवर्ड प्रोटेक्टेड) ================= -->
 <div id="tabTriggers" class="tab-pane">
   <section class="card" style="padding:10px 14px; margin-bottom:12px;">
     <div id="triggersLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 Syncing time...</div>
   </section>
 
   <section class="card" style="border-left: 5px solid #2563eb;">
-    <h2>⏱️ Triggers और एम्प्लीफायर ट्रिगर (पासवर्ड प्रोटेक्टेड)</h2>
+    <h2>⏱️ Triggers & Amplifier Trigger (Password Protected)</h2>
 
     <div id="triggerLockDiv" class="locked-box">
       <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 Enter password to unlock Triggers setup!</p>
@@ -431,7 +444,8 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
       </div>
 
       <div style="background:#f9f9f9; padding:10px; border-radius:8px; border:1px solid var(--line);">
-        <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ Timetable & Routine</h3>
+        <h3 style="font-size:15px; margin-top:0; color:#12213a;">⏰ Timetable & Routine (Multi-Timer Trigger Workflow)</h3>
+        <div class="workflow-badge">⚡ Unified Trigger-For-All Workflow: All scheduled bells automatically dispatch via Firebase Amplifier Trigger (`pendingCommand`) at their exact time</div>
         <div class="days row" id="daysRow"></div>
         <div id="items"></div>
         <div class="row"><button onclick="addItem()">+ Add New Time / Bell</button></div>
@@ -469,7 +483,7 @@ const DNAMES={"Mon":"Mon","Tue":"Tue","Wed":"Wed","Thu":"Thu","Fri":"Fri","Sat":
 
 let defaultData = {
   announcements: [
-    { id: "a1", title: "Prayer", text: "Prayer का समय हो गया है, सभी छात्र मैदान में आएं" },
+    { id: "a1", title: "Prayer", text: "It is time for morning prayer, all students please gather on the ground" },
     { id: "a2", title: "First Period", text: "The first bell has rung, please go to your classrooms" }
   ],
   items:[{time:"08:00", label:"Assembly", mode:"bell_voice", bellCount:1, voiceCount:1, annId:"a1"}],
@@ -499,7 +513,7 @@ let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "nul
   updatedAt: 0
 };
 
-// रूटीन ऑटो-फ़ेच चेकबॉक्स स्टेट (टिक होने पर पेज खुलने पर क्लाउड से लास्ट डेटा फ़ेच होगा; अनटिक होने पर बटन दबाने पर ही चलेगा)
+// रूटीन ऑटो-फ़ेच चेकबॉक्स स्टेट
 const AUTO_SYNC_ROUTINE_KEY = "schoolBellAutoSyncRoutine_v1";
 let autoSyncRoutineEnabled = JSON.parse(localStorage.getItem(AUTO_SYNC_ROUTINE_KEY) || "false") === true;
 let isApplyingRemoteRoutine = false;
@@ -514,6 +528,9 @@ let wasAmplifierBeforeBroadcast = false;
 let activeRemoteAudioEls = [];
 let activePeerCalls = [];
 let latestConnectedDevices = {};
+
+// Deduplication tracker for incoming remote commands so multi-item dispatches never clash or duplicate
+let lastProcessedCommandKey = "";
 
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg";
@@ -597,7 +614,7 @@ function updateHeaderTriggerBadge() {
     el.textContent = `⚡ Trigger Time: ${triggerPreset.time}`;
   } else {
     el.style.opacity = "0.75";
-    el.textContent = `⚡ Trigger Time: ${triggerPreset.time} (बंद)`;
+    el.textContent = `⚡ Trigger Time: ${triggerPreset.time} (Off)`;
   }
 }
 
@@ -647,9 +664,13 @@ function saveTriggerPreset() {
   }
 }
 
-function executeTriggerCommand(presetObj, isManualTest = false) {
-  const mode = presetObj.mode || "only_bell";
-  const text = (presetObj.text || "").trim();
+// Unified Trigger-For-All Dispatcher (used by Trigger Timer, Manual Trigger, Quick Announcements, and all Scheduled Routine Bells)
+function dispatchBellCommandToAmplifier(mode, bellCount, voiceCount, text, sourceLabel = "Routine Bell", onSent = null) {
+  const cleanMode = mode || "bell_voice";
+  const cleanText = (text || "").trim();
+  const cleanBellCount = parseInt(bellCount) || 1;
+  const cleanVoiceCount = parseInt(voiceCount) || 1;
+  const cmdId = "cmd_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
 
   if(!db) {
     toast("Firebase is not connected!");
@@ -657,18 +678,37 @@ function executeTriggerCommand(presetObj, isManualTest = false) {
   }
 
   const commandData = {
-    mode: mode,
-    bellCount: 1,
-    voiceCount: 1,
-    text: text,
+    cmdId: cmdId,
+    mode: cleanMode,
+    bellCount: cleanBellCount,
+    voiceCount: cleanVoiceCount,
+    text: cleanText,
+    source: sourceLabel,
+    senderId: myDeviceId,
     timestamp: Date.now()
   };
 
   db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
-    toast(isManualTest ? "⚡ Amplifier Trigger भेज दिया गया!" : "⏰ टाइमर पूरा! एम्प्लीफायर ट्रिगर भेज दिया गया!");
+    if(onSent) onSent();
   }).catch(err => {
-    toast("Error sending trigger: " + err.message);
+    toast("Error sending command: " + err.message);
   });
+}
+
+function executeTriggerCommand(presetObj, isManualTest = false) {
+  const mode = presetObj.mode || "only_bell";
+  const text = (presetObj.text || "").trim();
+
+  dispatchBellCommandToAmplifier(
+    mode,
+    1,
+    1,
+    text,
+    isManualTest ? "Manual Trigger" : "Trigger Timer",
+    () => {
+      toast(isManualTest ? "⚡ Amplifier Trigger sent!" : "⏰ Timer reached! Amplifier trigger sent!");
+    }
+  );
 }
 
 function fireTriggerNow() {
@@ -832,7 +872,7 @@ function renderAutoSyncRoutineUI() {
   if(statusEl) {
     statusEl.innerText = autoSyncRoutineEnabled
       ? "🟢 Routine Auto-Sync On (Auto-fetches last cloud data on page load)"
-      : "Saved in Local Storage (ऑटो-सिंक बंद — बटन दबाने पर ही सिंक/फ़ेच होगा)";
+      : "Saved in Local Storage (Auto-sync off — use buttons to sync/fetch)";
   }
 }
 
@@ -1032,20 +1072,10 @@ function handleEmergency(actionType) {
 
   if(target === 'local') {
     executeBellRoutine(actionType, 1, 1, customText, null);
-    toast("This Device एक्शन ले लिया गया है!");
+    toast("Action executed on this device!");
   } else {
-    if(!db) { toast("Firebase is not connected!"); return; }
-    const commandData = {
-      mode: actionType,
-      bellCount: 1,
-      voiceCount: 1,
-      text: customText,
-      timestamp: Date.now()
-    };
-    db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
+    dispatchBellCommandToAmplifier(actionType, 1, 1, customText, "Quick Announcement", () => {
       toast("🚀 Command sent to amplifier device!");
-    }).catch(err => {
-      toast("Failed to send command: " + err.message);
     });
   }
 }
@@ -1395,13 +1425,25 @@ function tick(){
     const hits=st.items.filter(i=>i.time===t);
     if(hits.length){
       log.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(log));
-      hits.forEach(i=>{
+      hits.forEach((i, idx)=>{
         let textToSay = "";
         if(i.mode !== 'only_bell' && i.mode !== 'teacher_exit' && i.annId){
           const found = st.announcements.find(a => a.id === i.annId);
           if(found) textToSay = found.text;
         }
-        executeBellRoutine(i.mode || 'bell_voice', i.bellCount || 1, i.voiceCount || 1, textToSay, null);
+        const m = i.mode || 'bell_voice';
+        const bCount = i.bellCount || 1;
+        const vCount = i.voiceCount || 1;
+        // Stagger by 120ms if multiple routine items share the exact same HH:MM so Firebase pendingCommand triggers cleanly for each
+        setTimeout(() => {
+          if(db) {
+            dispatchBellCommandToAmplifier(m, bCount, vCount, textToSay, "Routine Bell", () => {
+              toast("🔔 Scheduled bell triggered for all amplifiers!");
+            });
+          } else {
+            executeBellRoutine(m, bCount, vCount, textToSay, null);
+          }
+        }, idx * 120);
       });
       showNext();
     }
@@ -1549,7 +1591,7 @@ function render(){
 
       const playBtn = document.createElement("button");
       playBtn.className = "small primary";
-      playBtn.textContent = "▶ टेस्ट";
+      playBtn.textContent = "▶ Test";
       playBtn.onclick = () => {
         let tText = "";
         if(it.mode !== 'only_bell' && it.mode !== 'teacher_exit' && it.annId){
@@ -1614,9 +1656,14 @@ async function initApp() {
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
       if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
+        const dedupKey = cmd.cmdId || (cmd.timestamp + "_" + (cmd.mode || "") + "_" + (cmd.text || ""));
+        if(dedupKey === lastProcessedCommandKey) return;
+        lastProcessedCommandKey = dedupKey;
+
         if(st.isAmplifierDevice && !isBroadcastingActive) {
           executeBellRoutine(cmd.mode || 'bell_voice', cmd.bellCount || 1, cmd.voiceCount || 1, cmd.text || "", null);
-          toast("🔔 Remote announcement received!");
+          const label = cmd.source ? ` (${cmd.source})` : "";
+          toast(`🔔 Remote bell/announcement received${label}!`);
         }
       }
     });
