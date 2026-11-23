@@ -647,9 +647,12 @@ function saveTriggerPreset() {
   }
 }
 
-function executeTriggerCommand(presetObj, isManualTest = false) {
-  const mode = presetObj.mode || "only_bell";
-  const text = (presetObj.text || "").trim();
+function dispatchBellCommandToAmplifier(mode, bellCount, voiceCount, text, sourceLabel = "Routine Bell", onSent = null) {
+  const cleanMode = mode || "bell_voice";
+  const cleanText = (text || "").trim();
+  const cleanBellCount = parseInt(bellCount) || 1;
+  const cleanVoiceCount = parseInt(voiceCount) || 1;
+  const cmdId = "cmd_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
 
   if(!db) {
     toast("Firebase is not connected!");
@@ -657,18 +660,37 @@ function executeTriggerCommand(presetObj, isManualTest = false) {
   }
 
   const commandData = {
-    mode: mode,
-    bellCount: 1,
-    voiceCount: 1,
-    text: text,
+    cmdId: cmdId,
+    mode: cleanMode,
+    bellCount: cleanBellCount,
+    voiceCount: cleanVoiceCount,
+    text: cleanText,
+    source: sourceLabel,
+    senderId: myDeviceId,
     timestamp: Date.now()
   };
 
   db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
-    toast(isManualTest ? "⚡ Amplifier Trigger भेज दिया गया!" : "⏰ टाइमर पूरा! एम्प्लीफायर ट्रिगर भेज दिया गया!");
+    if(onSent) onSent();
   }).catch(err => {
-    toast("Error sending trigger: " + err.message);
+    toast("Error sending command: " + err.message);
   });
+}
+
+function executeTriggerCommand(presetObj, isManualTest = false) {
+  const mode = presetObj.mode || "only_bell";
+  const text = (presetObj.text || "").trim();
+
+  dispatchBellCommandToAmplifier(
+    mode,
+    1,
+    1,
+    text,
+    isManualTest ? "Manual Trigger" : "Trigger Timer",
+    () => {
+      toast(isManualTest ? "⚡ Amplifier Trigger sent!" : "⏰ Timer reached! Amplifier trigger sent!");
+    }
+  );
 }
 
 function fireTriggerNow() {
@@ -689,7 +711,8 @@ function checkTriggerTimer(now) {
   if(hhmm(now) !== triggerPreset.time) return;
 
   const dateKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
-  const firedKey = "schoolBellTriggerLastFired_" + triggerPreset.time;
+  const ver = triggerPreset.updatedAt || 0;
+  const firedKey = "schoolBellTriggerLastFired_" + triggerPreset.time + "_" + ver;
   if(localStorage.getItem(firedKey) === dateKey) return;
 
   localStorage.setItem(firedKey, dateKey);
@@ -1034,18 +1057,8 @@ function handleEmergency(actionType) {
     executeBellRoutine(actionType, 1, 1, customText, null);
     toast("This Device एक्शन ले लिया गया है!");
   } else {
-    if(!db) { toast("Firebase is not connected!"); return; }
-    const commandData = {
-      mode: actionType,
-      bellCount: 1,
-      voiceCount: 1,
-      text: customText,
-      timestamp: Date.now()
-    };
-    db.ref("school_bell_system/pendingCommand").set(commandData).then(() => {
+    dispatchBellCommandToAmplifier(actionType, 1, 1, customText, "Quick Announcement", () => {
       toast("🚀 Command sent to amplifier device!");
-    }).catch(err => {
-      toast("Failed to send command: " + err.message);
     });
   }
 }
@@ -1395,13 +1408,24 @@ function tick(){
     const hits=st.items.filter(i=>i.time===t);
     if(hits.length){
       log.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(log));
-      hits.forEach(i=>{
+      hits.forEach((i, idx)=>{
         let textToSay = "";
         if(i.mode !== 'only_bell' && i.mode !== 'teacher_exit' && i.annId){
           const found = st.announcements.find(a => a.id === i.annId);
           if(found) textToSay = found.text;
         }
-        executeBellRoutine(i.mode || 'bell_voice', i.bellCount || 1, i.voiceCount || 1, textToSay, null);
+        const m = i.mode || 'bell_voice';
+        const bCount = i.bellCount || 1;
+        const vCount = i.voiceCount || 1;
+        setTimeout(() => {
+          if(db) {
+            dispatchBellCommandToAmplifier(m, bCount, vCount, textToSay, "Routine Bell", () => {
+              toast("🔔 Scheduled bell triggered via Firebase!");
+            });
+          } else {
+            executeBellRoutine(m, bCount, vCount, textToSay, null);
+          }
+        }, idx * 120);
       });
       showNext();
     }
@@ -1611,12 +1635,20 @@ async function initApp() {
       fetchFromCloudNow(true);
     }
 
+    let lastSeenCmdKey = "";
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
-      if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
-        if(st.isAmplifierDevice && !isBroadcastingActive) {
+      if(!cmd || !cmd.timestamp) return;
+      const ageMs = Math.abs(Date.now() - Number(cmd.timestamp));
+      if(ageMs < 15000) {
+        const dedupKey = String(cmd.cmdId || (cmd.timestamp + "_" + (cmd.mode || "") + "_" + (cmd.text || "")));
+        if(dedupKey === lastSeenCmdKey) return;
+        lastSeenCmdKey = dedupKey;
+
+        if(!isBroadcastingActive) {
           executeBellRoutine(cmd.mode || 'bell_voice', cmd.bellCount || 1, cmd.voiceCount || 1, cmd.text || "", null);
-          toast("🔔 Remote announcement received!");
+          const srcInfo = cmd.source ? ` (${cmd.source})` : "";
+          toast(`🔔 Remote announcement received${srcInfo}!`);
         }
       }
     });
