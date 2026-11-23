@@ -1254,7 +1254,6 @@ async function initApp() {
   }
 
   if(db) {
-    // Auto-fetch & live auto-sync triggerPreset from Firebase
     db.ref(TRIGGER_FIREBASE_PATH).once("value").then((snapshot) => {
       if(snapshot.exists()) {
         applyRemoteTriggerPreset(snapshot.val(), false);
