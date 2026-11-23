@@ -729,7 +729,8 @@ function checkTriggerTimer(now) {
   if(hhmm(now) !== triggerPreset.time) return;
 
   const dateKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
-  const firedKey = "schoolBellTriggerLastFired_" + triggerPreset.time;
+  const ver = triggerPreset.updatedAt || 0;
+  const firedKey = "schoolBellTriggerLastFired_" + triggerPreset.time + "_" + ver;
   if(localStorage.getItem(firedKey) === dateKey) return;
 
   localStorage.setItem(firedKey, dateKey);
@@ -1655,12 +1656,14 @@ async function initApp() {
 
     db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
       const cmd = snapshot.val();
-      if(cmd && cmd.timestamp && (Date.now() - cmd.timestamp < 5000)) {
-        const dedupKey = cmd.cmdId || (cmd.timestamp + "_" + (cmd.mode || "") + "_" + (cmd.text || ""));
+      if(!cmd || !cmd.timestamp) return;
+      const ageMs = Math.abs(Date.now() - Number(cmd.timestamp));
+      if(ageMs < 15000) {
+        const dedupKey = String(cmd.cmdId || (cmd.timestamp + "_" + (cmd.mode || "") + "_" + (cmd.text || "")));
         if(dedupKey === lastProcessedCommandKey) return;
         lastProcessedCommandKey = dedupKey;
 
-        if(st.isAmplifierDevice && !isBroadcastingActive) {
+        if(!isBroadcastingActive) {
           executeBellRoutine(cmd.mode || 'bell_voice', cmd.bellCount || 1, cmd.voiceCount || 1, cmd.text || "", null);
           const label = cmd.source ? ` (${cmd.source})` : "";
           toast(`🔔 Remote bell/announcement received${label}!`);
