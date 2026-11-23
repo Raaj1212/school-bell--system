@@ -151,7 +151,6 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   margin-bottom:10px
 }
 
-/* 📑 टैब नेविगेशन स्टाइल */
 .nav-tabs-custom{
   display:flex;
   gap:6px;
@@ -180,7 +179,6 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
 
-/* 🎯 ट्रिगर मोड सिलेक्शन कार्ड स्टाइल */
 .mode-choice-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
@@ -205,12 +203,9 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   color:#312e81
 }
 </style>
-<!-- PeerJS Library -->
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<!-- Bootstrap JS Bundle CDN -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
@@ -226,7 +221,6 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
 </header>
 <main>
 
-<!-- 📑 टैब नेविगेशन बार (त्वरित घोषणाओं के बगल में ब्रॉडकास्ट) -->
 <div class="nav-tabs-custom">
   <button onclick="switchTab('tabClock')" id="btnTabClock" class="active">🕒 Main Screen</button>
   <button onclick="switchTab('tabEmergency')" id="btnTabEmergency">🚨 Quick Announcements</button>
@@ -235,7 +229,6 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   <button onclick="switchTab('tabAdmin')" id="btnTabAdmin">⚙️ Settings & Routine</button>
 </div>
 
-<!-- ================= TAB 1 (DEFAULT ACTIVE): मुख्य स्क्रीन ================= -->
 <div id="tabClock" class="tab-pane active">
   <section class="card">
     <h2>🌐 Internet Live Digital Clock & Auto Bell System</h2>
@@ -248,16 +241,14 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   </section>
 </div>
 
-<!-- ================= TAB 2: त्वरित घोषणाएँ ================= -->
 <div id="tabEmergency" class="tab-pane">
   <section class="card" style="padding:10px 14px; margin-bottom:12px;">
     <div id="emergencyLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 Syncing time...</div>
   </section>
 
   <section class="card" style="border-left: 5px solid #d9534f; background: #fff9f9;">
-    <h2>🚨 Quick Announcements और कंट्रोल</h2>
+    <h2>🚨 Quick Announcements & Controls</h2>
     <div style="margin-top: 8px;">
-      
       <div style="background:#fee2e2; border:1px solid #fecaca; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
         <span style="font-weight:bold; font-size:13px; color:#991b1b;">🎯 Where to play sound?:</span>
         <label style="cursor:pointer; font-weight:600; font-size:13px;"><input type="radio" name="targetDevice" value="local"> This Device</label>
@@ -277,12 +268,10 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
         <button onclick="handleEmergency('teacher_exit')" style="flex:1; background:#eef2ff; border:1px solid #4f46e5; color:#3730a3; font-weight:bold; font-size:14px;">🎵 Soft Tone</button>
         <button onclick="handleEmergency('teacher_exit_voice')" style="flex:1; background:#ecfdf5; border:1px solid #059669; color:#065f46; font-weight:bold; font-size:14px;">🎵+🔊 Soft Tone + Text</button>
       </div>
-
     </div>
   </section>
 </div>
 
-<!-- ================= TAB 3: ब्रॉडकास्ट & एम्प्लीफायर ================= -->
 <div id="tabBroadcast" class="tab-pane">
   <section class="card" style="border-left: 5px solid #16a34a; background: #f0fdf4;">
     <h2>📊 Live Connected Devices (Dashboard)</h2>
@@ -317,14 +306,13 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   </section>
 </div>
 
-<!-- ================= TAB 4: ट्रिगर्स (पासवर्ड 123 प्रोटेक्टेड) ================= -->
 <div id="tabTriggers" class="tab-pane">
   <section class="card" style="padding:10px 14px; margin-bottom:12px;">
     <div id="triggersLiveClock" style="font-size: 17px; font-weight: bold; background: #000000; color: #ffffff; padding: 8px 12px; border-radius: 8px; text-align: center;">🕒 Syncing time...</div>
   </section>
 
   <section class="card" style="border-left: 5px solid #2563eb;">
-    <h2>⏱️ Triggers और एम्प्लीफायर ट्रिगर (पासवर्ड प्रोटेक्टेड)</h2>
+    <h2>⏱️ Triggers & Amplifier Trigger (Password Protected)</h2>
 
     <div id="triggerLockDiv" class="locked-box">
       <p style="color: #c53030; font-weight: bold; margin-top: 0;">🔒 Enter password to unlock Triggers setup!</p>
@@ -389,7 +377,6 @@ input[type=text],input[type=password],input[type=number]{flex:1;min-width:70px}
   </section>
 </div>
 
-<!-- ================= TAB 5: सेटिंग्स, लाइब्रेरी और टाइमटेबल ================= -->
 <div id="tabAdmin" class="tab-pane">
   <section class="card" style="border-left: 5px solid #dc2626;">
     <h2>⏰ Settings, Library & Timetable (Password Protected)</h2>
@@ -464,30 +451,32 @@ try {
   db = firebase.database();
 } catch(e) {}
 
-const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const DNAMES={"Mon":"Mon","Tue":"Tue","Wed":"Wed","Thu":"Thu","Fri":"Fri","Sat":"Sat","Sun":"Sun"};
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const DNAMES = {"Mon":"Mon","Tue":"Tue","Wed":"Wed","Thu":"Thu","Fri":"Fri","Sat":"Sat","Sun":"Sun"};
 
-let defaultData = {
+const defaultData = {
   announcements: [
-    { id: "a1", title: "Prayer", text: "Prayer का समय हो गया है, सभी छात्र मैदान में आएं" },
+    { id: "a1", title: "Prayer", text: "It is time for morning prayer, all students please gather on the ground" },
     { id: "a2", title: "First Period", text: "The first bell has rung, please go to your classrooms" }
   ],
-  items:[{time:"08:00", label:"Assembly", mode:"bell_voice", bellCount:1, voiceCount:1, annId:"a1"}],
-  days:"all",
-  roomCode:"bps",
-  isAmplifierDevice:true,
-  amplifierOptOut:false
+  items: [{time:"08:00", label:"Assembly", mode:"bell_voice", bellCount:1, voiceCount:1, annId:"a1"}],
+  days: "all",
+  roomCode: "bps",
+  isAmplifierDevice: true,
+  amplifierOptOut: false
 };
 
-let st = JSON.parse(localStorage.getItem("bellphone")||"null")||defaultData;
+let st = JSON.parse(localStorage.getItem("bellphone") || "null") || JSON.parse(JSON.stringify(defaultData));
 if(!st.roomCode || st.roomCode === "bps-school-123") {
   st.roomCode = "bps";
   localStorage.setItem("bellphone", JSON.stringify(st));
 }
+if(!Array.isArray(st.announcements)) st.announcements = JSON.parse(JSON.stringify(defaultData.announcements));
+if(!Array.isArray(st.items)) st.items = JSON.parse(JSON.stringify(defaultData.items));
+if(!st.days) st.days = "all";
 if(typeof st.amplifierOptOut !== "boolean") st.amplifierOptOut = false;
 if(!st.amplifierOptOut) st.isAmplifierDevice = true;
 
-// ट्रिगर टाइमर प्रीसेट (ऑनलाइन Firebase + लोकल स्टोरेज सिंक)
 const TRIGGER_STORAGE_KEY = "schoolBellTriggerPreset_v1";
 const TRIGGER_FIREBASE_PATH = "school_bell_system/triggerPreset";
 let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "null") || {
@@ -499,21 +488,26 @@ let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "nul
   updatedAt: 0
 };
 
-// रूटीन ऑटो-फ़ेच चेकबॉक्स स्टेट (टिक होने पर पेज खुलने पर क्लाउड से लास्ट डेटा फ़ेच होगा; अनटिक होने पर बटन दबाने पर ही चलेगा)
 const AUTO_SYNC_ROUTINE_KEY = "schoolBellAutoSyncRoutine_v1";
 let autoSyncRoutineEnabled = JSON.parse(localStorage.getItem(AUTO_SYNC_ROUTINE_KEY) || "false") === true;
 let isApplyingRemoteRoutine = false;
 
-let running=false, audioEl=new Audio(), softToneEl=new Audio(), ttsAudioEl=new Audio(), quietEl=null;
-let peer=null, localStream=null, wakeLock=null;
+let running = false;
+let audioEl = new Audio();
+let softToneEl = new Audio();
+let ttsAudioEl = new Audio();
+let quietEl = null;
+let peer = null;
+let localStream = null;
+let wakeLock = null;
 let timeOffset = 0;
 
-// Broadcast state & echo prevention
 let isBroadcastingActive = false;
 let wasAmplifierBeforeBroadcast = false;
 let activeRemoteAudioEls = [];
 let activePeerCalls = [];
 let latestConnectedDevices = {};
+let lastSeenCmdKey = "";
 
 const myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9);
 const DEFAULT_BELL_URL = "https://raw.githubusercontent.com/Raaj1212/school-bell--system/fd1de4741a7d1fa61149e7d1920f47333d40bc03/bell.mp3.mpeg";
@@ -530,21 +524,38 @@ const MODE_LABELS = {
   teacher_exit_voice: "🎵+🔊 Soft Tone + Text"
 };
 
+function toast(t) {
+  const e = document.getElementById("toast");
+  if(!e) return;
+  e.textContent = t;
+  e.style.display = "block";
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { e.style.display = "none"; }, 3000);
+}
+
+function saveLocal() {
+  localStorage.setItem("bellphone", JSON.stringify(st));
+}
+
+function save() {
+  saveLocal();
+}
+
 function switchTab(tabId) {
   document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tabs-custom button').forEach(el => el.classList.remove('active'));
-  
-  document.getElementById(tabId).classList.add('active');
-  if(tabId === 'tabClock') document.getElementById('btnTabClock').classList.add('active');
-  if(tabId === 'tabEmergency') document.getElementById('btnTabEmergency').classList.add('active');
-  if(tabId === 'tabBroadcast') document.getElementById('btnTabBroadcast').classList.add('active');
-  if(tabId === 'tabTriggers') document.getElementById('btnTabTriggers').classList.add('active');
-  if(tabId === 'tabAdmin') document.getElementById('btnTabAdmin').classList.add('active');
+  const targetPane = document.getElementById(tabId);
+  if(targetPane) targetPane.classList.add('active');
+  if(tabId === 'tabClock') document.getElementById('btnTabClock')?.classList.add('active');
+  if(tabId === 'tabEmergency') document.getElementById('btnTabEmergency')?.classList.add('active');
+  if(tabId === 'tabBroadcast') document.getElementById('btnTabBroadcast')?.classList.add('active');
+  if(tabId === 'tabTriggers') document.getElementById('btnTabTriggers')?.classList.add('active');
+  if(tabId === 'tabAdmin') document.getElementById('btnTabAdmin')?.classList.add('active');
 }
 
 function unlockTriggerTab() {
-  const pass = document.getElementById('triggerPassInput').value;
-  if (pass === '123') {
+  const pass = document.getElementById('triggerPassInput')?.value;
+  if(pass === '123') {
     document.getElementById('triggerLockDiv').style.display = 'none';
     document.getElementById('triggerContentDiv').style.display = 'block';
     toast('Triggers tab unlocked!');
@@ -556,7 +567,8 @@ function unlockTriggerTab() {
 function lockTriggerTab() {
   document.getElementById('triggerLockDiv').style.display = 'block';
   document.getElementById('triggerContentDiv').style.display = 'none';
-  document.getElementById('triggerPassInput').value = '';
+  const inp = document.getElementById('triggerPassInput');
+  if(inp) inp.value = '';
   toast('Triggers tab locked.');
 }
 
@@ -564,40 +576,19 @@ function onTriggerModeChange() {
   const selected = document.querySelector('input[name="triggerPresetMode"]:checked');
   const val = selected ? selected.value : "only_bell";
   document.querySelectorAll('#triggerModeGrid .mode-choice-card').forEach(card => card.classList.remove('selected'));
-  const activeCard = document.getElementById("card_" + val);
-  if(activeCard) activeCard.classList.add('selected');
-}
-
-function renderTriggerPresetUI() {
-  const radio = document.querySelector(`input[name="triggerPresetMode"][value="${triggerPreset.mode}"]`);
-  if(radio) radio.checked = true;
-  onTriggerModeChange();
-
-  const trigTextInp = document.getElementById("triggerCustomText");
-  if(trigTextInp && triggerPreset.text) trigTextInp.value = triggerPreset.text;
-
-  const enabledChk = document.getElementById("triggerTimerEnabled");
-  if(enabledChk) enabledChk.checked = !!triggerPreset.enabled;
-
-  const timeInp = document.getElementById("triggerTimerTime");
-  if(timeInp) timeInp.value = triggerPreset.time || "07:45";
-
-  updateTriggerStatusText();
+  document.getElementById("card_" + val)?.classList.add('selected');
 }
 
 function updateHeaderTriggerBadge() {
   const el = document.getElementById("headerTriggerTime");
   if(!el) return;
-  if(!triggerPreset || !triggerPreset.time) {
-    el.textContent = "⚡ Trigger Time: --:--";
-    return;
-  }
-  if(triggerPreset.enabled) {
+  const t = (triggerPreset && triggerPreset.time) ? triggerPreset.time : "--:--";
+  if(triggerPreset && triggerPreset.enabled) {
     el.style.opacity = "1";
-    el.textContent = `⚡ Trigger Time: ${triggerPreset.time}`;
+    el.textContent = `⚡ Trigger Time: ${t}`;
   } else {
     el.style.opacity = "0.75";
-    el.textContent = `⚡ Trigger Time: ${triggerPreset.time} (बंद)`;
+    el.textContent = `⚡ Trigger Time: ${t} (Off)`;
   }
 }
 
@@ -615,12 +606,57 @@ function updateTriggerStatusText() {
   updateHeaderTriggerBadge();
 }
 
+function renderTriggerPresetUI() {
+  const radio = document.querySelector(`input[name="triggerPresetMode"][value="${triggerPreset.mode}"]`);
+  if(radio) radio.checked = true;
+  onTriggerModeChange();
+
+  const trigTextInp = document.getElementById("triggerCustomText");
+  if(trigTextInp && typeof triggerPreset.text === "string") trigTextInp.value = triggerPreset.text;
+
+  const enabledChk = document.getElementById("triggerTimerEnabled");
+  if(enabledChk) enabledChk.checked = triggerPreset.enabled !== false;
+
+  const timeInp = document.getElementById("triggerTimerTime");
+  if(timeInp) timeInp.value = triggerPreset.time || "07:45";
+
+  updateTriggerStatusText();
+}
+
+function applyRemoteTriggerPreset(remotePreset, showToastMsg = false) {
+  if(!remotePreset || typeof remotePreset !== "object") return;
+  const remoteTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(remotePreset.time || "") ? remotePreset.time : "07:45";
+  const remoteUpdatedAt = Number(remotePreset.updatedAt || 0);
+  const localUpdatedAt = Number(triggerPreset.updatedAt || 0);
+
+  // If local preset was saved more recently than remote snapshot, keep local preset and sync it up
+  if(localUpdatedAt > remoteUpdatedAt && remoteUpdatedAt === 0) {
+    if(db) db.ref(TRIGGER_FIREBASE_PATH).set(triggerPreset).catch(() => {});
+    return;
+  }
+
+  const timeChanged = triggerPreset.time !== remoteTime;
+  triggerPreset = {
+    enabled: remotePreset.enabled !== false,
+    mode: remotePreset.mode || "only_bell",
+    text: typeof remotePreset.text === "string" ? remotePreset.text : "",
+    time: remoteTime,
+    target: "remote",
+    updatedAt: remoteUpdatedAt || Date.now()
+  };
+  localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
+  renderTriggerPresetUI();
+  if(showToastMsg && timeChanged) {
+    toast("🔄 Online trigger time updated/loaded (" + triggerPreset.time + ")!");
+  }
+}
+
 function saveTriggerPreset() {
   const selectedModeEl = document.querySelector('input[name="triggerPresetMode"]:checked');
   const mode = selectedModeEl ? selectedModeEl.value : "only_bell";
-  const text = document.getElementById("triggerCustomText").value.trim();
-  const enabled = !!document.getElementById("triggerTimerEnabled").checked;
-  const time = document.getElementById("triggerTimerTime").value;
+  const text = (document.getElementById("triggerCustomText")?.value || "").trim();
+  const enabled = !!document.getElementById("triggerTimerEnabled")?.checked;
+  const time = document.getElementById("triggerTimerTime")?.value || "07:45";
 
   if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
     toast("Please select a valid time!");
@@ -660,7 +696,7 @@ function dispatchBellCommandToAmplifier(mode, bellCount, voiceCount, text, sourc
   }
 
   const commandData = {
-    cmdId: cmdId,
+    cmdId,
     mode: cleanMode,
     bellCount: cleanBellCount,
     voiceCount: cleanVoiceCount,
@@ -680,7 +716,6 @@ function dispatchBellCommandToAmplifier(mode, bellCount, voiceCount, text, sourc
 function executeTriggerCommand(presetObj, isManualTest = false) {
   const mode = presetObj.mode || "only_bell";
   const text = (presetObj.text || "").trim();
-
   dispatchBellCommandToAmplifier(
     mode,
     1,
@@ -696,7 +731,7 @@ function executeTriggerCommand(presetObj, isManualTest = false) {
 function fireTriggerNow() {
   const selectedModeEl = document.querySelector('input[name="triggerPresetMode"]:checked');
   const mode = selectedModeEl ? selectedModeEl.value : triggerPreset.mode;
-  const text = document.getElementById("triggerCustomText").value.trim();
+  const text = (document.getElementById("triggerCustomText")?.value || "").trim();
 
   if((mode === "bell_voice" || mode === "only_voice" || mode === "teacher_exit_voice") && !text) {
     toast("Please enter some text in the trigger text box first!");
@@ -721,15 +756,55 @@ function checkTriggerTimer(now) {
 
 async function syncInternetTime() {
   try {
-    let controller = new AbortController();
-    let timeoutId = setTimeout(() => controller.abort(), 3000);
-    let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata', { signal: controller.signal });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata', { signal: controller.signal });
     clearTimeout(timeoutId);
-    let data = await response.json();
+    const data = await response.json();
     timeOffset = new Date(data.datetime).getTime() - new Date().getTime();
   } catch (error) {
     timeOffset = 0;
   }
+}
+
+function applyCloudRoutineSnapshot(serverData, showToastMsg = false) {
+  if(!serverData || typeof serverData !== "object") return;
+  isApplyingRemoteRoutine = true;
+
+  // Preserve current triggerPreset so routine changes/fetches never overwrite trigger timer
+  const preservedTrigger = Object.assign({}, triggerPreset);
+
+  if(Array.isArray(serverData.announcements)) {
+    st.announcements = serverData.announcements;
+  }
+  if(Array.isArray(serverData.items)) {
+    st.items = serverData.items;
+  }
+  if(serverData.days) {
+    st.days = serverData.days;
+  }
+  if(serverData.roomCode && serverData.roomCode !== "bps-school-123") {
+    st.roomCode = serverData.roomCode;
+  }
+  if(!st.roomCode) st.roomCode = "bps";
+
+  saveLocal();
+  render();
+  initRoomCodeField();
+  showNext();
+
+  triggerPreset = preservedTrigger;
+  localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
+  updateHeaderTriggerBadge();
+
+  const statusEl = document.getElementById("syncStatusText");
+  if(statusEl) {
+    statusEl.innerText = autoSyncRoutineEnabled
+      ? "🟢 Routine Auto-Sync On: Last cloud data fetched"
+      : "🟢 Data fetched from cloud";
+  }
+  if(showToastMsg) toast("🔄 Last uploaded routine loaded from cloud!");
+  setTimeout(() => { isApplyingRemoteRoutine = false; }, 100);
 }
 
 function syncToCloudNow() {
@@ -759,6 +834,13 @@ function fetchFromCloudNow(isAutoFetch = false) {
     const serverData = snapshot.val();
     if(serverData) {
       applyCloudRoutineSnapshot(serverData, isAutoFetch);
+      if(serverData.triggerPreset && typeof serverData.triggerPreset === "object") {
+        const srvTs = Number(serverData.triggerPreset.updatedAt || 0);
+        const locTs = Number(triggerPreset.updatedAt || 0);
+        if(srvTs >= locTs) {
+          applyRemoteTriggerPreset(serverData.triggerPreset, false);
+        }
+      }
       if(!isAutoFetch) {
         const statusEl = document.getElementById("syncStatusText");
         if(statusEl) statusEl.innerText = "🟢 Data fetched from cloud";
@@ -772,82 +854,6 @@ function fetchFromCloudNow(isAutoFetch = false) {
   });
 }
 
-function unlockAdminSettings() {
-  const pass = document.getElementById('adminPassInput').value;
-  if (pass === '123') {
-    document.getElementById('adminLockDiv').style.display = 'none';
-    document.getElementById('adminContentDiv').style.display = 'block';
-    toast('Settings and library unlocked!');
-  } else {
-    toast('Wrong password!');
-  }
-}
-
-function lockAdminSettings() {
-  document.getElementById('adminLockDiv').style.display = 'block';
-  document.getElementById('adminContentDiv').style.display = 'none';
-  document.getElementById('adminPassInput').value = '';
-  toast('Settings locked.');
-}
-
-async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-    }
-  } catch (err) {}
-}
-
-document.addEventListener('visibilitychange', async () => {
-  if (wakeLock !== null && document.visibilityState === 'visible') {
-    await requestWakeLock();
-  }
-});
-
-function makeQuietLoop(){
-  try{
-    const sr=8000,sec=2,n=sr*sec,buf=new Uint8Array(44+n*2),dv=new DataView(buf.buffer);
-    const w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
-    w(0,"RIFF");dv.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");dv.setUint32(16,16,true);dv.setInt16(20,1,true);dv.setInt16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setInt16(32,2,true);dv.setInt16(34,16,true);w(36,"data");dv.setUint32(40,n*2,true);
-    for(let i=0;i<n;i++){const v=Math.round(200*Math.sin(2*Math.PI*85*i/sr));dv.setInt16(44+i*2,v,true);}
-    let out="";const CHUNK=8192;
-    for(let i=0;i<buf.length;i+=CHUNK){out+=String.fromCharCode.apply(null,buf.subarray(i,Math.min(i+CHUNK,buf.length)));}
-    quietEl=new Audio("data:audio/wav;base64,"+btoa(out));
-    quietEl.loop=true;quietEl.volume=0.05;
-  }catch(e){}
-}
-
-function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",3000);}
-
-function saveLocal(){
-  localStorage.setItem("bellphone",JSON.stringify(st));
-}
-
-function applyCloudRoutineSnapshot(serverData, showToastMsg = false) {
-  if(!serverData || typeof serverData !== "object") return;
-  isApplyingRemoteRoutine = true;
-  if(Array.isArray(serverData.announcements)) {
-    st.announcements = serverData.announcements;
-  }
-  if(Array.isArray(serverData.items)) {
-    st.items = serverData.items;
-  }
-  if(serverData.days) {
-    st.days = serverData.days;
-  }
-  if(serverData.roomCode && serverData.roomCode !== "bps-school-123") {
-    st.roomCode = serverData.roomCode;
-  }
-  saveLocal();
-  render();
-  initRoomCodeField();
-  showNext();
-  const statusEl = document.getElementById("syncStatusText");
-  if(statusEl) statusEl.innerText = "🟢 Routine Auto-Sync On: Last cloud data fetched";
-  if(showToastMsg) toast("🔄 Last uploaded routine auto-loaded from cloud!");
-  setTimeout(() => { isApplyingRemoteRoutine = false; }, 100);
-}
-
 function renderAutoSyncRoutineUI() {
   const chk = document.getElementById("autoSyncRoutineCheckbox");
   if(chk) chk.checked = !!autoSyncRoutineEnabled;
@@ -855,7 +861,7 @@ function renderAutoSyncRoutineUI() {
   if(statusEl) {
     statusEl.innerText = autoSyncRoutineEnabled
       ? "🟢 Routine Auto-Sync On (Auto-fetches last cloud data on page load)"
-      : "Saved in Local Storage (ऑटो-सिंक बंद — बटन दबाने पर ही सिंक/फ़ेच होगा)";
+      : "Saved in Local Storage (Auto-sync off — use buttons to sync/fetch)";
   }
 }
 
@@ -873,56 +879,109 @@ function toggleAutoSyncRoutine() {
   }
 }
 
-function save(){
-  saveLocal();
-}
-
-function daysToArr(d){if(!d||d==="all")return [...DAYS];if(Array.isArray(d))return d.slice();d=String(d);if(d.includes("-")){const [a,b]=d.split("-");let i=DAYS.indexOf(a.slice(0,3)),j=DAYS.indexOf(b.slice(0,3));return DAYS.slice(Math.min(i,j),Math.max(i,j)+1);}return d.split(",").map(x=>x.trim());}
-function arrToDays(a){return a.length===7?"all":a.join(",");}
-
-function playSoftTeacherTone(cb){
-  try{
-    softToneEl.pause();
-    softToneEl.currentTime = 0;
-    softToneEl.onended = () => {
-      softToneEl.onended = null;
-      if(cb) cb();
-    };
-    softToneEl.play().catch(() => {
-      if(cb) cb();
-    });
-  }catch(e){
-    if(cb) cb();
+function unlockAdminSettings() {
+  const pass = document.getElementById('adminPassInput')?.value;
+  if(pass === '123') {
+    document.getElementById('adminLockDiv').style.display = 'none';
+    document.getElementById('adminContentDiv').style.display = 'block';
+    renderAutoSyncRoutineUI();
+    toast('Settings and library unlocked!');
+  } else {
+    toast('Wrong password!');
   }
 }
 
-function speakSingleText(text, cb){
-  if(!text){ if(cb) cb(); return; }
-  try{
+function lockAdminSettings() {
+  document.getElementById('adminLockDiv').style.display = 'block';
+  document.getElementById('adminContentDiv').style.display = 'none';
+  const inp = document.getElementById('adminPassInput');
+  if(inp) inp.value = '';
+  toast('Settings locked.');
+}
+
+async function requestWakeLock() {
+  try {
+    if('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (err) {}
+}
+
+document.addEventListener('visibilitychange', async () => {
+  if(wakeLock !== null && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
+function makeQuietLoop() {
+  try {
+    const sr = 8000, sec = 2, n = sr * sec, buf = new Uint8Array(44 + n * 2), dv = new DataView(buf.buffer);
+    const w = (o, s) => { for(let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, "RIFF"); dv.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); dv.setUint32(16, 16, true);
+    dv.setInt16(20, 1, true); dv.setInt16(22, 1, true); dv.setUint32(24, sr, true); dv.setUint32(28, sr * 2, true);
+    dv.setInt16(32, 2, true); dv.setInt16(34, 16, true); w(36, "data"); dv.setUint32(40, n * 2, true);
+    for(let i = 0; i < n; i++) {
+      const v = Math.round(200 * Math.sin(2 * Math.PI * 85 * i / sr));
+      dv.setInt16(44 + i * 2, v, true);
+    }
+    let out = "";
+    const CHUNK = 8192;
+    for(let i = 0; i < buf.length; i += CHUNK) {
+      out += String.fromCharCode.apply(null, buf.subarray(i, Math.min(i + CHUNK, buf.length)));
+    }
+    quietEl = new Audio("data:audio/wav;base64," + btoa(out));
+    quietEl.loop = true;
+    quietEl.volume = 0.05;
+  } catch(e) {}
+}
+
+function daysToArr(d) {
+  if(!d || d === "all") return [...DAYS];
+  if(Array.isArray(d)) return d.slice();
+  d = String(d);
+  if(d.includes("-")) {
+    const [a, b] = d.split("-");
+    const i = DAYS.indexOf(a.slice(0,3)), j = DAYS.indexOf(b.slice(0,3));
+    return DAYS.slice(Math.min(i,j), Math.max(i,j) + 1);
+  }
+  return d.split(",").map(x => x.trim()).filter(Boolean);
+}
+
+function arrToDays(a) {
+  return a.length === 7 ? "all" : a.join(",");
+}
+
+function playSoftTeacherTone(cb) {
+  try {
+    softToneEl.pause();
+    softToneEl.currentTime = 0;
+    softToneEl.onended = () => { softToneEl.onended = null; if(cb) cb(); };
+    softToneEl.play().catch(() => { if(cb) cb(); });
+  } catch(e) { if(cb) cb(); }
+}
+
+function speakSingleText(text, cb) {
+  if(!text) { if(cb) cb(); return; }
+  try {
     ttsAudioEl.pause();
     const encoded = encodeURIComponent(text);
     ttsAudioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=hi&client=tw-ob`;
     ttsAudioEl.currentTime = 0;
     ttsAudioEl.onended = () => { ttsAudioEl.onended = null; if(cb) cb(); };
-    ttsAudioEl.play().catch(e => {
-      let u = new SpeechSynthesisUtterance(text);
+    ttsAudioEl.play().catch(() => {
+      const u = new SpeechSynthesisUtterance(text);
       u.lang = "hi-IN";
       u.onend = () => { if(cb) cb(); };
       window.speechSynthesis.speak(u);
     });
-  }catch(e){ if(cb) cb(); }
+  } catch(e) { if(cb) cb(); }
 }
 
-function ringSingleBell(cb){
+function ringSingleBell(cb) {
   audioEl.pause();
   audioEl.currentTime = 0;
-  audioEl.onended = () => {
-    audioEl.onended = null;
-    if(cb) cb();
-  };
-  audioEl.play().catch(() => {
-    if(cb) cb();
-  });
+  audioEl.onended = () => { audioEl.onended = null; if(cb) cb(); };
+  audioEl.play().catch(() => { if(cb) cb(); });
 }
 
 function executeBellRoutine(mode, bellCount, voiceCount, text, cb) {
@@ -932,121 +991,79 @@ function executeBellRoutine(mode, bellCount, voiceCount, text, cb) {
   if(mode === 'teacher_exit') {
     let played = 0;
     function nextTone() {
-      if(played < bellCount) {
-        played++;
-        playSoftTeacherTone(() => setTimeout(nextTone, 400));
-      } else if(cb) cb();
+      if(played < bellCount) { played++; playSoftTeacherTone(() => setTimeout(nextTone, 400)); }
+      else if(cb) cb();
     }
     nextTone();
-  }
-  else if(mode === 'teacher_exit_voice') {
+  } else if(mode === 'teacher_exit_voice') {
     let played = 0;
     function nextTone() {
-      if(played < bellCount) {
-        played++;
-        playSoftTeacherTone(() => setTimeout(nextTone, 400));
-      } else {
+      if(played < bellCount) { played++; playSoftTeacherTone(() => setTimeout(nextTone, 400)); }
+      else {
         setTimeout(() => {
           let spoken = 0;
           function nextVoice() {
-            if(spoken < voiceCount) {
-              spoken++;
-              speakSingleText(text, () => setTimeout(nextVoice, 400));
-            } else if(cb) cb();
+            if(spoken < voiceCount) { spoken++; speakSingleText(text, () => setTimeout(nextVoice, 400)); }
+            else if(cb) cb();
           }
           nextVoice();
         }, 400);
       }
     }
     nextTone();
-  }
-  else if(mode === 'only_bell') {
+  } else if(mode === 'only_bell') {
     let played = 0;
     function nextBell() {
-      if(played < bellCount) {
-        played++;
-        ringSingleBell(nextBell);
-      } else if(cb) cb();
+      if(played < bellCount) { played++; ringSingleBell(nextBell); }
+      else if(cb) cb();
     }
     nextBell();
-  } 
-  else if(mode === 'only_voice') {
+  } else if(mode === 'only_voice') {
     let spoken = 0;
     function nextVoice() {
-      if(spoken < voiceCount) {
-        spoken++;
-        speakSingleText(text, () => {
-          setTimeout(nextVoice, 400);
-        });
-      } else if(cb) cb();
+      if(spoken < voiceCount) { spoken++; speakSingleText(text, () => setTimeout(nextVoice, 400)); }
+      else if(cb) cb();
     }
     nextVoice();
-  } 
-  else if(mode === 'bell_voice') {
+  } else if(mode === 'bell_voice') {
     let played = 0;
     function nextBell() {
-      if(played < bellCount) {
-        played++;
-        ringSingleBell(nextBell);
-      } else {
+      if(played < bellCount) { played++; ringSingleBell(nextBell); }
+      else {
         setTimeout(() => {
           let spoken = 0;
           function nextVoice() {
-            if(spoken < voiceCount) {
-              spoken++;
-              speakSingleText(text, () => {
-                setTimeout(nextVoice, 400);
-              });
-            } else if(cb) cb();
+            if(spoken < voiceCount) { spoken++; speakSingleText(text, () => setTimeout(nextVoice, 400)); }
+            else if(cb) cb();
           }
           nextVoice();
         }, 500);
       }
     }
     nextBell();
-  }
-  else if(mode === 'alternative') {
-    let maxSteps = Math.max(bellCount, voiceCount);
+  } else if(mode === 'alternative') {
+    const maxSteps = Math.max(bellCount, voiceCount);
     let currentStep = 0;
-
     function stepLoop() {
       if(currentStep < maxSteps) {
-        let doBell = currentStep < bellCount;
-        let doVoice = currentStep < voiceCount;
-
+        const doBell = currentStep < bellCount;
+        const doVoice = currentStep < voiceCount;
         if(doBell && doVoice) {
-          ringSingleBell(() => {
-            setTimeout(() => {
-              speakSingleText(text, () => {
-                currentStep++;
-                setTimeout(stepLoop, 600);
-              });
-            }, 300);
-          });
+          ringSingleBell(() => setTimeout(() => speakSingleText(text, () => { currentStep++; setTimeout(stepLoop, 600); }), 300));
         } else if(doBell) {
-          ringSingleBell(() => {
-            currentStep++;
-            setTimeout(stepLoop, 500);
-          });
+          ringSingleBell(() => { currentStep++; setTimeout(stepLoop, 500); });
         } else if(doVoice) {
-          speakSingleText(text, () => {
-            currentStep++;
-            setTimeout(stepLoop, 600);
-          });
-        } else {
-          if(cb) cb();
-        }
-      } else {
-        if(cb) cb();
-      }
+          speakSingleText(text, () => { currentStep++; setTimeout(stepLoop, 600); });
+        } else if(cb) cb();
+      } else if(cb) cb();
     }
     stepLoop();
   }
 }
 
 function handleEmergency(actionType) {
-  const target = document.querySelector('input[name="targetDevice"]:checked').value;
-  const customText = document.getElementById("emergencyText").value.trim();
+  const target = document.querySelector('input[name="targetDevice"]:checked')?.value || "remote";
+  const customText = (document.getElementById("emergencyText")?.value || "").trim();
 
   if((actionType === 'bell_voice' || actionType === 'only_voice' || actionType === 'teacher_exit_voice') && !customText) {
     toast("Please enter some text in the text box first!");
@@ -1055,7 +1072,7 @@ function handleEmergency(actionType) {
 
   if(target === 'local') {
     executeBellRoutine(actionType, 1, 1, customText, null);
-    toast("This Device एक्शन ले लिया गया है!");
+    toast("Action executed on this device!");
   } else {
     dispatchBellCommandToAmplifier(actionType, 1, 1, customText, "Quick Announcement", () => {
       toast("🚀 Command sent to amplifier device!");
@@ -1073,28 +1090,23 @@ function testTeacherToneLocal() {
   toast("Playing soft tone");
 }
 
-function stopSound(){
-  try{ ttsAudioEl.pause(); window.speechSynthesis.cancel(); }catch(e){}
-  audioEl.pause();
-  audioEl.currentTime = 0;
-  softToneEl.pause();
-  softToneEl.currentTime = 0;
+function stopSound() {
+  try { ttsAudioEl.pause(); window.speechSynthesis.cancel(); } catch(e) {}
+  audioEl.pause(); audioEl.currentTime = 0;
+  softToneEl.pause(); softToneEl.currentTime = 0;
 }
 
-function initRoomCodeField(){
+function initRoomCodeField() {
   const rcInput = document.getElementById("roomCode");
   if(!rcInput) return;
   if(!st.roomCode) st.roomCode = "bps";
   rcInput.value = st.roomCode;
 
-  rcInput.oninput = () => { 
-    const typed = rcInput.value.trim();
-    st.roomCode = typed || "bps"; 
-    save(); 
+  rcInput.oninput = () => {
+    st.roomCode = rcInput.value.trim() || "bps";
+    save();
     updateDevicePresence();
-    if(st.isAmplifierDevice && !isBroadcastingActive) {
-      startAutoListener();
-    }
+    if(st.isAmplifierDevice && !isBroadcastingActive) startAutoListener();
   };
 
   rcInput.onblur = () => {
@@ -1103,31 +1115,17 @@ function initRoomCodeField(){
       st.roomCode = "bps";
       save();
       updateDevicePresence();
-      if(st.isAmplifierDevice && !isBroadcastingActive) {
-        startAutoListener();
-      }
+      if(st.isAmplifierDevice && !isBroadcastingActive) startAutoListener();
     }
   };
 }
 
 function cleanupPeerConnection(destroyPeerInstance = true) {
-  activePeerCalls.forEach(c => {
-    try { c.close(); } catch(e) {}
-  });
+  activePeerCalls.forEach(c => { try { c.close(); } catch(e) {} });
   activePeerCalls = [];
-
-  activeRemoteAudioEls.forEach(el => {
-    try {
-      el.pause();
-      el.srcObject = null;
-    } catch(e) {}
-  });
+  activeRemoteAudioEls.forEach(el => { try { el.pause(); el.srcObject = null; } catch(e) {} });
   activeRemoteAudioEls = [];
-
-  if(destroyPeerInstance && peer) {
-    try { peer.destroy(); } catch(e) {}
-    peer = null;
-  }
+  if(destroyPeerInstance && peer) { try { peer.destroy(); } catch(e) {} peer = null; }
 }
 
 function updateRoleBadgeUI() {
@@ -1142,50 +1140,32 @@ function updateRoleBadgeUI() {
   }
 }
 
-function setAsAmplifierPhone(){
+function setAsAmplifierPhone() {
   isBroadcastingActive = false;
-  if(localStream) {
-    localStream.getTracks().forEach(t => t.stop());
-    localStream = null;
-  }
-  st.isAmplifierDevice = true;
-  st.amplifierOptOut = false;
-  save();
-  updateRoleBadgeUI();
-  toast("Device set as amplifier.");
-  startAutoListener();
-  updateDevicePresence();
+  if(localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  st.isAmplifierDevice = true; st.amplifierOptOut = false;
+  save(); updateRoleBadgeUI(); toast("Device set as amplifier.");
+  startAutoListener(); updateDevicePresence();
 }
 
-function unsetAmplifierPhone(){
+function unsetAmplifierPhone() {
   isBroadcastingActive = false;
-  if(localStream) {
-    localStream.getTracks().forEach(t => t.stop());
-    localStream = null;
-  }
-  st.isAmplifierDevice = false;
-  st.amplifierOptOut = true;
-  save();
-  cleanupPeerConnection(true);
-  updateRoleBadgeUI();
-  toast("Amplifier mode removed.");
-  updateDevicePresence();
+  if(localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  st.isAmplifierDevice = false; st.amplifierOptOut = true;
+  save(); cleanupPeerConnection(true); updateRoleBadgeUI();
+  toast("Amplifier mode removed."); updateDevicePresence();
 }
 
-function startAutoListener(){
+function startAutoListener() {
   if(isBroadcastingActive || !st.isAmplifierDevice) return;
   const code = (st.roomCode || "bps").trim();
   if(!code) return;
   cleanupPeerConnection(true);
-  
-  const ampPeerId = "bps_amp_" + code + "_" + myDeviceId;
-  peer = new Peer(ampPeerId);
+  peer = new Peer("bps_amp_" + code + "_" + myDeviceId);
 
-  peer.on('open', (id) => {
+  peer.on('open', () => {
     const stEl = document.getElementById("streamStatus");
-    if(stEl && !isBroadcastingActive) {
-      stEl.textContent = "Status: 🟢 Amplifier ready (" + code + ")...";
-    }
+    if(stEl && !isBroadcastingActive) stEl.textContent = "Status: 🟢 Amplifier ready (" + code + ")...";
   });
 
   peer.on('call', call => {
@@ -1195,49 +1175,34 @@ function startAutoListener(){
     call.on('stream', remoteStream => {
       if(isBroadcastingActive || !st.isAmplifierDevice) return;
       const audio = new Audio();
-      audio.muted = false;
-      audio.volume = 1.0;
-      audio.srcObject = remoteStream;
+      audio.muted = false; audio.volume = 1.0; audio.srcObject = remoteStream;
       activeRemoteAudioEls.push(audio);
-      audio.play().catch(e => {});
+      audio.play().catch(() => {});
       const stEl = document.getElementById("streamStatus");
       if(stEl) stEl.textContent = "Status: 🟢 Receiving live audio...";
     });
   });
 
-  peer.on('error', (err) => {
+  peer.on('error', err => {
     const stEl = document.getElementById("streamStatus");
     if(stEl && !isBroadcastingActive) stEl.textContent = "Error: " + err.type;
   });
 }
 
-function startBroadcasting(){
-  const code = (document.getElementById("roomCode").value.trim() || st.roomCode || "bps");
-  if(!code){ toast("Please enter a room code!"); return; }
+function startBroadcasting() {
+  const code = (document.getElementById("roomCode")?.value.trim() || st.roomCode || "bps");
+  if(!code) { toast("Please enter a room code!"); return; }
 
   wasAmplifierBeforeBroadcast = !!st.isAmplifierDevice;
   isBroadcastingActive = true;
   st.isAmplifierDevice = false;
-  saveLocal();
-  cleanupPeerConnection(true);
-  updateRoleBadgeUI();
-  updateDevicePresence();
+  saveLocal(); cleanupPeerConnection(true); updateRoleBadgeUI(); updateDevicePresence();
 
-  const audioConstraints = {
-    echoCancellation: true,
-    noiseSuppression: true,
-    autoGainControl: true
-  };
-
-  navigator.mediaDevices.getUserMedia({ audio: audioConstraints, video: false }).then(stream => {
-    if(!isBroadcastingActive) {
-      stream.getTracks().forEach(t => t.stop());
-      return;
-    }
+  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false }).then(stream => {
+    if(!isBroadcastingActive) { stream.getTracks().forEach(t => t.stop()); return; }
     localStream = stream;
     peer = new Peer();
-    
-    peer.on('open', id => {
+    peer.on('open', () => {
       if(!isBroadcastingActive) return;
       const stEl = document.getElementById("streamStatus");
       if(stEl) stEl.textContent = "Status: 🔴 Searching for amplifiers...";
@@ -1246,30 +1211,23 @@ function startBroadcasting(){
         const devices = devicesObj || latestConnectedDevices || {};
         let connectedCount = 0;
         const now = Date.now();
-
         Object.keys(devices).forEach(devId => {
           if(devId === myDeviceId) return;
           const dev = devices[devId];
           if(dev && dev.role === "amplifier" && dev.room === code && (!dev.lastSeen || (now - dev.lastSeen < 35000))) {
-            const targetAmpPeerId = "bps_amp_" + code + "_" + devId;
-            const call = peer.call(targetAmpPeerId, stream);
+            const call = peer.call("bps_amp_" + code + "_" + devId, stream);
             if(call) activePeerCalls.push(call);
             connectedCount++;
           }
         });
-
-        if(stEl) {
-          stEl.textContent = `Status: 🔴 Broadcast Live (${connectedCount} amplifiers connected — Room: ${code})`;
-        }
+        if(stEl) stEl.textContent = `Status: 🔴 Broadcast Live (${connectedCount} amplifiers connected — Room: ${code})`;
         toast(`Broadcast started! ${connectedCount} amplifiers connected.`);
       };
 
       if(db) {
-        db.ref("school_bell_system/connectedDevices").once("value").then(snapshot => {
-          callAvailableAmplifiers(snapshot.val() || {});
-        }).catch(() => {
-          callAvailableAmplifiers(latestConnectedDevices);
-        });
+        db.ref("school_bell_system/connectedDevices").once("value")
+          .then(snap => callAvailableAmplifiers(snap.val() || {}))
+          .catch(() => callAvailableAmplifiers(latestConnectedDevices));
       } else {
         callAvailableAmplifiers(latestConnectedDevices);
       }
@@ -1277,28 +1235,19 @@ function startBroadcasting(){
   }).catch(e => {
     isBroadcastingActive = false;
     st.isAmplifierDevice = wasAmplifierBeforeBroadcast && !st.amplifierOptOut;
-    saveLocal();
-    updateRoleBadgeUI();
-    updateDevicePresence();
+    saveLocal(); updateRoleBadgeUI(); updateDevicePresence();
     if(st.isAmplifierDevice) startAutoListener();
     toast("Microphone permission denied: " + e.message);
   });
 }
 
-function stopBroadcasting(){
+function stopBroadcasting() {
   isBroadcastingActive = false;
-  if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if(localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   cleanupPeerConnection(true);
-
   st.isAmplifierDevice = !st.amplifierOptOut;
-  saveLocal();
-  updateRoleBadgeUI();
-  updateDevicePresence();
-
-  if(st.isAmplifierDevice) {
-    setTimeout(() => { startAutoListener(); }, 400);
-  }
-
+  saveLocal(); updateRoleBadgeUI(); updateDevicePresence();
+  if(st.isAmplifierDevice) setTimeout(() => { startAutoListener(); }, 400);
   const stEl = document.getElementById("streamStatus");
   if(stEl) stEl.textContent = st.isAmplifierDevice ? "Status: 🟢 Amplifier ready (" + (st.roomCode || "bps") + ")..." : "Status: Stopped";
   toast("Broadcast stopped! Device returned to amplifier mode.");
@@ -1306,10 +1255,8 @@ function stopBroadcasting(){
 
 function computeDeviceCounts(devicesObj) {
   latestConnectedDevices = devicesObj || {};
-  let masterCount = 0;
-  let ampCount = 0;
+  let masterCount = 0, ampCount = 0;
   const now = Date.now();
-
   Object.keys(latestConnectedDevices).forEach(id => {
     const dev = latestConnectedDevices[id];
     if(!dev) return;
@@ -1319,11 +1266,9 @@ function computeDeviceCounts(devicesObj) {
       else if(dev.role === "amplifier") ampCount++;
     }
   });
-
   const localRole = isBroadcastingActive ? "master" : (st.isAmplifierDevice ? "amplifier" : null);
   if(localRole === "master" && masterCount === 0) masterCount = 1;
   if(localRole === "amplifier" && ampCount === 0) ampCount = 1;
-
   const mEl = document.getElementById("activeMasterCount");
   const aEl = document.getElementById("activeAmpCount");
   if(mEl) mEl.textContent = String(masterCount);
@@ -1333,45 +1278,26 @@ function computeDeviceCounts(devicesObj) {
 function updateDevicePresence() {
   const roleType = isBroadcastingActive ? "master" : (st.isAmplifierDevice ? "amplifier" : "idle");
   const activeRoom = st.roomCode || "bps";
-  latestConnectedDevices[myDeviceId] = {
-    role: roleType,
-    room: activeRoom,
-    lastSeen: Date.now()
-  };
+  latestConnectedDevices[myDeviceId] = { role: roleType, room: activeRoom, lastSeen: Date.now() };
   computeDeviceCounts(latestConnectedDevices);
-
   if(!db) return;
   const ref = db.ref("school_bell_system/connectedDevices/" + myDeviceId);
-  
-  ref.set({
-    role: roleType,
-    room: activeRoom,
-    lastSeen: firebase.database.ServerValue.TIMESTAMP
-  }).catch(() => {});
+  ref.set({ role: roleType, room: activeRoom, lastSeen: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
   try { ref.onDisconnect().remove(); } catch(e) {}
 }
 
 function initPresenceSystem() {
   updateDevicePresence();
   if(!db) return;
-
-  setInterval(() => {
-    updateDevicePresence();
-  }, 10000);
-
-  setInterval(() => {
-    computeDeviceCounts(latestConnectedDevices);
-  }, 5000);
-
-  db.ref("school_bell_system/connectedDevices").on("value", (snapshot) => {
-    computeDeviceCounts(snapshot.val() || {});
-  });
+  setInterval(() => { updateDevicePresence(); }, 10000);
+  setInterval(() => { computeDeviceCounts(latestConnectedDevices); }, 5000);
+  db.ref("school_bell_system/connectedDevices").on("value", snap => computeDeviceCounts(snap.val() || {}));
 }
 
-function saveAnnouncement(){
-  const title = document.getElementById("annTitle").value.trim();
-  const text = document.getElementById("annText").value.trim();
-  if(!title || !text){ toast("Please enter both name and text!"); return; }
+function saveAnnouncement() {
+  const title = (document.getElementById("annTitle")?.value || "").trim();
+  const text = (document.getElementById("annText")?.value || "").trim();
+  if(!title || !text) { toast("Please enter both name and text!"); return; }
   st.announcements.push({ id: "ann_" + Math.random().toString(36).substr(2, 9), title, text });
   save();
   document.getElementById("annTitle").value = "";
@@ -1380,68 +1306,80 @@ function saveAnnouncement(){
   render();
 }
 
-function deleteAnnouncement(id){
+function deleteAnnouncement(id) {
   st.announcements = st.announcements.filter(a => a.id !== id);
-  save();
-  toast("Deleted");
-  render();
+  save(); toast("Deleted"); render();
 }
 
-function startSys(){
-  if(running)return;running=true;
-  document.getElementById("runState").textContent="● Running";
-  try{if(!quietEl)makeQuietLoop();quietEl.currentTime=0;quietEl.play();}catch(e){}
+function startSys() {
+  if(running) return;
+  running = true;
+  const rs = document.getElementById("runState");
+  if(rs) rs.textContent = "● Running";
+  try { if(!quietEl) makeQuietLoop(); quietEl.currentTime = 0; quietEl.play(); } catch(e) {}
   requestWakeLock();
 }
 
-function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
-function tick(){
+function hhmm(d) {
+  return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+}
+
+function tick() {
   const d = new Date(new Date().getTime() + timeOffset);
   checkTriggerTimer(d);
-  if(running&&d.getSeconds()<3){
-    const t=hhmm(d),today=d.toDateString();
-    let log=JSON.parse(localStorage.getItem("bellfired")||"{}");
-    if(log.date!==today){log={date:today,list:{}};}
-    if(log.list[t])return;
-    const days=daysToArr(st.days);
-    if(!days.includes(DAYS[d.getDay()]))return;
-    const hits=st.items.filter(i=>i.time===t);
-    if(hits.length){
-      log.list[t]=true;localStorage.setItem("bellfired",JSON.stringify(log));
-      hits.forEach((i, idx)=>{
-        let textToSay = "";
-        if(i.mode !== 'only_bell' && i.mode !== 'teacher_exit' && i.annId){
-          const found = st.announcements.find(a => a.id === i.annId);
-          if(found) textToSay = found.text;
+  if(running && d.getSeconds() < 3) {
+    const t = hhmm(d), today = d.toDateString();
+    let log = JSON.parse(localStorage.getItem("bellfired") || "{}");
+    if(log.date !== today) log = { date: today, list: {} };
+    if(!log.list[t]) {
+      const days = daysToArr(st.days);
+      if(days.includes(DAYS[d.getDay()])) {
+        const hits = st.items.filter(i => i.time === t);
+        if(hits.length) {
+          log.list[t] = true;
+          localStorage.setItem("bellfired", JSON.stringify(log));
+          hits.forEach((i, idx) => {
+            let textToSay = "";
+            if(i.mode !== 'only_bell' && i.mode !== 'teacher_exit' && i.annId) {
+              const found = st.announcements.find(a => a.id === i.annId);
+              if(found) textToSay = found.text;
+            }
+            const m = i.mode || 'bell_voice';
+            const bCount = i.bellCount || 1;
+            const vCount = i.voiceCount || 1;
+            setTimeout(() => {
+              if(db) {
+                dispatchBellCommandToAmplifier(m, bCount, vCount, textToSay, "Routine Bell", () => {
+                  toast("🔔 Scheduled bell triggered via Firebase!");
+                });
+              } else {
+                executeBellRoutine(m, bCount, vCount, textToSay, null);
+              }
+            }, idx * 120);
+          });
         }
-        const m = i.mode || 'bell_voice';
-        const bCount = i.bellCount || 1;
-        const vCount = i.voiceCount || 1;
-        setTimeout(() => {
-          if(db) {
-            dispatchBellCommandToAmplifier(m, bCount, vCount, textToSay, "Routine Bell", () => {
-              toast("🔔 Scheduled bell triggered via Firebase!");
-            });
-          } else {
-            executeBellRoutine(m, bCount, vCount, textToSay, null);
-          }
-        }, idx * 120);
-      });
-      showNext();
+      }
     }
   }
   showNext();
 }
 
-function showNext(){
+function showNext() {
   const d = new Date(new Date().getTime() + timeOffset);
-  const now=hhmm(d);
-  const days=daysToArr(st.days);
-  const ok=days.includes(DAYS[d.getDay()]);
-  const items=[...st.items].sort((a,b)=>a.time.localeCompare(b.time));
-  let nxt=null;
-  if(ok){for(const i of items){if(i.time>now){nxt=i;break;}}}
-  document.getElementById("nextBell").textContent = nxt ? ("Next Bell: " + nxt.time + (nxt.label ? " (" + nxt.label + ")" : "")) : "Next Bell: Done for Today";
+  const now = hhmm(d);
+  const days = daysToArr(st.days);
+  const ok = days.includes(DAYS[d.getDay()]);
+  const items = [...st.items].sort((a, b) => a.time.localeCompare(b.time));
+  let nxt = null;
+  if(ok) {
+    for(const i of items) {
+      if(i.time > now) { nxt = i; break; }
+    }
+  }
+  const nb = document.getElementById("nextBell");
+  if(nb) {
+    nb.textContent = nxt ? ("Next Bell: " + nxt.time + (nxt.label ? " (" + nxt.label + ")" : "")) : "Next Bell: Done for Today";
+  }
   updateHeaderTriggerBadge();
 
   let hours = d.getHours();
@@ -1450,29 +1388,20 @@ function showNext(){
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12 || 12;
   const formattedClock = `${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm}`;
-  const clockEl = document.getElementById("liveDigitalClock");
-  if(clockEl) {
-    clockEl.innerHTML = `🕒 ${formattedClock} (Live)`;
-  }
-  const emergClockEl = document.getElementById("emergencyLiveClock");
-  if(emergClockEl) {
-    emergClockEl.innerHTML = `🕒 ${formattedClock} (Live)`;
-  }
-  const trigTabClockEl = document.getElementById("triggersLiveClock");
-  if(trigTabClockEl) {
-    trigTabClockEl.innerHTML = `🕒 ${formattedClock} (Live)`;
-  }
+
+  ["liveDigitalClock", "emergencyLiveClock", "triggersLiveClock"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = `🕒 ${formattedClock} (Live)`;
+  });
   const trigClockEl = document.getElementById("triggerLiveClockBar");
-  if(trigClockEl) {
-    trigClockEl.textContent = `🕒 Current Time: ${formattedClock}`;
-  }
+  if(trigClockEl) trigClockEl.textContent = `🕒 Current Time: ${formattedClock}`;
 }
 
-function render(){
+function render() {
   const annDiv = document.getElementById("annList");
-  if(annDiv){
+  if(annDiv) {
     annDiv.innerHTML = "";
-    if(st.announcements.length === 0){
+    if(st.announcements.length === 0) {
       annDiv.innerHTML = '<div class="muted" style="margin-top:6px;">No announcements available.</div>';
     } else {
       st.announcements.forEach(a => {
@@ -1484,40 +1413,55 @@ function render(){
     }
   }
 
-  const dr=document.getElementById("daysRow");
-  if(dr){
-    dr.innerHTML="";
-    const days=daysToArr(st.days);
-    DAYS.forEach(dd=>{const l=document.createElement("label");const c=document.createElement("input");c.type="checkbox";c.checked=days.includes(dd);c.onchange=()=>{st.days=arrToDays(DAYS.filter(x=>dr.querySelectorAll("input")[DAYS.indexOf(x)].checked));save();showNext();};l.append(c,document.createTextNode(DNAMES[dd]));dr.appendChild(l);});
+  const dr = document.getElementById("daysRow");
+  if(dr) {
+    dr.innerHTML = "";
+    const days = daysToArr(st.days);
+    DAYS.forEach(dd => {
+      const l = document.createElement("label");
+      const c = document.createElement("input");
+      c.type = "checkbox";
+      c.checked = days.includes(dd);
+      c.onchange = () => {
+        st.days = arrToDays(DAYS.filter((_, idx) => dr.querySelectorAll("input")[idx].checked));
+        save();
+        showNext();
+      };
+      l.append(c, document.createTextNode(DNAMES[dd]));
+      dr.appendChild(l);
+    });
   }
-  
-  const box=document.getElementById("items");
-  if(box){
-    box.innerHTML="";
-    st.items.forEach(it=>{if(!it.id)it.id="b"+Math.random().toString(36).slice(2,9);if(!it.mode)it.mode="bell_voice";if(!it.bellCount)it.bellCount=1;if(!it.voiceCount)it.voiceCount=1;});
-    
-    [...st.items].sort((a,b)=>a.time.localeCompare(b.time)).forEach(it=>{
-      const r=document.createElement("div");r.className="item";
-      
-      const r1=document.createElement("div");r1.className="r1";
-      const t=document.createElement("input");t.type="time";t.value=it.time||"08:00";t.style.width="110px";
-      t.oninput = () => { it.time=t.value; save(); };
 
-      const lblInput=document.createElement("input");lblInput.type="text";lblInput.value=it.label||"";lblInput.placeholder="Period Name";lblInput.style.flex="1";
-      lblInput.oninput = () => { it.label=lblInput.value; save(); };
+  const box = document.getElementById("items");
+  if(box) {
+    box.innerHTML = "";
+    st.items.forEach(it => {
+      if(!it.id) it.id = "b" + Math.random().toString(36).slice(2, 9);
+      if(!it.mode) it.mode = "bell_voice";
+      if(!it.bellCount) it.bellCount = 1;
+      if(!it.voiceCount) it.voiceCount = 1;
+    });
 
-      const del=document.createElement("button");del.className="danger small";del.textContent="✕";
-      del.onclick=()=>{st.items=st.items.filter(x=>x!==it);save();render();};
-      r1.append(t,lblInput,del);
+    [...st.items].sort((a, b) => a.time.localeCompare(b.time)).forEach(it => {
+      const r = document.createElement("div"); r.className = "item";
 
-      const r2=document.createElement("div");r2.className="row";r2.style.marginTop="6px";
-      const selectAnn = document.createElement("select");
-      selectAnn.style.flex = "1";
+      const r1 = document.createElement("div"); r1.className = "r1";
+      const t = document.createElement("input"); t.type = "time"; t.value = it.time || "08:00"; t.style.width = "110px";
+      t.oninput = () => { it.time = t.value; save(); showNext(); };
+
+      const lblInput = document.createElement("input"); lblInput.type = "text"; lblInput.value = it.label || ""; lblInput.placeholder = "Period Name"; lblInput.style.flex = "1";
+      lblInput.oninput = () => { it.label = lblInput.value; save(); showNext(); };
+
+      const del = document.createElement("button"); del.className = "danger small"; del.textContent = "✕";
+      del.onclick = () => { st.items = st.items.filter(x => x !== it); save(); render(); showNext(); };
+      r1.append(t, lblInput, del);
+
+      const r2 = document.createElement("div"); r2.className = "row"; r2.style.marginTop = "6px";
+      const selectAnn = document.createElement("select"); selectAnn.style.flex = "1";
       selectAnn.innerHTML = '<option value="">-- Select Announcement --</option>';
       st.announcements.forEach(a => {
         const opt = document.createElement("option");
-        opt.value = a.id;
-        opt.textContent = `📢 ${a.title}`;
+        opt.value = a.id; opt.textContent = `📢 ${a.title}`;
         if(it.annId === a.id) opt.selected = true;
         selectAnn.appendChild(opt);
       });
@@ -1525,9 +1469,8 @@ function render(){
       if(it.mode === 'only_bell' || it.mode === 'teacher_exit') selectAnn.disabled = true;
       r2.append(selectAnn);
 
-      const r3=document.createElement("div");r3.className="r3";
-      
-      const modeSelect = document.createElement("select");
+      const r3 = document.createElement("div"); r3.className = "r3";
+      const modeSelect = document.createElement("select"); modeSelect.style.flex = "1";
       modeSelect.innerHTML = `
         <option value="bell_voice" ${it.mode==='bell_voice'?'selected':''}>🔔+🗣️ Continuous (Bell then Voice)</option>
         <option value="alternative" ${it.mode==='alternative'?'selected':''}>🔄 Alternative (Alternate Bell ⇄ Voice)</option>
@@ -1536,47 +1479,31 @@ function render(){
         <option value="teacher_exit" ${it.mode==='teacher_exit'?'selected':''}>🎵 Soft Tone</option>
         <option value="teacher_exit_voice" ${it.mode==='teacher_exit_voice'?'selected':''}>🎵+🔊 Soft Tone + Voice</option>
       `;
-      modeSelect.style.flex = "1";
       modeSelect.onchange = () => {
         it.mode = modeSelect.value;
         selectAnn.disabled = (it.mode === 'only_bell' || it.mode === 'teacher_exit');
-        save();
-        render();
+        save(); render();
       };
 
       const isSoftToneMode = (it.mode === 'teacher_exit' || it.mode === 'teacher_exit_voice');
-      const bellCountLbl = document.createElement("span");
-      bellCountLbl.style.fontSize = "12px";
-      bellCountLbl.style.fontWeight = "600";
+      const bellCountLbl = document.createElement("span"); bellCountLbl.style.fontSize = "12px"; bellCountLbl.style.fontWeight = "600";
       bellCountLbl.textContent = isSoftToneMode ? "Soft Tone:" : "Bell:";
-      const bellCountInp = document.createElement("input");
-      bellCountInp.type = "number";
-      bellCountInp.min = "1";
-      bellCountInp.max = "5";
-      bellCountInp.value = it.bellCount || 1;
-      bellCountInp.style.width = "50px";
-      bellCountInp.oninput = () => { it.bellCount = parseInt(bellCountInp.value)||1; save(); };
+      const bellCountInp = document.createElement("input"); bellCountInp.type = "number"; bellCountInp.min = "1"; bellCountInp.max = "5";
+      bellCountInp.value = it.bellCount || 1; bellCountInp.style.width = "50px";
+      bellCountInp.oninput = () => { it.bellCount = parseInt(bellCountInp.value) || 1; save(); };
       if(it.mode === 'only_voice') { bellCountInp.disabled = true; bellCountLbl.style.opacity = "0.4"; }
 
-      const voiceCountLbl = document.createElement("span");
-      voiceCountLbl.style.fontSize = "12px";
-      voiceCountLbl.style.fontWeight = "600";
+      const voiceCountLbl = document.createElement("span"); voiceCountLbl.style.fontSize = "12px"; voiceCountLbl.style.fontWeight = "600";
       voiceCountLbl.textContent = "Voice:";
-      const voiceCountInp = document.createElement("input");
-      voiceCountInp.type = "number";
-      voiceCountInp.min = "1";
-      voiceCountInp.max = "5";
-      voiceCountInp.value = it.voiceCount || 1;
-      voiceCountInp.style.width = "50px";
-      voiceCountInp.oninput = () => { it.voiceCount = parseInt(voiceCountInp.value)||1; save(); };
+      const voiceCountInp = document.createElement("input"); voiceCountInp.type = "number"; voiceCountInp.min = "1"; voiceCountInp.max = "5";
+      voiceCountInp.value = it.voiceCount || 1; voiceCountInp.style.width = "50px";
+      voiceCountInp.oninput = () => { it.voiceCount = parseInt(voiceCountInp.value) || 1; save(); };
       if(it.mode === 'only_bell' || it.mode === 'teacher_exit') { voiceCountInp.disabled = true; voiceCountLbl.style.opacity = "0.4"; }
 
-      const playBtn = document.createElement("button");
-      playBtn.className = "small primary";
-      playBtn.textContent = "▶ टेस्ट";
+      const playBtn = document.createElement("button"); playBtn.className = "small primary"; playBtn.textContent = "▶ टेस्ट";
       playBtn.onclick = () => {
         let tText = "";
-        if(it.mode !== 'only_bell' && it.mode !== 'teacher_exit' && it.annId){
+        if(it.mode !== 'only_bell' && it.mode !== 'teacher_exit' && it.annId) {
           const f = st.announcements.find(a => a.id === it.annId);
           if(f) tText = f.text;
         }
@@ -1589,10 +1516,9 @@ function render(){
   }
 }
 
-function addItem(){
-  st.items.push({time:"09:00",label:"",mode:"bell_voice",bellCount:1,voiceCount:1,annId:""});
-  save();
-  render();
+function addItem() {
+  st.items.push({ time: "09:00", label: "", mode: "bell_voice", bellCount: 1, voiceCount: 1, annId: "" });
+  save(); render(); showNext();
 }
 
 async function initApp() {
@@ -1609,25 +1535,28 @@ async function initApp() {
   showNext();
   initPresenceSystem();
 
-  if(st.isAmplifierDevice){
+  if(st.isAmplifierDevice) {
     setTimeout(() => { startAutoListener(); }, 1000);
   }
 
   if(db) {
-    db.ref(TRIGGER_FIREBASE_PATH).on("value", (snapshot) => {
-      const remotePreset = snapshot.val();
-      if(remotePreset && typeof remotePreset === "object") {
-        triggerPreset = {
-          enabled: remotePreset.enabled !== false,
-          mode: remotePreset.mode || "only_bell",
-          text: remotePreset.text || "",
-          time: /^([01]\d|2[0-3]):[0-5]\d$/.test(remotePreset.time || "") ? remotePreset.time : "07:45",
-          target: "remote",
-          updatedAt: remotePreset.updatedAt || Date.now()
-        };
-        localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
-        renderTriggerPresetUI();
-        toast("🔄 Online trigger time updated/loaded (" + triggerPreset.time + ")!");
+    db.ref(TRIGGER_FIREBASE_PATH).once("value").then(snap => {
+      if(snap.exists()) applyRemoteTriggerPreset(snap.val(), false);
+    }).catch(() => {});
+
+    let isInitialTriggerLoad = true;
+    db.ref(TRIGGER_FIREBASE_PATH).on("value", snapshot => {
+      if(!snapshot.exists()) return;
+      const val = snapshot.val();
+      const srvTs = Number(val?.updatedAt || 0);
+      const locTs = Number(triggerPreset.updatedAt || 0);
+      if(isInitialTriggerLoad) {
+        isInitialTriggerLoad = false;
+        if(srvTs >= locTs) applyRemoteTriggerPreset(val, false);
+        return;
+      }
+      if(srvTs > locTs) {
+        applyRemoteTriggerPreset(val, true);
       }
     });
 
@@ -1635,8 +1564,7 @@ async function initApp() {
       fetchFromCloudNow(true);
     }
 
-    let lastSeenCmdKey = "";
-    db.ref("school_bell_system/pendingCommand").on("value", (snapshot) => {
+    db.ref("school_bell_system/pendingCommand").on("value", snapshot => {
       const cmd = snapshot.val();
       if(!cmd || !cmd.timestamp) return;
       const ageMs = Math.abs(Date.now() - Number(cmd.timestamp));
