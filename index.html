@@ -491,6 +491,7 @@ let triggerPreset = JSON.parse(localStorage.getItem(TRIGGER_STORAGE_KEY) || "nul
 const AUTO_SYNC_ROUTINE_KEY = "schoolBellAutoSyncRoutine_v1";
 let autoSyncRoutineEnabled = JSON.parse(localStorage.getItem(AUTO_SYNC_ROUTINE_KEY) || "false") === true;
 let isApplyingRemoteRoutine = false;
+let lastLocalTriggerSaveAt = 0;
 
 let running = false;
 let audioEl = new Audio();
@@ -625,17 +626,14 @@ function renderTriggerPresetUI() {
 
 function applyRemoteTriggerPreset(remotePreset, showToastMsg = false) {
   if(!remotePreset || typeof remotePreset !== "object") return;
+  if(Date.now() - lastLocalTriggerSaveAt < 1200) return;
+
   const remoteTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(remotePreset.time || "") ? remotePreset.time : "07:45";
   const remoteUpdatedAt = Number(remotePreset.updatedAt || 0);
-  const localUpdatedAt = Number(triggerPreset.updatedAt || 0);
-
-  // If local preset was saved more recently than remote snapshot, keep local preset and sync it up
-  if(localUpdatedAt > remoteUpdatedAt && remoteUpdatedAt === 0) {
-    if(db) db.ref(TRIGGER_FIREBASE_PATH).set(triggerPreset).catch(() => {});
-    return;
-  }
-
   const timeChanged = triggerPreset.time !== remoteTime;
+  const modeChanged = triggerPreset.mode !== (remotePreset.mode || "only_bell");
+  const enabledChanged = Boolean(triggerPreset.enabled) !== (remotePreset.enabled !== false);
+
   triggerPreset = {
     enabled: remotePreset.enabled !== false,
     mode: remotePreset.mode || "only_bell",
@@ -646,8 +644,8 @@ function applyRemoteTriggerPreset(remotePreset, showToastMsg = false) {
   };
   localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
   renderTriggerPresetUI();
-  if(showToastMsg && timeChanged) {
-    toast("🔄 Online trigger time updated/loaded (" + triggerPreset.time + ")!");
+  if(showToastMsg && (timeChanged || modeChanged || enabledChanged)) {
+    toast("🔄 Trigger time auto-synced (" + triggerPreset.time + ")!");
   }
 }
 
@@ -668,13 +666,16 @@ function saveTriggerPreset() {
     return;
   }
 
-  triggerPreset = { enabled, mode, text, time, target: "remote", updatedAt: Date.now() };
+  const nowTs = Date.now();
+  lastLocalTriggerSaveAt = nowTs;
+  triggerPreset = { enabled, mode, text, time, target: "remote", updatedAt: nowTs };
   localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
+  localStorage.removeItem("schoolBellTriggerLastFired_" + time);
   updateTriggerStatusText();
 
   if(db) {
     db.ref(TRIGGER_FIREBASE_PATH).set(triggerPreset).then(() => {
-      toast("✅ Trigger timer saved locally and online (Firebase)!");
+      toast("✅ Trigger timer saved and synced online!");
     }).catch(err => {
       toast("✅ Saved locally, online sync error: " + err.message);
     });
@@ -746,8 +747,7 @@ function checkTriggerTimer(now) {
   if(hhmm(now) !== triggerPreset.time) return;
 
   const dateKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
-  const ver = triggerPreset.updatedAt || 0;
-  const firedKey = "schoolBellTriggerLastFired_" + triggerPreset.time + "_" + ver;
+  const firedKey = "schoolBellTriggerLastFired_" + triggerPreset.time;
   if(localStorage.getItem(firedKey) === dateKey) return;
 
   localStorage.setItem(firedKey, dateKey);
@@ -771,9 +771,6 @@ function applyCloudRoutineSnapshot(serverData, showToastMsg = false) {
   if(!serverData || typeof serverData !== "object") return;
   isApplyingRemoteRoutine = true;
 
-  // Preserve current triggerPreset so routine changes/fetches never overwrite trigger timer
-  const preservedTrigger = Object.assign({}, triggerPreset);
-
   if(Array.isArray(serverData.announcements)) {
     st.announcements = serverData.announcements;
   }
@@ -792,10 +789,6 @@ function applyCloudRoutineSnapshot(serverData, showToastMsg = false) {
   render();
   initRoomCodeField();
   showNext();
-
-  triggerPreset = preservedTrigger;
-  localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(triggerPreset));
-  updateHeaderTriggerBadge();
 
   const statusEl = document.getElementById("syncStatusText");
   if(statusEl) {
@@ -835,11 +828,7 @@ function fetchFromCloudNow(isAutoFetch = false) {
     if(serverData) {
       applyCloudRoutineSnapshot(serverData, isAutoFetch);
       if(serverData.triggerPreset && typeof serverData.triggerPreset === "object") {
-        const srvTs = Number(serverData.triggerPreset.updatedAt || 0);
-        const locTs = Number(triggerPreset.updatedAt || 0);
-        if(srvTs >= locTs) {
-          applyRemoteTriggerPreset(serverData.triggerPreset, false);
-        }
+        applyRemoteTriggerPreset(serverData.triggerPreset, false);
       }
       if(!isAutoFetch) {
         const statusEl = document.getElementById("syncStatusText");
@@ -1327,35 +1316,36 @@ function hhmm(d) {
 function tick() {
   const d = new Date(new Date().getTime() + timeOffset);
   checkTriggerTimer(d);
-  if(running && d.getSeconds() < 3) {
+
+  if(d.getSeconds() < 4) {
     const t = hhmm(d), today = d.toDateString();
     let log = JSON.parse(localStorage.getItem("bellfired") || "{}");
     if(log.date !== today) log = { date: today, list: {} };
     if(!log.list[t]) {
       const days = daysToArr(st.days);
       if(days.includes(DAYS[d.getDay()])) {
-        const hits = st.items.filter(i => i.time === t);
+        const hits = (st.items || []).filter(i => i.time === t);
         if(hits.length) {
           log.list[t] = true;
           localStorage.setItem("bellfired", JSON.stringify(log));
           hits.forEach((i, idx) => {
             let textToSay = "";
             if(i.mode !== 'only_bell' && i.mode !== 'teacher_exit' && i.annId) {
-              const found = st.announcements.find(a => a.id === i.annId);
+              const found = (st.announcements || []).find(a => a.id === i.annId);
               if(found) textToSay = found.text;
             }
             const m = i.mode || 'bell_voice';
-            const bCount = i.bellCount || 1;
-            const vCount = i.voiceCount || 1;
+            const bCount = parseInt(i.bellCount) || 1;
+            const vCount = parseInt(i.voiceCount) || 1;
             setTimeout(() => {
               if(db) {
                 dispatchBellCommandToAmplifier(m, bCount, vCount, textToSay, "Routine Bell", () => {
-                  toast("🔔 Scheduled bell triggered via Firebase!");
+                  toast("🔔 Routine bell dispatched via Firebase!");
                 });
               } else {
                 executeBellRoutine(m, bCount, vCount, textToSay, null);
               }
-            }, idx * 120);
+            }, idx * 150);
           });
         }
       }
@@ -1540,23 +1530,14 @@ async function initApp() {
   }
 
   if(db) {
+    // Auto-fetch & live auto-sync triggerPreset from Firebase
     db.ref(TRIGGER_FIREBASE_PATH).once("value").then(snap => {
       if(snap.exists()) applyRemoteTriggerPreset(snap.val(), false);
     }).catch(() => {});
 
-    let isInitialTriggerLoad = true;
     db.ref(TRIGGER_FIREBASE_PATH).on("value", snapshot => {
-      if(!snapshot.exists()) return;
-      const val = snapshot.val();
-      const srvTs = Number(val?.updatedAt || 0);
-      const locTs = Number(triggerPreset.updatedAt || 0);
-      if(isInitialTriggerLoad) {
-        isInitialTriggerLoad = false;
-        if(srvTs >= locTs) applyRemoteTriggerPreset(val, false);
-        return;
-      }
-      if(srvTs > locTs) {
-        applyRemoteTriggerPreset(val, true);
+      if(snapshot.exists()) {
+        applyRemoteTriggerPreset(snapshot.val(), true);
       }
     });
 
@@ -1568,7 +1549,7 @@ async function initApp() {
       const cmd = snapshot.val();
       if(!cmd || !cmd.timestamp) return;
       const ageMs = Math.abs(Date.now() - Number(cmd.timestamp));
-      if(ageMs < 15000) {
+      if(ageMs < 30000) {
         const dedupKey = String(cmd.cmdId || (cmd.timestamp + "_" + (cmd.mode || "") + "_" + (cmd.text || "")));
         if(dedupKey === lastSeenCmdKey) return;
         lastSeenCmdKey = dedupKey;
